@@ -3,6 +3,7 @@ package deploystack
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"os"
 	"reflect"
@@ -14,6 +15,64 @@ import (
 	"github.com/kylelemons/godebug/diff"
 )
 
+var projectID = ""
+
+func TestMain(m *testing.M) {
+	var err error
+	projectID, err = GetProjectID()
+	if err != nil {
+		log.Fatalf("could not get environment project id: %s", err)
+	}
+
+	code := m.Run()
+	os.Exit(code)
+}
+
+func TestReadConfig(t *testing.T) {
+	tests := map[string]struct {
+		file string
+		desc string
+		want Stack
+	}{
+		"1": {
+			file: "test_files/config.json",
+			desc: "test_files/description.txt",
+			want: Stack{
+				Config: Config{
+					Title:         "TESTCONFIG",
+					Description:   "A test string for usage with this stuff.",
+					Duration:      5,
+					Project:       true,
+					Region:        true,
+					RegionType:    "functions",
+					RegionDefault: "us-central1",
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			s := NewStack()
+			s.ReadConfig(tc.file, tc.desc)
+
+			compareValues(tc.want.Config.Title, s.Config.Title, t)
+			compareValues(tc.want.Config.Description, s.Config.Description, t)
+			compareValues(tc.want.Config.Duration, s.Config.Duration, t)
+			compareValues(tc.want.Config.Project, s.Config.Project, t)
+			compareValues(tc.want.Config.Region, s.Config.Region, t)
+			compareValues(tc.want.Config.RegionType, s.Config.RegionType, t)
+			compareValues(tc.want.Config.RegionDefault, s.Config.RegionDefault, t)
+		})
+	}
+}
+
+func compareValues(want interface{}, got interface{}, t *testing.T) {
+	if !reflect.DeepEqual(want, got) {
+		t.Fatalf("expected: \n|%v|\ngot: \n|%v|", want, got)
+	}
+}
+
 func TestManageZone(t *testing.T) {
 	tests := map[string]struct {
 		project string
@@ -21,15 +80,16 @@ func TestManageZone(t *testing.T) {
 		want    string
 	}{
 		"1": {
-			project: "stackinabox",
+			project: projectID,
 			region:  "us-central1",
-			want: `Polling for zones...
+			want: `Enabling service to poll...
+Polling for zones...
 [1;36mChoose a valid zone to use for this application. [0m
 [1;36m 1) us-central1-a  [0m
  2) us-central1-b 
  3) us-central1-c 
  4) us-central1-f 
-Choose number, or just [enter] for [1;36mus-central1-a[0m
+Choose number from list, or just [enter] for [1;36mus-central1-a[0m
 > `,
 		},
 	}
@@ -37,7 +97,7 @@ Choose number, or just [enter] for [1;36mus-central1-a[0m
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := captureOutput(func() {
-				ManageZone(tc.project, tc.region)
+				ZoneManage(tc.project, tc.region)
 			})
 
 			fmt.Println(diff.Diff(got, tc.want))
@@ -57,9 +117,10 @@ func TestManageRegion(t *testing.T) {
 		err     error
 	}{
 		"compute": {
-			project: "stackinabox",
+			project: projectID,
 			product: "compute",
-			want: `Polling for regions...
+			want: `Enabling service to poll...
+Polling for regions...
 [1;36mChoose a valid region to use for this application. [0m
  1) asia-east1              16) europe-west3            
  2) asia-east2              17) europe-west4            
@@ -76,15 +137,16 @@ func TestManageRegion(t *testing.T) {
 13) europe-north1           28) us-west3                
 14) europe-west1            29) us-west4                
 15) europe-west2            
-Choose number, or just [enter] for [1;36mus-central1[0m
+Choose number from list, or just [enter] for [1;36mus-central1[0m
 > `,
 			err: nil,
 			def: "us-central1",
 		},
 		"functions": {
-			project: "stackinabox",
+			project: projectID,
 			product: "functions",
-			want: `Polling for regions...
+			want: `Enabling service to poll...
+Polling for regions...
 [1;36mChoose a valid region to use for this application. [0m
  1) asia-east1              13) europe-west3            
  2) asia-east2              14) europe-west6            
@@ -98,15 +160,16 @@ Choose number, or just [enter] for [1;36mus-central1[0m
 10) europe-central2         22) us-west3                
 11) europe-west1            23) us-west4                
 12) europe-west2            
-Choose number, or just [enter] for [1;36mus-central1[0m
+Choose number from list, or just [enter] for [1;36mus-central1[0m
 > `,
 			err: nil,
 			def: "us-central1",
 		},
 		"run": {
-			project: "stackinabox",
+			project: projectID,
 			product: "run",
-			want: `Polling for regions...
+			want: `Enabling service to poll...
+Polling for regions...
 [1;36mChoose a valid region to use for this application. [0m
  1) asia-east1              16) europe-west3            
  2) asia-east2              17) europe-west4            
@@ -123,7 +186,7 @@ Choose number, or just [enter] for [1;36mus-central1[0m
 13) europe-north1           28) us-west3                
 14) europe-west1            29) us-west4                
 15) europe-west2            
-Choose number, or just [enter] for [1;36mus-central1[0m
+Choose number from list, or just [enter] for [1;36mus-central1[0m
 > `,
 			err: nil,
 			def: "us-central1",
@@ -133,7 +196,7 @@ Choose number, or just [enter] for [1;36mus-central1[0m
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := captureOutput(func() {
-				ManageRegion(tc.project, tc.product, tc.def)
+				RegionManage(tc.project, tc.product, tc.def)
 			})
 
 			fmt.Println(diff.Diff(got, tc.want))
@@ -156,7 +219,7 @@ func TestSelectFromListRender(t *testing.T) {
 			want: ` 1) one   
 [1;36m 2) two    [0m
  3) three 
-Choose number, or just [enter] for [1;36mtwo[0m
+Choose number from list, or just [enter] for [1;36mtwo[0m
 > `,
 		},
 		"2": {
@@ -168,7 +231,7 @@ Choose number, or just [enter] for [1;36mtwo[0m
  4) four  
  5) five  
 [1;36m 6) six    [0m
-Choose number, or just [enter] for [1;36msix[0m
+Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
 		"3": {
@@ -180,7 +243,7 @@ Choose number, or just [enter] for [1;36msix[0m
  4) four   10) ten    
  5) five   11) eleven 
 [1;36m 6) six     [0m12) twelve 
-Choose number, or just [enter] for [1;36msix[0m
+Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
 		"4": {
@@ -192,7 +255,7 @@ Choose number, or just [enter] for [1;36msix[0m
  4) four   10) ten    
  5) five   11) eleven 
 [1;36m 6) six     [0m
-Choose number, or just [enter] for [1;36msix[0m
+Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
 		"5": {
@@ -256,7 +319,7 @@ Choose number, or just [enter] for [1;36msix[0m
 17) deploystack-costsentry-tester 36) zprojectnamedeletefrzcl       
 18) deploystack-terraform         37) zprojectnamedeletehgzcu       
 19) deploystack-terraform-2       38) zprojectnamedeleteveday       
-Choose number, or just [enter] for [1;36mstackinabox[0m
+Choose number from list, or just [enter] for [1;36mstackinabox[0m
 > `,
 		},
 	}
@@ -264,7 +327,7 @@ Choose number, or just [enter] for [1;36mstackinabox[0m
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := captureOutput(func() {
-				SelectFromList(tc.input, tc.def)
+				ListSelect(tc.input, tc.def)
 			})
 
 			fmt.Println(diff.Diff(got, tc.want))
@@ -279,7 +342,7 @@ func TestStackTFvars(t *testing.T) {
 	s := NewStack()
 	s.AddSetting("project", "testproject")
 	s.AddSetting("boolean", "true")
-	got := s.TFvars()
+	got := s.Terraform()
 
 	want := `boolean="true"
 project="testproject"
@@ -317,8 +380,13 @@ It's going to take around [0;36m2 minutes[0m
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			s := NewStack()
+			s.Config.Title = tc.title
+			s.Config.Description = tc.desc
+			s.Config.Duration = tc.duration
+
 			got := captureOutput(func() {
-				Title(tc.title, tc.desc, tc.duration)
+				s.Config.PrintHeader()
 			})
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
@@ -393,7 +461,7 @@ func TestGetRegions(t *testing.T) {
 		project string
 		want    []string
 	}{
-		"1": {product: "compute", project: "stackinabox", want: []string{
+		"1": {product: "compute", project: projectID, want: []string{
 			"asia-east1",
 			"asia-east2",
 			"asia-northeast1",
@@ -424,7 +492,7 @@ func TestGetRegions(t *testing.T) {
 			"us-west3",
 			"us-west4",
 		}},
-		"2": {product: "functions", project: "stackinabox", want: []string{
+		"2": {product: "functions", project: projectID, want: []string{
 			"asia-east1",
 			"asia-east2",
 			"asia-northeast1",
@@ -449,7 +517,7 @@ func TestGetRegions(t *testing.T) {
 			"us-west3",
 			"us-west4",
 		}},
-		"3": {product: "run", project: "stackinabox", want: []string{
+		"3": {product: "run", project: projectID, want: []string{
 			"asia-east1",
 			"asia-east2",
 			"asia-northeast1",
@@ -484,7 +552,7 @@ func TestGetRegions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetRegions(tc.project, tc.product)
+			got, err := Regions(tc.project, tc.product)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -501,7 +569,7 @@ func TestGetZones(t *testing.T) {
 		region  string
 		want    []string
 	}{
-		"1": {project: "stackinabox", region: "us-central1", want: []string{
+		"1": {project: projectID, region: "us-central1", want: []string{
 			"us-central1-a",
 			"us-central1-b",
 			"us-central1-c",
@@ -511,7 +579,7 @@ func TestGetZones(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetZones(tc.project, tc.region)
+			got, err := Zones(tc.project, tc.region)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -526,7 +594,7 @@ func TestGetProjectID(t *testing.T) {
 	tests := map[string]struct {
 		want string
 	}{
-		"1": {want: "stackinabox"},
+		"1": {want: projectID},
 	}
 
 	for name, tc := range tests {
@@ -542,6 +610,7 @@ func TestGetProjectID(t *testing.T) {
 	}
 }
 
+// TODO: get rid of tests that are project specific
 func TestGetProjectNumbers(t *testing.T) {
 	tests := map[string]struct {
 		input string
@@ -564,6 +633,7 @@ func TestGetProjectNumbers(t *testing.T) {
 	}
 }
 
+// TODO: get rid of tests that are project specific
 func TestGetProjects(t *testing.T) {
 	tests := map[string]struct {
 		want []string
@@ -607,7 +677,7 @@ func TestGetProjects(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetProjects()
+			got, err := Projects()
 
 			gotfiltered := []string{}
 
@@ -634,6 +704,7 @@ func TestGetProjects(t *testing.T) {
 	}
 }
 
+// TODO: get rid of tests that are project specific
 func TestGetBillingAccounts(t *testing.T) {
 	tests := map[string]struct {
 		want []string
@@ -643,7 +714,7 @@ func TestGetBillingAccounts(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetBillingAccounts()
+			got, err := BillingAccounts()
 
 			sort.Strings(tc.want)
 
@@ -670,8 +741,8 @@ func TestCreateProject(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			name := tc.input + randSeq(5)
-			err := CreateProjectCall(name)
-			DeleteProjectCall(name)
+			err := ProjectCreate(name)
+			ProjectDelete(name)
 			if err != tc.err {
 				t.Fatalf("expected: %v, got: %v project: %s", tc.err, err, name)
 			}
@@ -679,20 +750,21 @@ func TestCreateProject(t *testing.T) {
 	}
 }
 
+// TODO: get rid of tests that are project specific
 func TestLinkProjectToBillingAccount(t *testing.T) {
 	tests := map[string]struct {
 		project string
 		account string
 		err     error
 	}{
-		"ShouldWork":  {project: "stackinabox", account: "0145C0-557C58-C970F3", err: nil},
+		"ShouldWork":  {project: projectID, account: "0145C0-557C58-C970F3", err: nil},
 		"BadProject":  {project: "stackinaboxstackinabox", account: "0145C0-557C58-C970F3", err: ErrorBillingNoPermission},
-		"BaddAccount": {project: "stackinabox", account: "AAAAAA-BBBBBB-CCCCCC", err: ErrorBillingInvalidAccount},
+		"BaddAccount": {project: projectID, account: "AAAAAA-BBBBBB-CCCCCC", err: ErrorBillingInvalidAccount},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := LinkProjectToBillingAccount(tc.project, tc.account)
+			err := BillingAccountProjectAttach(tc.project, tc.account)
 			if err != tc.err {
 				t.Fatalf("expected: %v, got: %v", tc.err, err)
 			}

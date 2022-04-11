@@ -21,7 +21,7 @@ func main() {
 	s.AddSetting("region", *regionPtr)
 	s.AddSetting("zone", *zonePtr)
 
-	if err := s.ReadConfig("config.json"); err != nil {
+	if err := s.ReadConfig("config.json", "description.txt"); err != nil {
 		log.Fatalf("could not read config file: %s", err)
 	}
 

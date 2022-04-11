@@ -23,18 +23,20 @@ import (
 )
 
 const (
-	black  = "\033[0;30m"
-	white  = "\033[1;37m"
-	cyan   = "\033[0;36m"
-	bcyan  = "\033[1;36m"
-	dcyan  = "\033[2;36m"
-	oncyan = "\033[36m"
-	ucyan  = "\033[4;36m"
-	red    = "\033[0;31m"
-	bred   = "\033[1;31m"
-	onred  = "\033[41m"
-	bgreen = "\033[1;32m"
-	nc     = "\033[0m"
+	// TERMCYAN is the terminal code for cyan text
+	TERMCYAN = "\033[0;36m"
+	// TERMCYANB is the terminal code for bold cyan text
+	TERMCYANB = "\033[1;36m"
+	// TERMCYANREV is the terminal code for black on cyan text
+	TERMCYANREV = "\033[36m"
+	// TERMRED is the terminal code for red text
+	TERMRED = "\033[0;31m"
+	// TERMREDB is the terminal code for bold red text
+	TERMREDB = "\033[1;31m"
+	// TERMREDREV is the terminal code for black on red text
+	TERMREDREV = "\033[41m"
+	// TERMCLEAR is the terminal code for the clear out color text
+	TERMCLEAR = "\033[0m"
 )
 
 var divider = ""
@@ -113,12 +115,52 @@ type Custom struct {
 	Name        string
 	Description string
 	Default     string
+	Value       string
+}
+
+// Collect will collect a value for a Custom from a user
+func (c *Custom) Collect() error {
+	result := ""
+	fmt.Printf("%s%s: %s\n", TERMCYANB, c.Description, TERMCLEAR)
+	fmt.Printf("Enter value, or just [enter] for %s%s%s\n", TERMCYANB, c.Default, TERMCLEAR)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("> ")
+		text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+		result = text
+		if len(text) == 0 {
+			result = c.Default
+		}
+		c.Value = result
+		break
+
+	}
+
+	return nil
+}
+
+// PrintHeader prints out the header for a DeployStack
+func (c Config) PrintHeader() {
+	fmt.Printf("%s\n", divider)
+	fmt.Printf("%s%s%s\n", TERMCYANB, c.Title, TERMCLEAR)
+	fmt.Printf("%s\n", c.Description)
+
+	timestring := "minute"
+	if c.Duration > 1 {
+		timestring = "minutes"
+	}
+
+	fmt.Printf("It's going to take around %s%d %s%s\n", TERMCYAN, c.Duration, timestring, TERMCLEAR)
+	fmt.Printf("%s\n", divider)
 }
 
 // Process runs through all of the options in a config and collects all of the
 // necessary data from users.
 func (c Config) Process(s *Stack, output string) error {
-	Title(c.Title, c.Description, c.Duration)
+	c.PrintHeader()
 	var project, region, zone, projectnumber, billingaccount string
 	var err error
 
@@ -131,18 +173,15 @@ func (c Config) Process(s *Stack, output string) error {
 	zone = s.GetSetting("zone")
 
 	if c.Project && len(project) == 0 {
-		project, err = ManageProject()
+		project, err = ProjectManage()
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
 		s.AddSetting("project_id", project)
 	}
 
-	// TODO: Make sure that people can query the apis before they run the queries.
-	// Probably needs to happen here.
-
 	if c.Region && len(region) == 0 {
-		region, err = ManageRegion(project, c.RegionType, c.RegionDefault)
+		region, err = RegionManage(project, c.RegionType, c.RegionDefault)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
@@ -150,7 +189,7 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	if c.Zone && len(zone) == 0 {
-		zone, err = ManageZone(project, region)
+		zone, err = ZoneManage(project, region)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
@@ -158,33 +197,32 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	if c.ProjectNumber {
-		projectnumber, err = GetProjectNumber(project)
+		projectnumber, err = ProjectNumber(project)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
 		s.AddSetting("project_number", projectnumber)
 	}
 
-	// TODO: Fix this actually present user options.
 	if c.BillingAccount {
-		ba, err := GetBillingAccounts()
+
+		ba, err := BillingAccountManage()
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
-		billingaccount = ba[0]
+		billingaccount = ba
 		s.AddSetting("billing_account", billingaccount)
 	}
 
 	for _, v := range c.CustomSettings {
-		result, err := CollectCustom(v)
-		if err != nil {
+		if err := v.Collect(); err != nil {
 			log.Fatalf("error getting custom value from user:  %s", err)
 		}
-		s.AddSetting(v.Name, result)
+		s.AddSetting(v.Name, v.Value)
 	}
 
 	s.PrintSettings()
-	s.TFvarsFile(output)
+	s.TerraformFile(output)
 	return nil
 }
 
@@ -213,7 +251,7 @@ func NewStack() Stack {
 }
 
 // ReadConfig reads in a Config from a json file.
-func (s *Stack) ReadConfig(file string) error {
+func (s *Stack) ReadConfig(file, desc string) error {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		return fmt.Errorf("unable to read config file: %s", err)
@@ -222,6 +260,16 @@ func (s *Stack) ReadConfig(file string) error {
 	if err != nil {
 		return fmt.Errorf("unable to parse config file: %s", err)
 	}
+
+	if len(desc) > 0 {
+		description, err := ioutil.ReadFile(desc)
+		if err != nil {
+			return fmt.Errorf("unable to read description file: %s", err)
+		}
+
+		config.Description = string(description)
+	}
+
 	s.Config = config
 
 	return nil
@@ -239,12 +287,12 @@ func (s Stack) AddSetting(key, value string) {
 }
 
 // GetSetting returns a setting value.
-func (s Stack) GetSetting(k string) string {
-	return s.Settings[k]
+func (s Stack) GetSetting(key string) string {
+	return s.Settings[key]
 }
 
-// TFvars returns all of the settings as a Terraform variables format.
-func (s Stack) TFvars() string {
+// Terraform returns all of the settings as a Terraform variables format.
+func (s Stack) Terraform() string {
 	result := ""
 
 	keys := []string{}
@@ -269,10 +317,19 @@ func (s Stack) TFvars() string {
 	return result
 }
 
-// TFvarsFile exports TFVars format to input file.
-func (s Stack) TFvarsFile(filename string) {
-	txt := s.TFvars()
-	os.WriteFile(filename, []byte(txt), 0o644)
+// TerraformFile exports TFVars format to input file.
+func (s Stack) TerraformFile(filename string) error {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if _, err = f.WriteString(s.Terraform()); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // PrintSettings prints the settings to the screen
@@ -284,7 +341,7 @@ func (s Stack) PrintSettings() {
 
 	longest := longestLengh(keys)
 
-	fmt.Printf("%sProject Details %s \n", oncyan, nc)
+	fmt.Printf("%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
 	if s, ok := s.Settings["project_id"]; ok {
 		printSetting("project_id", s, longest)
@@ -308,7 +365,7 @@ func (s Stack) PrintSettings() {
 func printSetting(name, value string, longest int) {
 	sp := buildSpacer(name, longest)
 	formatted := strings.Title(strings.ReplaceAll(name, "_", " "))
-	fmt.Printf("%s:%s %s%s%s\n", formatted, sp, bcyan, value, nc)
+	fmt.Printf("%s:%s %s%s%s\n", formatted, sp, TERMCYANB, value, TERMCLEAR)
 }
 
 // Section allows for division of tasks in a DeployStack
@@ -324,34 +381,19 @@ func NewSection(title string) Section {
 // Open prints out the header for a Section.
 func (s Section) Open() {
 	fmt.Printf("%s\n", divider)
-	fmt.Printf("%s%s%s\n", cyan, s.Title, nc)
+	fmt.Printf("%s%s%s\n", TERMCYAN, s.Title, TERMCLEAR)
 	fmt.Printf("%s\n", divider)
 }
 
 // Close prints out the footer for a Section.
 func (s Section) Close() {
 	fmt.Printf("%s\n", divider)
-	fmt.Printf("%s%s - %sdone%s\n", cyan, s.Title, bcyan, nc)
+	fmt.Printf("%s%s - %sdone%s\n", TERMCYAN, s.Title, TERMCYANB, TERMCLEAR)
 	fmt.Printf("%s\n", divider)
 }
 
-// Title prints out the header for a DeployStack
-func Title(title, description string, time int) {
-	fmt.Printf("%s\n", divider)
-	fmt.Printf("%s%s%s\n", bcyan, title, nc)
-	fmt.Printf("%s\n", description)
-
-	timestring := "minute"
-	if time > 1 {
-		timestring = "minutes"
-	}
-
-	fmt.Printf("It's going to take around %s%d %s%s\n", cyan, time, timestring, nc)
-	fmt.Printf("%s\n", divider)
-}
-
-// GetProjectID gets the currently set default project
-func GetProjectID() (string, error) {
+// ProjectID gets the currently set default project
+func ProjectID() (string, error) {
 	cmd := exec.Command("gcloud", "config", "get-value", "project")
 	out, err := cmd.Output()
 	if err != nil {
@@ -361,8 +403,8 @@ func GetProjectID() (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// GetProjectNumber will get the project_number for the input projectid
-func GetProjectNumber(id string) (string, error) {
+// ProjectNumber will get the project_number for the input projectid
+func ProjectNumber(id string) (string, error) {
 	resp := ""
 	ctx := context.Background()
 	svc, err := cloudresourcemanager.NewService(ctx)
@@ -380,8 +422,8 @@ func GetProjectNumber(id string) (string, error) {
 	return resp, nil
 }
 
-// GetProjects gets a list of the projects a user has access to
-func GetProjects() ([]string, error) {
+// Projects gets a list of the projects a user has access to
+func Projects() ([]string, error) {
 	resp := []string{}
 	ctx := context.Background()
 	svc, err := cloudresourcemanager.NewService(ctx)
@@ -405,8 +447,8 @@ func GetProjects() ([]string, error) {
 	return resp, nil
 }
 
-// GetBillingAccounts gets a list of the billing accounts a user has access to
-func GetBillingAccounts() ([]string, error) {
+// BillingAccounts gets a list of the billing accounts a user has access to
+func BillingAccounts() ([]string, error) {
 	resp := []string{}
 	ctx := context.Background()
 	svc, err := cloudbilling.NewService(ctx)
@@ -428,8 +470,8 @@ func GetBillingAccounts() ([]string, error) {
 	return resp, nil
 }
 
-// LinkProjectToBillingAccount will enable billing in a given project
-func LinkProjectToBillingAccount(project, account string) error {
+// BillingAccountProjectAttach will enable billing in a given project
+func BillingAccountProjectAttach(project, account string) error {
 	retries := 10
 	ctx := context.Background()
 	svc, err := cloudbilling.NewService(ctx)
@@ -472,30 +514,24 @@ func LinkProjectToBillingAccount(project, account string) error {
 	return looperr
 }
 
-// EnableService enable a service in the selected project so that query calls
-// to various lists will work.
-func EnableService(project, service string) error {
-	ctx := context.Background()
-	svc, err := serviceusage.NewService(ctx)
+// BillingAccountManage either grabs the users only BillingAccount or
+// presents a list of BillingAccounts to select from.
+func BillingAccountManage() (string, error) {
+	accounts, err := BillingAccounts()
 	if err != nil {
-		return err
-	}
-	s := fmt.Sprintf("projects/%s/services/%s", project, service)
-	op, err := svc.Services.Enable(s, &serviceusage.EnableServiceRequest{}).Do()
-	if err != nil {
-		return fmt.Errorf("could not enable service: %s", err)
+		return "", fmt.Errorf("could not get list of billing accounts: %s", err)
 	}
 
-	if !strings.Contains(string(op.Response), "ENABLED") {
-		return EnableService(project, service)
+	if len(accounts) == 1 {
+		return accounts[0], nil
 	}
 
-	return nil
+	return ListSelect(accounts, accounts[0]), nil
 }
 
-// CreateProjectCall does the work of actually creating a new project in your
+// ProjectCreate does the work of actually creating a new project in your
 // GCP account
-func CreateProjectCall(project string) error {
+func ProjectCreate(project string) error {
 	ctx := context.Background()
 	svc, err := cloudresourcemanager.NewService(ctx)
 	if err != nil {
@@ -519,9 +555,9 @@ func CreateProjectCall(project string) error {
 	return nil
 }
 
-// DeleteProjectCall does the work of actually deleting an existing project in
+// ProjectDelete does the work of actually deleting an existing project in
 // your GCP account
-func DeleteProjectCall(project string) error {
+func ProjectDelete(project string) error {
 	ctx := context.Background()
 	svc, err := cloudresourcemanager.NewService(ctx)
 	if err != nil {
@@ -536,22 +572,99 @@ func DeleteProjectCall(project string) error {
 	return nil
 }
 
-// GetRegions will return a list of regions depending on product type
-func GetRegions(project, product string) ([]string, error) {
+// ProjectManage promps a user to select a project.
+func ProjectManage() (string, error) {
+	createString := "CREATE NEW PROJECT"
+	project, err := ProjectID()
+	if err != nil {
+		return "", err
+	}
+
+	projects, err := Projects()
+	if err != nil {
+		return "", err
+	}
+
+	projects = append([]string{createString}, projects...)
+
+	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", TERMCYANB, TERMCLEAR)
+	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
+	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
+
+	project = ListSelect(projects, project)
+
+	if project == createString {
+		project, err = ProjectPrompt()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return project, nil
+}
+
+// ProjectPrompt manages the interaction of creating a project, including prompts.
+func ProjectPrompt() (string, error) {
+	result := ""
+	sec1 := NewSection("Creating the project")
+
+	sec1.Open()
+	fmt.Printf("%sPlease enter a new project name to create: %s\n", TERMCYANB, TERMCLEAR)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("> ")
+		text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+
+		if len(text) == 0 {
+			fmt.Printf("%sPlease enter a new project name to create: %s\n", TERMCYANB, TERMCLEAR)
+			continue
+		}
+
+		if err := ProjectCreate(text); err != nil {
+			fmt.Printf("%sProject name could not be created, please choose another,%s\n", TERMREDREV, TERMCLEAR)
+			continue
+		}
+
+		fmt.Printf("Project Created\n")
+		result = text
+		break
+
+	}
+	sec1.Close()
+
+	sec2 := NewSection("Activating Billing for the project")
+	sec2.Open()
+	account, err := BillingAccountManage()
+	if err != nil {
+		return "", fmt.Errorf("could not determine proper billing account: %s ", err)
+	}
+
+	if err := BillingAccountProjectAttach(result, account); err != nil {
+		return "", fmt.Errorf("could not link billing account: %s ", err)
+	}
+	sec2.Close()
+	return result, nil
+}
+
+// Regions will return a list of regions depending on product type
+func Regions(project, product string) ([]string, error) {
 	switch product {
 	case "compute":
-		return GetRegionsCompute(project)
+		return RegionsCompute(project)
 	case "functions":
-		return GetRegionsFunctions(project)
+		return RegionsFunctions(project)
 	case "run":
-		return GetRegionsRun(project)
+		return RegionsRun(project)
 	}
 
 	return []string{}, fmt.Errorf("invalid product requested: %s", product)
 }
 
-// GetRegionsFunctions will return a list of regions for Cloud Functions
-func GetRegionsFunctions(project string) ([]string, error) {
+// RegionsFunctions will return a list of regions for Cloud Functions
+func RegionsFunctions(project string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
@@ -574,8 +687,8 @@ func GetRegionsFunctions(project string) ([]string, error) {
 	return resp, nil
 }
 
-// GetRegionsRun will return a list of regions for Cloud Run
-func GetRegionsRun(project string) ([]string, error) {
+// RegionsRun will return a list of regions for Cloud Run
+func RegionsRun(project string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
@@ -598,8 +711,8 @@ func GetRegionsRun(project string) ([]string, error) {
 	return resp, nil
 }
 
-// GetRegionsCompute will return a list of regions for Compute Engine
-func GetRegionsCompute(project string) ([]string, error) {
+// RegionsCompute will return a list of regions for Compute Engine
+func RegionsCompute(project string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
@@ -622,8 +735,36 @@ func GetRegionsCompute(project string) ([]string, error) {
 	return resp, nil
 }
 
-// GetZones will return a list of zones in a given region
-func GetZones(project, region string) ([]string, error) {
+// RegionManage promps a user to select a region.
+func RegionManage(project, product, def string) (string, error) {
+	fmt.Printf("Enabling service to poll...\n")
+	service := "compute.googleapis.com"
+	switch product {
+	case "compute":
+		service = "compute.googleapis.com"
+	case "functions":
+		service = "cloudfunctions.googleapis.com"
+	case "run":
+		service = "run.googleapis.com"
+	}
+
+	if err := ServiceEnable(project, service); err != nil {
+		return "", fmt.Errorf("error activating service for polling: %s", err)
+	}
+
+	fmt.Printf("Polling for regions...\n")
+	regions, err := Regions(project, product)
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("%sChoose a valid region to use for this application. %s\n", TERMCYANB, TERMCLEAR)
+	region := ListSelect(regions, def)
+
+	return region, nil
+}
+
+// Zones will return a list of zones in a given region
+func Zones(project, region string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
@@ -648,10 +789,28 @@ func GetZones(project, region string) ([]string, error) {
 	return resp, nil
 }
 
-// SelectFromList presents the a slice of strings as a list from which
+// ZoneManage promps a user to select a zone.
+func ZoneManage(project, region string) (string, error) {
+	fmt.Printf("Enabling service to poll...\n")
+	if err := ServiceEnable(project, "compute.googleapis.com"); err != nil {
+		return "", fmt.Errorf("error activating service for polling: %s", err)
+	}
+
+	fmt.Printf("Polling for zones...\n")
+	zones, err := Zones(project, region)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", TERMCYANB, TERMCLEAR)
+	zone := ListSelect(zones, zones[0])
+	return zone, nil
+}
+
+// ListSelect presents a slice of strings as a list from which
 // the user can select. It also highlights and preesnts behvaior for the
 // default
-func SelectFromList(sl []string, def string) string {
+func ListSelect(sl []string, def string) string {
 	itemCount := len(sl)
 	halfcount := int(math.Ceil(float64(itemCount / 2)))
 	width := longestLengh(sl)
@@ -696,7 +855,7 @@ func SelectFromList(sl []string, def string) string {
 	answer := def
 	reader := bufio.NewReader(os.Stdin)
 	if defaultExists {
-		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", bcyan, def, nc)
+		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, def, TERMCLEAR)
 	} else {
 		fmt.Printf("Choose number from list.\n")
 	}
@@ -729,7 +888,7 @@ func printWithDefault(idx, width int, value, def string) bool {
 	sp := buildSpacer(value, width)
 
 	if value == def {
-		fmt.Printf("%s%2d) %s %s %s", bcyan, idx, value, sp, nc)
+		fmt.Printf("%s%2d) %s %s %s", TERMCYANB, idx, value, sp, TERMCLEAR)
 		return true
 	}
 	fmt.Printf("%2d) %s %s", idx, value, sp)
@@ -758,164 +917,23 @@ func longestLengh(sl []string) int {
 	return longest
 }
 
-// ManageRegion promps a user to select a region.
-func ManageRegion(project, product, def string) (string, error) {
-	fmt.Printf("Enabling service to poll...\n")
-	service := "compute.googleapis.com"
-	switch product {
-	case "compute":
-		service = "compute.googleapis.com"
-	case "functions":
-		service = "cloudfunctions.googleapis.com"
-	case "run":
-		service = "run.googleapis.com"
-	}
-
-	if err := EnableService(project, service); err != nil {
-		return "", fmt.Errorf("error activating service for polling: %s", err)
-	}
-
-	fmt.Printf("Polling for regions...\n")
-	regions, err := GetRegions(project, product)
+// ServiceEnable enable a service in the selected project so that query calls
+// to various lists will work.
+func ServiceEnable(project, service string) error {
+	ctx := context.Background()
+	svc, err := serviceusage.NewService(ctx)
 	if err != nil {
-		return "", err
+		return err
 	}
-	fmt.Printf("%sChoose a valid region to use for this application. %s\n", bcyan, nc)
-	region := SelectFromList(regions, def)
-
-	return region, nil
-}
-
-// ManageZone promps a user to select a zone.
-func ManageZone(project, region string) (string, error) {
-	fmt.Printf("Enabling service to poll...\n")
-	if err := EnableService(project, "compute.googleapis.com"); err != nil {
-		return "", fmt.Errorf("error activating service for polling: %s", err)
-	}
-
-	fmt.Printf("Polling for zones...\n")
-	zones, err := GetZones(project, region)
+	s := fmt.Sprintf("projects/%s/services/%s", project, service)
+	op, err := svc.Services.Enable(s, &serviceusage.EnableServiceRequest{}).Do()
 	if err != nil {
-		return "", err
+		return fmt.Errorf("could not enable service: %s", err)
 	}
 
-	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", bcyan, nc)
-	zone := SelectFromList(zones, zones[0])
-	return zone, nil
-}
-
-// ManageProject promps a user to select a project.
-func ManageProject() (string, error) {
-	createString := "CREATE NEW PROJECT"
-	project, err := GetProjectID()
-	if err != nil {
-		return "", err
+	if !strings.Contains(string(op.Response), "ENABLED") {
+		return ServiceEnable(project, service)
 	}
 
-	projects, err := GetProjects()
-	if err != nil {
-		return "", err
-	}
-
-	projects = append([]string{createString}, projects...)
-
-	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", bcyan, nc)
-	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", oncyan, cyan, nc)
-	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
-
-	project = SelectFromList(projects, project)
-
-	if project == createString {
-		project, err = CreateProject()
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return project, nil
-}
-
-// CollectCustom will collect a value for a Custom from a user
-func CollectCustom(c Custom) (string, error) {
-	result := ""
-	fmt.Printf("%s%s: %s\n", bcyan, c.Description, nc)
-	fmt.Printf("Enter value, or just [enter] for %s%s%s\n", bcyan, c.Default, nc)
-
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Print("> ")
-		text, _ := reader.ReadString('\n')
-		text = strings.Replace(text, "\n", "", -1)
-		result = text
-		if len(text) == 0 {
-			result = c.Default
-		}
-
-		break
-
-	}
-
-	return result, nil
-}
-
-// CreateProject manages the interaction of creating a project, including prompts.
-func CreateProject() (string, error) {
-	result := ""
-	sec1 := NewSection("Creating the project")
-
-	sec1.Open()
-	fmt.Printf("%sPlease enter a new project name to create: %s\n", bcyan, nc)
-
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Print("> ")
-		text, _ := reader.ReadString('\n')
-		text = strings.Replace(text, "\n", "", -1)
-
-		if len(text) == 0 {
-			fmt.Printf("%sPlease enter a new project name to create: %s\n", bcyan, nc)
-			continue
-		}
-
-		if err := CreateProjectCall(text); err != nil {
-			fmt.Printf("%sProject name could not be created, please choose another,%s\n", onred, nc)
-			continue
-		}
-
-		fmt.Printf("Project Created\n")
-		result = text
-		break
-
-	}
-	sec1.Close()
-
-	sec2 := NewSection("Activating Billing for the project")
-	sec2.Open()
-	account, err := DetermineBillingAccount()
-	if err != nil {
-		return "", fmt.Errorf("could not determine proper billing account: %s ", err)
-	}
-
-	if err := LinkProjectToBillingAccount(result, account); err != nil {
-		return "", fmt.Errorf("could not link billing account: %s ", err)
-	}
-	sec2.Close()
-	return result, nil
-}
-
-// DetermineBillingAccount either grabs the users only BillingAccount or
-// presents a list of BillingAccounts to select from.
-func DetermineBillingAccount() (string, error) {
-	accounts, err := GetBillingAccounts()
-	if err != nil {
-		return "", fmt.Errorf("could not get list of billing accounts: %s", err)
-	}
-
-	if len(accounts) == 1 {
-		return accounts[0], nil
-	}
-
-	return SelectFromList(accounts, accounts[0]), nil
+	return nil
 }
