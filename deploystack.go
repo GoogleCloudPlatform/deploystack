@@ -102,6 +102,9 @@ type Flags struct {
 	Custom  map[string]string `json:"custom"`
 }
 
+// HandleFlags consolidates all of the cli flag login in the package instead of
+// relegating that to the calling file. Not super idiomatic, but allows us
+// to leave all of this code in one place.
 func HandleFlags() Flags {
 	f := Flags{}
 	m := make(map[string]string)
