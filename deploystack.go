@@ -554,11 +554,6 @@ func GetRegions(project, product string) ([]string, error) {
 func GetRegionsFunctions(project string) ([]string, error) {
 	resp := []string{}
 
-	err := EnableService(project, "cloudfunctions.googleapis.com")
-	if err != nil {
-		return resp, err
-	}
-
 	ctx := context.Background()
 	svc, err := cloudfunctions.NewService(ctx)
 	if err != nil {
@@ -582,11 +577,6 @@ func GetRegionsFunctions(project string) ([]string, error) {
 // GetRegionsRun will return a list of regions for Cloud Run
 func GetRegionsRun(project string) ([]string, error) {
 	resp := []string{}
-
-	err := EnableService(project, "run.googleapis.com")
-	if err != nil {
-		return resp, err
-	}
 
 	ctx := context.Background()
 	svc, err := run.NewService(ctx)
@@ -612,11 +602,6 @@ func GetRegionsRun(project string) ([]string, error) {
 func GetRegionsCompute(project string) ([]string, error) {
 	resp := []string{}
 
-	err := EnableService(project, "compute.googleapis.com")
-	if err != nil {
-		return resp, err
-	}
-
 	ctx := context.Background()
 	svc, err := compute.NewService(ctx)
 	if err != nil {
@@ -640,11 +625,6 @@ func GetRegionsCompute(project string) ([]string, error) {
 // GetZones will return a list of zones in a given region
 func GetZones(project, region string) ([]string, error) {
 	resp := []string{}
-
-	err := EnableService(project, "compute.googleapis.com")
-	if err != nil {
-		return resp, err
-	}
 
 	ctx := context.Background()
 	svc, err := compute.NewService(ctx)
@@ -780,6 +760,22 @@ func longestLengh(sl []string) int {
 
 // ManageRegion promps a user to select a region.
 func ManageRegion(project, product, def string) (string, error) {
+	fmt.Printf("Enabling service to poll...\n")
+	service := "compute.googleapis.com"
+	switch product {
+	case "compute":
+		service = "compute.googleapis.com"
+	case "functions":
+		service = "cloudfunctions.googleapis.com"
+	case "run":
+		service = "run.googleapis.com"
+	}
+
+	err := EnableService(project, service)
+	if err != nil {
+		return "", fmt.Errorf("error activating service for polling: %s", err)
+	}
+
 	fmt.Printf("Polling for regions...\n")
 	regions, err := GetRegions(project, product)
 	if err != nil {
@@ -793,6 +789,12 @@ func ManageRegion(project, product, def string) (string, error) {
 
 // ManageZone promps a user to select a zone.
 func ManageZone(project, region string) (string, error) {
+	fmt.Printf("Enabling service to poll...\n")
+	err := EnableService(project, "compute.googleapis.com")
+	if err != nil {
+		return "", fmt.Errorf("error activating service for polling: %s", err)
+	}
+
 	fmt.Printf("Polling for zones...\n")
 	zones, err := GetZones(project, region)
 	if err != nil {
