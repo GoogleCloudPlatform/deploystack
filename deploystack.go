@@ -1,9 +1,12 @@
+// Package deploystack provides a series of interfaces for getting Google Cloud
+// settings and configurations for use with DeplyStack
 package deploystack
 
 import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -89,6 +92,42 @@ func buildDivider() (string, error) {
 		sb.WriteString("*")
 	}
 	return sb.String(), nil
+}
+
+// Flags is a collection variables that can be passed in from the CLI
+type Flags struct {
+	Project string            `json:"project"`
+	Region  string            `json:"region"`
+	Zone    string            `json:"zone"`
+	Custom  map[string]string `json:"custom"`
+}
+
+func HandleFlags() Flags {
+	f := Flags{}
+	m := make(map[string]string)
+	projectPtr := flag.String("project", "", "A Google Cloud Project ID")
+	regionPtr := flag.String("region", "", "A Google Cloud Region")
+	zonePtr := flag.String("zone", "", "A Google Cloud Zone")
+	customPtr := flag.String("custom", "", "A list of custom variables that can be passed in")
+
+	flag.Parse()
+
+	f.Project = *projectPtr
+	f.Region = *regionPtr
+	f.Zone = *zonePtr
+
+	rawString := *customPtr
+
+	cSl := strings.Split(rawString, ",")
+
+	for _, v := range cSl {
+		rawVK := strings.ReplaceAll(v, " ", "=")
+		kv := strings.Split(rawVK, "=")
+		m[kv[0]] = kv[1]
+	}
+	f.Custom = m
+
+	return f
 }
 
 // Config represents the settings this app will collect from a user. It should
@@ -215,10 +254,15 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	for _, v := range c.CustomSettings {
-		if err := v.Collect(); err != nil {
-			log.Fatalf("error getting custom value from user:  %s", err)
+		temp := s.GetSetting(v.Name)
+
+		if len(temp) < 1 {
+			if err := v.Collect(); err != nil {
+				log.Fatalf("error getting custom value from user:  %s", err)
+			}
+			s.AddSetting(v.Name, v.Value)
 		}
-		s.AddSetting(v.Name, v.Value)
+
 	}
 
 	s.PrintSettings()
@@ -248,6 +292,17 @@ func NewStack() Stack {
 	s := Stack{}
 	s.Settings = make(map[string]string)
 	return s
+}
+
+// ProcessFlags handles adding the contents of the flags to the stack settings
+func (s *Stack) ProcessFlags(f Flags) {
+	s.AddSetting("project_id", f.Project)
+	s.AddSetting("region", f.Region)
+	s.AddSetting("zone", f.Zone)
+
+	for i, v := range f.Custom {
+		s.AddSetting(i, v)
+	}
 }
 
 // ReadConfig reads in a Config from a json file.
@@ -341,7 +396,7 @@ func (s Stack) PrintSettings() {
 
 	longest := longestLengh(keys)
 
-	fmt.Printf("%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
+	fmt.Printf("%sProject_id Details %s \n", TERMCYANREV, TERMCLEAR)
 
 	if s, ok := s.Settings["project_id"]; ok {
 		printSetting("project_id", s, longest)
@@ -422,8 +477,8 @@ func ProjectNumber(id string) (string, error) {
 	return resp, nil
 }
 
-// Projects gets a list of the projects a user has access to
-func Projects() ([]string, error) {
+// projects gets a list of the projects a user has access to
+func projects() ([]string, error) {
 	resp := []string{}
 	ctx := context.Background()
 	svc, err := cloudresourcemanager.NewService(ctx)
@@ -447,8 +502,8 @@ func Projects() ([]string, error) {
 	return resp, nil
 }
 
-// BillingAccounts gets a list of the billing accounts a user has access to
-func BillingAccounts() ([]string, error) {
+// billingAccounts gets a list of the billing accounts a user has access to
+func billingAccounts() ([]string, error) {
 	resp := []string{}
 	ctx := context.Background()
 	svc, err := cloudbilling.NewService(ctx)
@@ -517,7 +572,7 @@ func BillingAccountProjectAttach(project, account string) error {
 // BillingAccountManage either grabs the users only BillingAccount or
 // presents a list of BillingAccounts to select from.
 func BillingAccountManage() (string, error) {
-	accounts, err := BillingAccounts()
+	accounts, err := billingAccounts()
 	if err != nil {
 		return "", fmt.Errorf("could not get list of billing accounts: %s", err)
 	}
@@ -526,12 +581,12 @@ func BillingAccountManage() (string, error) {
 		return accounts[0], nil
 	}
 
-	return ListSelect(accounts, accounts[0]), nil
+	return listSelect(accounts, accounts[0]), nil
 }
 
-// ProjectCreate does the work of actually creating a new project in your
+// projectCreate does the work of actually creating a new project in your
 // GCP account
-func ProjectCreate(project string) error {
+func projectCreate(project string) error {
 	ctx := context.Background()
 	svc, err := cloudresourcemanager.NewService(ctx)
 	if err != nil {
@@ -555,9 +610,9 @@ func ProjectCreate(project string) error {
 	return nil
 }
 
-// ProjectDelete does the work of actually deleting an existing project in
+// projectDelete does the work of actually deleting an existing project in
 // your GCP account
-func ProjectDelete(project string) error {
+func projectDelete(project string) error {
 	ctx := context.Background()
 	svc, err := cloudresourcemanager.NewService(ctx)
 	if err != nil {
@@ -580,7 +635,7 @@ func ProjectManage() (string, error) {
 		return "", err
 	}
 
-	projects, err := Projects()
+	projects, err := projects()
 	if err != nil {
 		return "", err
 	}
@@ -591,10 +646,10 @@ func ProjectManage() (string, error) {
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
 	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
 
-	project = ListSelect(projects, project)
+	project = listSelect(projects, project)
 
 	if project == createString {
-		project, err = ProjectPrompt()
+		project, err = projectPrompt()
 		if err != nil {
 			return "", err
 		}
@@ -603,8 +658,8 @@ func ProjectManage() (string, error) {
 	return project, nil
 }
 
-// ProjectPrompt manages the interaction of creating a project, including prompts.
-func ProjectPrompt() (string, error) {
+// projectPrompt manages the interaction of creating a project, including prompts.
+func projectPrompt() (string, error) {
 	result := ""
 	sec1 := NewSection("Creating the project")
 
@@ -623,7 +678,7 @@ func ProjectPrompt() (string, error) {
 			continue
 		}
 
-		if err := ProjectCreate(text); err != nil {
+		if err := projectCreate(text); err != nil {
 			fmt.Printf("%sProject name could not be created, please choose another,%s\n", TERMREDREV, TERMCLEAR)
 			continue
 		}
@@ -649,22 +704,22 @@ func ProjectPrompt() (string, error) {
 	return result, nil
 }
 
-// Regions will return a list of regions depending on product type
-func Regions(project, product string) ([]string, error) {
+// regions will return a list of regions depending on product type
+func regions(project, product string) ([]string, error) {
 	switch product {
 	case "compute":
-		return RegionsCompute(project)
+		return regionsCompute(project)
 	case "functions":
-		return RegionsFunctions(project)
+		return regionsFunctions(project)
 	case "run":
-		return RegionsRun(project)
+		return regionsRun(project)
 	}
 
 	return []string{}, fmt.Errorf("invalid product requested: %s", product)
 }
 
-// RegionsFunctions will return a list of regions for Cloud Functions
-func RegionsFunctions(project string) ([]string, error) {
+// regionsFunctions will return a list of regions for Cloud Functions
+func regionsFunctions(project string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
@@ -687,8 +742,8 @@ func RegionsFunctions(project string) ([]string, error) {
 	return resp, nil
 }
 
-// RegionsRun will return a list of regions for Cloud Run
-func RegionsRun(project string) ([]string, error) {
+// regionsRun will return a list of regions for Cloud Run
+func regionsRun(project string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
@@ -711,8 +766,8 @@ func RegionsRun(project string) ([]string, error) {
 	return resp, nil
 }
 
-// RegionsCompute will return a list of regions for Compute Engine
-func RegionsCompute(project string) ([]string, error) {
+// regionsCompute will return a list of regions for Compute Engine
+func regionsCompute(project string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
@@ -753,18 +808,18 @@ func RegionManage(project, product, def string) (string, error) {
 	}
 
 	fmt.Printf("Polling for regions...\n")
-	regions, err := Regions(project, product)
+	regions, err := regions(project, product)
 	if err != nil {
 		return "", err
 	}
 	fmt.Printf("%sChoose a valid region to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	region := ListSelect(regions, def)
+	region := listSelect(regions, def)
 
 	return region, nil
 }
 
-// Zones will return a list of zones in a given region
-func Zones(project, region string) ([]string, error) {
+// zones will return a list of zones in a given region
+func zones(project, region string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
@@ -797,20 +852,20 @@ func ZoneManage(project, region string) (string, error) {
 	}
 
 	fmt.Printf("Polling for zones...\n")
-	zones, err := Zones(project, region)
+	zones, err := zones(project, region)
 	if err != nil {
 		return "", err
 	}
 
 	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	zone := ListSelect(zones, zones[0])
+	zone := listSelect(zones, zones[0])
 	return zone, nil
 }
 
-// ListSelect presents a slice of strings as a list from which
+// listSelect presents a slice of strings as a list from which
 // the user can select. It also highlights and preesnts behvaior for the
 // default
-func ListSelect(sl []string, def string) string {
+func listSelect(sl []string, def string) string {
 	itemCount := len(sl)
 	halfcount := int(math.Ceil(float64(itemCount / 2)))
 	width := longestLengh(sl)

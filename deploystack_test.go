@@ -19,7 +19,7 @@ var projectID = ""
 
 func TestMain(m *testing.M) {
 	var err error
-	projectID, err = GetProjectID()
+	projectID, err = ProjectID()
 	if err != nil {
 		log.Fatalf("could not get environment project id: %s", err)
 	}
@@ -327,7 +327,7 @@ Choose number from list, or just [enter] for [1;36mstackinabox[0m
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := captureOutput(func() {
-				ListSelect(tc.input, tc.def)
+				listSelect(tc.input, tc.def)
 			})
 
 			fmt.Println(diff.Diff(got, tc.want))
@@ -552,7 +552,7 @@ func TestGetRegions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := Regions(tc.project, tc.product)
+			got, err := regions(tc.project, tc.product)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -579,7 +579,7 @@ func TestGetZones(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := Zones(tc.project, tc.region)
+			got, err := zones(tc.project, tc.region)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -599,7 +599,7 @@ func TestGetProjectID(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetProjectID()
+			got, err := ProjectID()
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -622,7 +622,7 @@ func TestGetProjectNumbers(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetProjectNumber(tc.input)
+			got, err := ProjectNumber(tc.input)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -677,7 +677,7 @@ func TestGetProjects(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := Projects()
+			got, err := projects()
 
 			gotfiltered := []string{}
 
@@ -714,7 +714,7 @@ func TestGetBillingAccounts(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := BillingAccounts()
+			got, err := billingAccounts()
 
 			sort.Strings(tc.want)
 
@@ -741,8 +741,8 @@ func TestCreateProject(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			name := tc.input + randSeq(5)
-			err := ProjectCreate(name)
-			ProjectDelete(name)
+			err := projectCreate(name)
+			projectDelete(name)
 			if err != tc.err {
 				t.Fatalf("expected: %v, got: %v project: %s", tc.err, err, name)
 			}
