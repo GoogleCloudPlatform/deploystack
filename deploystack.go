@@ -771,8 +771,7 @@ func ManageRegion(project, product, def string) (string, error) {
 		service = "run.googleapis.com"
 	}
 
-	err := EnableService(project, service)
-	if err != nil {
+	if err := EnableService(project, service); err != nil {
 		return "", fmt.Errorf("error activating service for polling: %s", err)
 	}
 
@@ -790,8 +789,7 @@ func ManageRegion(project, product, def string) (string, error) {
 // ManageZone promps a user to select a zone.
 func ManageZone(project, region string) (string, error) {
 	fmt.Printf("Enabling service to poll...\n")
-	err := EnableService(project, "compute.googleapis.com")
-	if err != nil {
+	if err := EnableService(project, "compute.googleapis.com"); err != nil {
 		return "", fmt.Errorf("error activating service for polling: %s", err)
 	}
 
@@ -800,6 +798,7 @@ func ManageZone(project, region string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", bcyan, nc)
 	zone := SelectFromList(zones, zones[0])
 	return zone, nil
