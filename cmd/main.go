@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	// fmt.Println("\033[2J")
+	deploystack.ClearScreen()
 	f := deploystack.HandleFlags()
 	s := deploystack.NewStack()
 	s.ProcessFlags(f)
@@ -16,7 +16,7 @@ func main() {
 		log.Fatalf("could not read config file: %s", err)
 	}
 
-	if err := s.Process("terraform.tfvars"); err != nil {
+	if err := s.Process("variables.tfvars"); err != nil {
 		log.Fatalf("problemn collecting the configurations: %s", err)
 	}
 }

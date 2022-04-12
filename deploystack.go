@@ -40,7 +40,14 @@ const (
 	TERMREDREV = "\033[41m"
 	// TERMCLEAR is the terminal code for the clear out color text
 	TERMCLEAR = "\033[0m"
+	// TERMCLEARSCREEN is the terminal code for clearning the whole screen.
+	TERMCLEARSCREEN = "\033[2J"
 )
+
+// ClearScreen will clear out a terminal screen.
+func ClearScreen() {
+	fmt.Println(TERMCLEARSCREEN)
+}
 
 var divider = ""
 
@@ -124,8 +131,12 @@ func HandleFlags() Flags {
 	cSl := strings.Split(rawString, ",")
 
 	for _, v := range cSl {
+		if len(v) == 0 {
+			continue
+		}
 		rawVK := strings.ReplaceAll(v, " ", "=")
 		kv := strings.Split(rawVK, "=")
+		fmt.Printf("kv %+v\n", kv)
 		m[kv[0]] = kv[1]
 	}
 	f.Custom = m
