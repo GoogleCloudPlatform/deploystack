@@ -9,7 +9,7 @@
 	"custom_settings":[
 		{	
 			"name":"nodes",
-			"description":"Please enter the number of nodes in the Managed Instance Group", 
+			"description":"Please enter the number of nodes", 
 			"default": "3"
 		}
 	]

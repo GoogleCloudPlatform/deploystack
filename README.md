@@ -1,0 +1,165 @@
+# DeployStack
+This project is to centralize all of the tools and processes to get terminal 
+interfaces for collecting information from users.
+
+
+## Authoring
+Authors are required to make 4 files. 
+
+* `main.tf`
+* `config.json`
+* `description.txt`
+* `test`
+
+The following files need to be included but shoudln't need to be edited at all:
+
+* `install`
+* `main.go`
+* `global`
+* `uninstall`
+
+### `main.tf`
+This is a standard terraform file with one adjustment to the DeployStack setup.
+These files should have several import variables setup with the idea that the 
+golang helper will get them from the user. 
+
+``` javascript
+variable "project_id" {
+  type = string
+}
+
+variable "project_number" {
+  type = string
+}
+
+variable "region" {
+  type = string
+}
+
+variable "zone" {
+  type = string
+}
+```
+
+### `config.json`
+This config will be read by the golang helper to prompt the user to create a 
+tfvars file that will drive the terraform script. 
+
+```json
+{	
+	"title":"Basic Title",
+	"duration":5,
+	"collect_project":true,
+	"collect_region":true,
+	"region_type":"functions",
+	"region_default":"us-central1",
+    "collect_zone":true,
+    "hard_settings":{
+		"basename":"appprefix"
+	},
+	"custom_settings":[
+		{	
+			"name":"nodes",
+			"description":"Please enter the number of nodes", 
+			"default": "3"
+		}
+	]
+}
+
+```
+
+|Name|Type|Description|
+|---|---|---|
+|title|string|You know what a title is|
+|duration|string|You know what a description is.|
+|collect_project|boolean|Whether or not to walk the user through picking or creating a project.|
+|collect_region|boolean|Whether or not to walk the user through picking a regions|
+|region_type|string|Which product to select a region for|
+|||Options: compute, run, functions |
+|region_default|string|The highlighted and default choice for region.|
+|collect_zone|string|Whether or not to walk the user through picking a zone|
+|hard_settings||Hard Settings are for key value pairs to hardset and not get from the user.  |
+|||`"basename":"appprefix"`|
+|custom_settings||Custom Settings are collections of settings that we would like to prompt a user for.  |
+|name|string|The name of the variable |
+|description|string|The description of the variable to prompt the user with|
+|default|string|A default value for the variable.|
+
+
+``` json
+"name":"nodes",
+"description":"Please enter the number of nodes", 
+"default": "3"
+```
+
+### `description.txt`
+This file allows you to add a formatted description to the configuration to 
+print out to the user.  Json files don't do well with newlines. 
+
+### `test`
+Test is a shell script that tests the individual pieces of the infrastructure 
+and tests the desired state at the end of the install. 
+
+There are a few functions in the global file that will help you run one of 
+these.
+
+* section_open - a display function that hellps communicate what is going on.
+* section_close - paired with section_open
+* evaltest - take a gcloud command and a desired outcome to make test assertions
+
+``` bash
+
+# Setup variables here
+source globals
+get_project_id PROJECT
+get_project_number PROJECT_NUMBER $PROJECT
+REGION=us-central1
+ZONE=us-central1-a
+BASENAME=basiclb
+SIZE=3
+
+# Make sure that project is hard set
+gcloud config set project ${PROJECT}
+
+# spin up terraform with variables plugged in to build the infrastructure
+terraform init
+terraform apply -auto-approve -var project_id="${PROJECT}" -var project_number="${PROJECT_NUMBER}" -var region="${REGION}" -var zone="${ZONE}" -var basename="${BASENAME}" -var nodes="${SIZE}"
+
+# You might hace to do some editing here to make these tests work
+section_open "Test Managed Instance Group"
+    evalTest 'gcloud compute instance-groups managed describe $BASENAME-mig --zone $ZONE --format="value(name)"'  $BASENAME-mig
+
+    COUNT=$(gcloud compute instances list --format="value(name)" | grep $BASENAME-mig | wc -l | xargs)
+
+    if [ $COUNT -ne $SIZE ]
+    then
+        printf "Halting - error: expected $SIZE instances of GCE got $COUNT  \n"
+        exit 1
+    else
+         printf "number of GCE instances is ok \n"
+    fi
+
+section_close
+
+# But in a lot of cases we can just use eval test with a gcloud command and a 
+# desrired result.
+section_open "Test Instance Template"
+    evalTest 'gcloud compute instance-templates describe $BASENAME-template --format="value(name)"'  $BASENAME-template
+section_close
+
+..
+
+# Now run a destroy operation. 
+terraform destroy -auto-approve -var project_id="${BASENAME}" -var project_number="${PROJECT_NUMBER}" -var region="${REGION}" -var zone="${ZONE}" -var basename="${BASENAME}" -var nodes="${SIZE}"
+
+# Test all of the parts are destroyed
+section_open "Test Managed Instance Group doesn't exist"
+    evalTest 'gcloud compute instance-groups managed describe $BASENAME-mig --zone $ZONE --format="value(name)"'  "EXPECTERROR"
+section_close
+
+printf "$DIVIDER"
+printf "CONGRATS!!!!!!! \n"
+printf "You got the end the of your test with everything working. \n"
+printf "$DIVIDER"
+
+```
