@@ -4,7 +4,23 @@ interfaces for collecting information from users.
 
 
 ## Authoring
-Authors are required to make 4 files. 
+
+### TLDR;
+Quick TLDR omitting testing, which you should totally do but for development and 
+whatnot you can just do this. 
+
+1. Clone this project.
+1. Add your `main.tf` file
+1. Edit the `config.json` file
+1. Edit the `description.txt` file
+
+Running `./install` should spin up the goapp and collect the config items the 
+stack need to run through the deployment
+
+Running `./uninstall` will destory the whole thing. 
+
+### Details
+Authors are required to make or edit 5 files. 
 
 * `main.tf`
 * `config.json`
@@ -19,7 +35,7 @@ The following files need to be included but shoudln't need to be edited at all:
 * `uninstall`
 
 ### `main.tf`
-This is a standard terraform file with one adjustment to the DeployStack setup.
+This is a standard terraform file with one adjustment for the DeployStack setup.
 These files should have several import variables setup with the idea that the 
 golang helper will get them from the user. 
 
@@ -163,3 +179,5 @@ printf "You got the end the of your test with everything working. \n"
 printf "$DIVIDER"
 
 ```
+
+This is not an offical Google product. 
