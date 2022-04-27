@@ -1,8 +1,7 @@
 # DeployStack
 This project is to centralize all of the tools and processes to get terminal 
-interfaces for collecting information from users.
-
-
+interfaces for collecting information from users for use with DeployStack.
+ 
 ## Authoring
 
 ### TLDR;
@@ -20,7 +19,7 @@ stack need to run through the deployment
 Running `./uninstall` will destory the whole thing. 
 
 ### Details
-Authors are required to make or edit 5 files. 
+Authors are required to make or edit 4 files. 
 
 * `main.tf`
 * `config.json`
@@ -33,6 +32,7 @@ The following files need to be included but shoudln't need to be edited at all:
 * `main.go`
 * `global`
 * `uninstall`
+* `test.yaml`
 
 ### `main.tf`
 This is a standard terraform file with one adjustment for the DeployStack setup.
@@ -119,12 +119,12 @@ and tests the desired state at the end of the install.
 There are a few functions in the global file that will help you run one of 
 these.
 
-* section_open - a display function that hellps communicate what is going on.
-* section_close - paired with section_open
-* evaltest - take a gcloud command and a desired outcome to make test assertions
+* `section_open` - a display function that hellps communicate what is going on.
+* `section_close` - paired with section_open
+* `evaltest` - take a gcloud command and a desired outcome to make test assertions
+
 
 ``` bash
-
 # Setup variables here
 source globals
 get_project_id PROJECT
@@ -177,7 +177,17 @@ printf "$DIVIDER"
 printf "CONGRATS!!!!!!! \n"
 printf "You got the end the of your test with everything working. \n"
 printf "$DIVIDER"
-
 ```
+
+## Testing
+In order to test teh 
+
+
+## Testing this Repo
+In order to test the helper app in this repo, we need to do a fair amount of 
+manipulation of projects and what not. To faciliate that the tests require a 
+Service Account key json file. To faciliate this there is a script in 
+`tools/credsfile` that will create a service account, give it the right access 
+and service enablements, and export out a key file to use with testing. 
 
 This is not an offical Google product. 
