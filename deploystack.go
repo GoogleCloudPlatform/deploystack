@@ -535,7 +535,7 @@ func Projects() ([]string, error) {
 	if err != nil {
 		return resp, err
 	}
-	pwb, err := GetBillingForProjects(results.Projects)
+	pwb, err := getBillingForProjects(results.Projects)
 	if err != nil {
 		return resp, err
 	}
@@ -557,13 +557,13 @@ func Projects() ([]string, error) {
 	return resp, nil
 }
 
-type ProjectWithBilling struct {
+type projectWithBilling struct {
 	Name           string
 	BillingEnabled bool
 }
 
-func GetBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBilling, error) {
-	res := []ProjectWithBilling{}
+func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBilling, error) {
+	res := []projectWithBilling{}
 
 	ctx := context.Background()
 	svc, err := cloudbilling.NewService(ctx, opts)
@@ -580,7 +580,7 @@ func GetBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBill
 				proj := fmt.Sprintf("projects/%s", p.ProjectId)
 				tmp, _ := svc.Projects.GetBillingInfo(proj).Do()
 
-				pwb := ProjectWithBilling{p.Name, tmp.BillingEnabled}
+				pwb := projectWithBilling{p.Name, tmp.BillingEnabled}
 				res = append(res, pwb)
 			}
 		}(v)
