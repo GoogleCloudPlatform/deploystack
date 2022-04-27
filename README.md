@@ -14,7 +14,7 @@ whatnot you can just do this.
 1. Edit the `description.txt` file
 
 Running `./install` should spin up the goapp and collect the config items the 
-stack need to run through the deployment
+stack needs to run through the deployment
 
 Running `./uninstall` will destory the whole thing. 
 
