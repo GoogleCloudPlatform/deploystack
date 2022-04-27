@@ -1,0 +1,15 @@
+source globals
+DSNAME=$1
+PROJECT=ds-tester-$1
+BRANCH=main
+REGION=us-central1
+TRIGGERNAME=Test-Procedure
+
+REPO_NAME=deploystack_$DSNAME
+REPO_OWNER=GoogleCloudPlatform
+
+section_open "Create Trigger that runs tests on giuthub code push"
+    gcloud beta builds triggers create github --name $TRIGGERNAME-push \
+    --repo-owner $REPO_OWNER --repo-name $REPO_NAME --branch-pattern="$BRANCH" \
+    --build-config="test.yaml" --project $PROJECT
+section_close

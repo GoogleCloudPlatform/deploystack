@@ -1,0 +1,71 @@
+{
+  "id": "cd3404d7-64fd-41c2-bfeb-b1ac77e72c0b",
+  "status": "FAILURE",
+  "source": {},
+  "createTime": "2022-04-22T19:38:30.146541071Z",
+  "startTime": "2022-04-22T19:38:31.124453171Z",
+  "finishTime": "2022-04-22T19:43:18.081468253Z",
+  "results": {
+    "buildStepImages": [
+      "sha256:a9b3c3899828984f44c691e1676529a33f9abd51f32530cd9312693025f67b3c"
+    ],
+    "buildStepOutputs": [""]
+  },
+  "steps": [
+    {
+      "name": "gcr.io/google.com/cloudsdktool/cloud-sdk",
+      "env": ["APPINABOX_YESORNOSITE_DOMAIN=example.com"],
+      "args": ["./test"],
+      "entrypoint": "bash",
+      "timing": {
+        "startTime": "2022-04-22T19:38:34.405521117Z",
+        "endTime": "2022-04-22T19:43:17.367198466Z"
+      },
+      "status": "FAILURE",
+      "pullTiming": {
+        "startTime": "2022-04-22T19:38:34.405521117Z",
+        "endTime": "2022-04-22T19:39:42.534749142Z"
+      }
+    }
+  ],
+  "timeout": "600s",
+  "projectId": "ds-tester-yesornosite",
+  "logsBucket": "gs://681153735710.cloudbuild-logs.googleusercontent.com",
+  "sourceProvenance": {},
+  "buildTriggerId": "44966323-985a-4686-8518-a7648939740b",
+  "options": {
+    "substitutionOption": "ALLOW_LOOSE",
+    "logging": "LEGACY",
+    "dynamicSubstitutions": true,
+    "pool": {}
+  },
+  "logUrl": "https://console.cloud.google.com/cloud-build/builds/cd3404d7-64fd-41c2-bfeb-b1ac77e72c0b?project=681153735710",
+  "substitutions": {
+    "_APPINABOX_YESORNOSITE_DOMAIN": "example.com",
+    "TRIGGER_BUILD_CONFIG_PATH": "test.yaml",
+    "SHORT_SHA": "080cb58",
+    "REVISION_ID": "080cb586bf99ed7792ed15044f5ebb1cde9f3753",
+    "REF_NAME": "main",
+    "COMMIT_SHA": "080cb586bf99ed7792ed15044f5ebb1cde9f3753",
+    "TRIGGER_NAME": "Test-Procedure",
+    "BRANCH_NAME": "main",
+    "REPO_NAME": "deploystack_yesornosite"
+  },
+  "tags": ["trigger-44966323-985a-4686-8518-a7648939740b"],
+  "timing": {
+    "FETCHSOURCE": {
+      "startTime": "2022-04-22T19:38:32.014141633Z",
+      "endTime": "2022-04-22T19:38:33.777941586Z"
+    },
+    "BUILD": {
+      "startTime": "2022-04-22T19:38:33.778041344Z",
+      "endTime": "2022-04-22T19:43:17.367323416Z"
+    }
+  },
+  "queueTtl": "3600s",
+  "name": "projects/681153735710/locations/global/builds/cd3404d7-64fd-41c2-bfeb-b1ac77e72c0b",
+  "failureInfo": {
+    "type": "USER_BUILD_STEP",
+    "detail": "Build step failure: build step 0 \"gcr.io/google.com/cloudsdktool/cloud-sdk\" failed: step exited with non-zero status: 1"
+  }
+}

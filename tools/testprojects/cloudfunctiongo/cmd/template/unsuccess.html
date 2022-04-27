@@ -1,0 +1,14 @@
+<p>
+    <a href="{{.URL}}">Latest build</a> finished with status 
+    <span style="color: #FF0000; font-weight: 900">{{.Status}}</span>, 
+    in {{.Duration}}.
+</p>
+
+<p>
+    This indicates that there was a unsuccessful test of this deploystack. 
+    Time to fix stuff.
+</p>
+
+<div style="font-family: 'Courier New', Courier, monospace; color: #fff; background-color:#222">
+{{.Log}}
+</div>
