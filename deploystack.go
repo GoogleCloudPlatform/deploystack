@@ -21,6 +21,7 @@ import (
 	"google.golang.org/api/cloudfunctions/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/option"
 	"google.golang.org/api/run/v1"
 	"google.golang.org/api/serviceusage/v1"
 )
@@ -49,7 +50,11 @@ func ClearScreen() {
 	fmt.Println(TERMCLEARSCREEN)
 }
 
-var divider = ""
+var (
+	divider   = ""
+	opts      = option.WithCredentialsFile("")
+	credspath = ""
+)
 
 var (
 	// ErrorBillingInvalidAccount is the error you get if you pass in a bad
@@ -410,7 +415,7 @@ func (s Stack) PrintSettings() {
 
 	longest := longestLengh(keys)
 
-	fmt.Printf("%sProject_id Details %s \n", TERMCYANREV, TERMCLEAR)
+	fmt.Printf("%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
 	if s, ok := s.Settings["project_id"]; ok {
 		printSetting("project_id", s, longest)
@@ -420,6 +425,7 @@ func (s Stack) PrintSettings() {
 		printSetting("project_number", s, longest)
 	}
 
+	ordered := []string{}
 	for i, v := range s.Settings {
 		if i == "project_id" || i == "project_number" {
 			continue
@@ -427,7 +433,14 @@ func (s Stack) PrintSettings() {
 		if len(v) < 1 {
 			continue
 		}
-		printSetting(i, v, longest)
+
+		ordered = append(ordered, i)
+	}
+	sort.Strings(ordered)
+
+	for i := range ordered {
+		key := ordered[i]
+		printSetting(key, s.Settings[key], longest)
 	}
 }
 
@@ -476,7 +489,7 @@ func ProjectID() (string, error) {
 func ProjectNumber(id string) (string, error) {
 	resp := ""
 	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx)
+	svc, err := cloudresourcemanager.NewService(ctx, opts)
 	if err != nil {
 		return resp, err
 	}
@@ -495,7 +508,8 @@ func ProjectNumber(id string) (string, error) {
 func projects() ([]string, error) {
 	resp := []string{}
 	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx)
+
+	svc, err := cloudresourcemanager.NewService(ctx, opts)
 	if err != nil {
 		return resp, err
 	}
@@ -520,7 +534,7 @@ func projects() ([]string, error) {
 func billingAccounts() ([]string, error) {
 	resp := []string{}
 	ctx := context.Background()
-	svc, err := cloudbilling.NewService(ctx)
+	svc, err := cloudbilling.NewService(ctx, opts)
 	if err != nil {
 		return resp, err
 	}
@@ -543,7 +557,7 @@ func billingAccounts() ([]string, error) {
 func BillingAccountProjectAttach(project, account string) error {
 	retries := 10
 	ctx := context.Background()
-	svc, err := cloudbilling.NewService(ctx)
+	svc, err := cloudbilling.NewService(ctx, opts)
 	if err != nil {
 		return err
 	}
@@ -602,7 +616,7 @@ func BillingAccountManage() (string, error) {
 // GCP account
 func projectCreate(project string) error {
 	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx)
+	svc, err := cloudresourcemanager.NewService(ctx, opts)
 	if err != nil {
 		return err
 	}
@@ -628,7 +642,7 @@ func projectCreate(project string) error {
 // your GCP account
 func projectDelete(project string) error {
 	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx)
+	svc, err := cloudresourcemanager.NewService(ctx, opts)
 	if err != nil {
 		return err
 	}
@@ -737,7 +751,7 @@ func regionsFunctions(project string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
-	svc, err := cloudfunctions.NewService(ctx)
+	svc, err := cloudfunctions.NewService(ctx, opts)
 	if err != nil {
 		return resp, err
 	}
@@ -761,7 +775,7 @@ func regionsRun(project string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
-	svc, err := run.NewService(ctx)
+	svc, err := run.NewService(ctx, opts)
 	if err != nil {
 		return resp, err
 	}
@@ -785,7 +799,7 @@ func regionsCompute(project string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
-	svc, err := compute.NewService(ctx)
+	svc, err := compute.NewService(ctx, opts)
 	if err != nil {
 		return resp, err
 	}
@@ -837,7 +851,7 @@ func zones(project, region string) ([]string, error) {
 	resp := []string{}
 
 	ctx := context.Background()
-	svc, err := compute.NewService(ctx)
+	svc, err := compute.NewService(ctx, opts)
 	if err != nil {
 		return resp, err
 	}
@@ -990,7 +1004,7 @@ func longestLengh(sl []string) int {
 // to various lists will work.
 func ServiceEnable(project, service string) error {
 	ctx := context.Background()
-	svc, err := serviceusage.NewService(ctx)
+	svc, err := serviceusage.NewService(ctx, opts)
 	if err != nil {
 		return err
 	}
