@@ -17,7 +17,10 @@ import (
 	"google.golang.org/api/option"
 )
 
-var projectID = ""
+var (
+	projectID = ""
+	creds     map[string]string
+)
 
 func TestMain(m *testing.M) {
 	var err error
@@ -27,8 +30,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("unable to handle the json config file: %v", err)
 	}
-
-	var creds map[string]string
 
 	json.Unmarshal(dat, &creds)
 
@@ -511,14 +512,6 @@ func TestGetZones(t *testing.T) {
 }
 
 func TestGetProjectNumbers(t *testing.T) {
-	dat, err := os.ReadFile("creds.json")
-	if err != nil {
-		t.Fatalf("unable to handle the json config file: %v", err)
-	}
-
-	var creds map[string]string
-	json.Unmarshal(dat, &creds)
-
 	tests := map[string]struct {
 		input string
 		want  string
@@ -540,14 +533,6 @@ func TestGetProjectNumbers(t *testing.T) {
 }
 
 func TestGetProjects(t *testing.T) {
-	dat, err := os.ReadFile("creds.json")
-	if err != nil {
-		t.Fatalf("unable to handle the json config file: %v", err)
-	}
-
-	var creds map[string]string
-	json.Unmarshal(dat, &creds)
-
 	tests := map[string]struct {
 		want []string
 	}{
