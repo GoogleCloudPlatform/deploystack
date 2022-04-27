@@ -1,0 +1,29 @@
+PROJECT=$1
+
+SANAME=test-runner
+PROJECT_NUMBER=$(gcloud projects list --filter="project_id=$PROJECT" --format="value(PROJECT_NUMBER)" | xargs)
+SAEMAIL=$SANAME@$PROJECT.iam.gserviceaccount.com
+
+gcloud iam service-accounts create $SANAME \
+    --description="Test runner for deploystack unit tests" \
+    --display-name="Test Runner" --project=$PROJECT
+
+gcloud projects add-iam-policy-binding $PROJECT \
+		--member=serviceAccount:$SAEMAIL \
+		--role=roles/editor --no-user-output-enabled	    
+
+
+gcloud services enable cloudbuild.googleapis.com --project=$PROJECT
+gcloud services enable compute.googleapis.com --project=$PROJECT
+gcloud services enable cloudfunctions.googleapis.com --project=$PROJECT
+gcloud services enable run.googleapis.com --project=$PROJECT
+gcloud services enable cloudbilling.googleapis.com --project=$PROJECT
+gcloud services enable cloudresourcemanager.googleapis.com --project=$PROJECT
+
+gcloud iam service-accounts keys create creds.json --iam-account=$SAEMAIL
+
+PRONUM=",\n\"project_number\": \"$PROJECT_NUMBER\" }"
+
+sed -i.txt  "s/}/$PRONUM/" creds.json
+mv creds.json ../../
+rm creds.json.txt
