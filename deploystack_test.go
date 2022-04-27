@@ -1,6 +1,7 @@
 package deploystack
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,17 +14,28 @@ import (
 	"time"
 
 	"github.com/kylelemons/godebug/diff"
+	"google.golang.org/api/option"
 )
 
 var projectID = ""
 
 func TestMain(m *testing.M) {
 	var err error
-	projectID, err = ProjectID()
+	opts = option.WithCredentialsFile("creds.json")
+
+	dat, err := os.ReadFile("creds.json")
+	if err != nil {
+		log.Fatalf("unable to handle the json config file: %v", err)
+	}
+
+	var creds map[string]string
+
+	json.Unmarshal(dat, &creds)
+
+	projectID = creds["project_id"]
 	if err != nil {
 		log.Fatalf("could not get environment project id: %s", err)
 	}
-
 	code := m.Run()
 	os.Exit(code)
 }
@@ -102,105 +114,7 @@ Choose number from list, or just [enter] for [1;36mus-central1-a[0m
 
 			fmt.Println(diff.Diff(got, tc.want))
 			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", tc.want, got)
-			}
-		})
-	}
-}
-
-func TestManageRegion(t *testing.T) {
-	tests := map[string]struct {
-		project string
-		product string
-		def     string
-		want    string
-		err     error
-	}{
-		"compute": {
-			project: projectID,
-			product: "compute",
-			want: `Enabling service to poll...
-Polling for regions...
-[1;36mChoose a valid region to use for this application. [0m
- 1) asia-east1              16) europe-west3            
- 2) asia-east2              17) europe-west4            
- 3) asia-northeast1         18) europe-west6            
- 4) asia-northeast2         19) northamerica-northeast1 
- 5) asia-northeast3         20) northamerica-northeast2 
- 6) asia-south1             21) southamerica-east1      
- 7) asia-south2             22) southamerica-west1      
- 8) asia-southeast1         [1;36m23) us-central1              [0m
- 9) asia-southeast2         24) us-east1                
-10) australia-southeast1    25) us-east4                
-11) australia-southeast2    26) us-west1                
-12) europe-central2         27) us-west2                
-13) europe-north1           28) us-west3                
-14) europe-west1            29) us-west4                
-15) europe-west2            
-Choose number from list, or just [enter] for [1;36mus-central1[0m
-> `,
-			err: nil,
-			def: "us-central1",
-		},
-		"functions": {
-			project: projectID,
-			product: "functions",
-			want: `Enabling service to poll...
-Polling for regions...
-[1;36mChoose a valid region to use for this application. [0m
- 1) asia-east1              13) europe-west3            
- 2) asia-east2              14) europe-west6            
- 3) asia-northeast1         15) northamerica-northeast1 
- 4) asia-northeast2         16) southamerica-east1      
- 5) asia-northeast3         [1;36m17) us-central1              [0m
- 6) asia-south1             18) us-east1                
- 7) asia-southeast1         19) us-east4                
- 8) asia-southeast2         20) us-west1                
- 9) australia-southeast1    21) us-west2                
-10) europe-central2         22) us-west3                
-11) europe-west1            23) us-west4                
-12) europe-west2            
-Choose number from list, or just [enter] for [1;36mus-central1[0m
-> `,
-			err: nil,
-			def: "us-central1",
-		},
-		"run": {
-			project: projectID,
-			product: "run",
-			want: `Enabling service to poll...
-Polling for regions...
-[1;36mChoose a valid region to use for this application. [0m
- 1) asia-east1              16) europe-west3            
- 2) asia-east2              17) europe-west4            
- 3) asia-northeast1         18) europe-west6            
- 4) asia-northeast2         19) northamerica-northeast1 
- 5) asia-northeast3         20) northamerica-northeast2 
- 6) asia-south1             21) southamerica-east1      
- 7) asia-south2             22) southamerica-west1      
- 8) asia-southeast1         [1;36m23) us-central1              [0m
- 9) asia-southeast2         24) us-east1                
-10) australia-southeast1    25) us-east4                
-11) australia-southeast2    26) us-west1                
-12) europe-central2         27) us-west2                
-13) europe-north1           28) us-west3                
-14) europe-west1            29) us-west4                
-15) europe-west2            
-Choose number from list, or just [enter] for [1;36mus-central1[0m
-> `,
-			err: nil,
-			def: "us-central1",
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := captureOutput(func() {
-				RegionManage(tc.project, tc.product, tc.def)
-			})
-
-			fmt.Println(diff.Diff(got, tc.want))
-			if !reflect.DeepEqual(tc.want, got) {
+				fmt.Printf("ProjectID: %s\n", projectID)
 				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", tc.want, got)
 			}
 		})
@@ -433,12 +347,12 @@ func TestStackPrintSettings(t *testing.T) {
 	})
 
 	want := `[36mProject Details [0m 
-Zone:   [1;36mtest[0m
 Region: [1;36mtest-a[0m
+Zone:   [1;36mtest[0m
 `
 
 	if got != want {
-		t.Fatalf("expected: \n%v\n, got: \n%v\n", want, got)
+		t.Fatalf("expected: \n|%v|\n, got: \n|%v|\n", want, got)
 	}
 }
 
@@ -480,6 +394,7 @@ func TestGetRegions(t *testing.T) {
 			"europe-west3",
 			"europe-west4",
 			"europe-west6",
+			"europe-west8",
 			"northamerica-northeast1",
 			"northamerica-northeast2",
 			"southamerica-east1",
@@ -536,6 +451,7 @@ func TestGetRegions(t *testing.T) {
 			"europe-west3",
 			"europe-west4",
 			"europe-west6",
+			"europe-west8",
 			"northamerica-northeast1",
 			"northamerica-northeast2",
 			"southamerica-east1",
@@ -556,6 +472,9 @@ func TestGetRegions(t *testing.T) {
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
+
+			sort.Strings(got)
+
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}
@@ -581,7 +500,7 @@ func TestGetZones(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := zones(tc.project, tc.region)
 			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
+				t.Fatalf("expected: no error, got: project-%s:%v", projectID, err)
 			}
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
@@ -590,34 +509,20 @@ func TestGetZones(t *testing.T) {
 	}
 }
 
-func TestGetProjectID(t *testing.T) {
-	tests := map[string]struct {
-		want string
-	}{
-		"1": {want: projectID},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := ProjectID()
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
-			}
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
-			}
-		})
-	}
-}
-
-// TODO: get rid of tests that are project specific
 func TestGetProjectNumbers(t *testing.T) {
+	dat, err := os.ReadFile("creds.json")
+	if err != nil {
+		t.Fatalf("unable to handle the json config file: %v", err)
+	}
+
+	var creds map[string]string
+	json.Unmarshal(dat, &creds)
+
 	tests := map[string]struct {
 		input string
 		want  string
 	}{
-		"1": {input: "stackinabox", want: "911905110276"},
-		"2": {input: "stackinaboxtester", want: "130107067175"},
+		"1": {input: creds["project_id"], want: creds["project_number"]},
 	}
 
 	for name, tc := range tests {
@@ -633,45 +538,20 @@ func TestGetProjectNumbers(t *testing.T) {
 	}
 }
 
-// TODO: get rid of tests that are project specific
 func TestGetProjects(t *testing.T) {
+	dat, err := os.ReadFile("creds.json")
+	if err != nil {
+		t.Fatalf("unable to handle the json config file: %v", err)
+	}
+
+	var creds map[string]string
+	json.Unmarshal(dat, &creds)
+
 	tests := map[string]struct {
 		want []string
 	}{
 		"1": {want: []string{
-			"deploystack-terraform-2",
-			"deploystack-terraform",
-			"deploy-terraform",
-			"stack-terraform",
-			"deploystack-costsentry-tester",
-			"microsites-deploystack",
-			"microsites-stackables",
-			"vertexaitester",
-			"stackinaboxtester",
-			"stackinabox",
-			"scaler-test-ui-delete",
-			"basiclb-test-project-delete",
-			"basiclb-tester-delete-me",
-			"basiclb-tester-project",
-			"basiclb-test-project2",
-			"aiab-test-project",
-			"appinabox-baslclb-tester",
-			"cost-sentry-experiments",
-			"appinabox-todo-tester",
-			"appinabox-scaler-tester",
-			"appinabox-yesornosite-demo",
-			"appinabox-yesornosite-tester",
-			"bucketsite-test",
-			"microsites-appinabox",
-			"scaler-microsite",
-			"todo-microsite",
-			"neosregional",
-			"cloudicons",
-			"sustained-racer-323200",
-			"nicholascain-starter-project",
-			"cloud-logging-generator",
-			"neos-log-test",
-			"neos-test-304321",
+			creds["project_id"],
 		}},
 	}
 
@@ -691,6 +571,8 @@ func TestGetProjects(t *testing.T) {
 			sort.Strings(gotfiltered)
 
 			if len(gotfiltered) != len(tc.want) {
+				fmt.Printf("Expected:\n%s", tc.want)
+				fmt.Printf("Got:\n%s", gotfiltered)
 				t.Fatalf("expected: %v, got: %v", len(tc.want), len(gotfiltered))
 			}
 
@@ -704,12 +586,11 @@ func TestGetProjects(t *testing.T) {
 	}
 }
 
-// TODO: get rid of tests that are project specific
 func TestGetBillingAccounts(t *testing.T) {
 	tests := map[string]struct {
 		want []string
 	}{
-		"1": {want: []string{"0145C0-557C58-C970F3"}},
+		"NoErrorNoAccounts": {want: []string{}},
 	}
 
 	for name, tc := range tests {
@@ -733,9 +614,8 @@ func TestCreateProject(t *testing.T) {
 		input string
 		err   error
 	}{
-		"1": {input: "zprojectnamedelete", err: nil},
-		"2": {input: "zprojectnamedeletethisprojectnamehastoomanycharacters", err: ErrorProjectCreateTooLong},
-		"3": {input: "ALLUPERCASEDONESTWORK", err: ErrorProjectInvalidCharacters},
+		"Too long":  {input: "zprojectnamedeletethisprojectnamehastoomanycharacters", err: ErrorProjectCreateTooLong},
+		"Bad Chars": {input: "ALLUPERCASEDONESTWORK", err: ErrorProjectInvalidCharacters},
 	}
 
 	for name, tc := range tests {
@@ -750,14 +630,12 @@ func TestCreateProject(t *testing.T) {
 	}
 }
 
-// TODO: get rid of tests that are project specific
 func TestLinkProjectToBillingAccount(t *testing.T) {
 	tests := map[string]struct {
 		project string
 		account string
 		err     error
 	}{
-		"ShouldWork":  {project: projectID, account: "0145C0-557C58-C970F3", err: nil},
 		"BadProject":  {project: "stackinaboxstackinabox", account: "0145C0-557C58-C970F3", err: ErrorBillingNoPermission},
 		"BaddAccount": {project: projectID, account: "AAAAAA-BBBBBB-CCCCCC", err: ErrorBillingInvalidAccount},
 	}
