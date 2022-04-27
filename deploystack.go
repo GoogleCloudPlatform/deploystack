@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudfunctions/v1"
@@ -43,6 +44,8 @@ const (
 	TERMCLEAR = "\033[0m"
 	// TERMCLEARSCREEN is the terminal code for clearning the whole screen.
 	TERMCLEARSCREEN = "\033[2J"
+	// TERMGREY is the terminal code for grey text
+	TERMGREY = "\033[1;30m"
 )
 
 // ClearScreen will clear out a terminal screen.
@@ -504,8 +507,8 @@ func ProjectNumber(id string) (string, error) {
 	return resp, nil
 }
 
-// projects gets a list of the projects a user has access to
-func projects() ([]string, error) {
+// Projects gets a list of the Projects a user has access to
+func Projects() ([]string, error) {
 	resp := []string{}
 	ctx := context.Background()
 
@@ -518,16 +521,59 @@ func projects() ([]string, error) {
 	if err != nil {
 		return resp, err
 	}
-
-	for _, v := range results.Projects {
-		if v.LifecycleState == "ACTIVE" {
-			resp = append(resp, v.ProjectId)
-		}
+	pwb, err := GetBillingForProjects(results.Projects)
+	if err != nil {
+		return resp, err
 	}
 
-	sort.Strings(resp)
+	sort.Slice(pwb, func(i, j int) bool {
+		return strings.ToLower(pwb[i].Name) < strings.ToLower(pwb[j].Name)
+	})
+
+	for _, v := range pwb {
+		if v.BillingEnabled {
+			resp = append(resp, v.Name)
+			continue
+		}
+
+		resp = append(resp, fmt.Sprintf("%s (Billing Disabled)", v.Name))
+
+	}
 
 	return resp, nil
+}
+
+type ProjectWithBilling struct {
+	Name           string
+	BillingEnabled bool
+}
+
+func GetBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBilling, error) {
+	res := []ProjectWithBilling{}
+
+	ctx := context.Background()
+	svc, err := cloudbilling.NewService(ctx, opts)
+	if err != nil {
+		return res, err
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(p))
+
+	for _, v := range p {
+		go func(p *cloudresourcemanager.Project) {
+			defer wg.Done()
+			if p.LifecycleState == "ACTIVE" {
+				proj := fmt.Sprintf("projects/%s", p.ProjectId)
+				tmp, _ := svc.Projects.GetBillingInfo(proj).Do()
+
+				pwb := ProjectWithBilling{p.Name, tmp.BillingEnabled}
+				res = append(res, pwb)
+			}
+		}(v)
+	}
+	wg.Wait()
+
+	return res, nil
 }
 
 // billingAccounts gets a list of the billing accounts a user has access to
@@ -663,18 +709,27 @@ func ProjectManage() (string, error) {
 		return "", err
 	}
 
-	projects, err := projects()
+	projects, err := Projects()
 	if err != nil {
 		return "", err
 	}
 
-	projects = append([]string{createString}, projects...)
+	projdis := []string{}
+
+	for _, v := range projects {
+		if strings.Contains(v, "Billing Disabled") {
+			v = fmt.Sprintf("%s%s%s", TERMGREY, v, TERMCLEAR)
+		}
+		projdis = append(projdis, v)
+	}
+
+	projdis = append([]string{createString}, projdis...)
 
 	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", TERMCYANB, TERMCLEAR)
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
 	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
 
-	project = listSelect(projects, project)
+	project = listSelect(projdis, project)
 
 	if project == createString {
 		project, err = projectPrompt()
@@ -897,7 +952,6 @@ func listSelect(sl []string, def string) string {
 	itemCount := len(sl)
 	halfcount := int(math.Ceil(float64(itemCount / 2)))
 	width := longestLengh(sl)
-
 	defaultExists := false
 
 	if itemCount < 11 {
@@ -971,7 +1025,7 @@ func printWithDefault(idx, width int, value, def string) bool {
 	sp := buildSpacer(value, width)
 
 	if value == def {
-		fmt.Printf("%s%2d) %s %s %s", TERMCYANB, idx, value, sp, TERMCLEAR)
+		fmt.Printf("%s%2d) %s %s%s", TERMCYANB, idx, value, sp, TERMCLEAR)
 		return true
 	}
 	fmt.Printf("%2d) %s %s", idx, value, sp)
@@ -993,11 +1047,26 @@ func longestLengh(sl []string) int {
 
 	for _, v := range sl {
 		if len(v) > longest {
-			longest = len(v)
+			longest = len(cleanTerminalCharsFromString(v))
 		}
 	}
 
 	return longest
+}
+
+func cleanTerminalCharsFromString(s string) string {
+	r := s
+	r = strings.ReplaceAll(r, TERMCYAN, "")
+	r = strings.ReplaceAll(r, TERMCYANB, "")
+	r = strings.ReplaceAll(r, TERMCYANREV, "")
+	r = strings.ReplaceAll(r, TERMRED, "")
+	r = strings.ReplaceAll(r, TERMREDB, "")
+	r = strings.ReplaceAll(r, TERMREDREV, "")
+	r = strings.ReplaceAll(r, TERMCLEAR, "")
+	r = strings.ReplaceAll(r, TERMCLEARSCREEN, "")
+	r = strings.ReplaceAll(r, TERMGREY, "")
+
+	return r
 }
 
 // ServiceEnable enable a service in the selected project so that query calls

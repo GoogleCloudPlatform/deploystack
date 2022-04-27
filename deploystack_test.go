@@ -97,7 +97,7 @@ func TestManageZone(t *testing.T) {
 			want: `Enabling service to poll...
 Polling for zones...
 [1;36mChoose a valid zone to use for this application. [0m
-[1;36m 1) us-central1-a  [0m
+[1;36m 1) us-central1-a [0m
  2) us-central1-b 
  3) us-central1-c 
  4) us-central1-f 
@@ -131,7 +131,7 @@ func TestSelectFromListRender(t *testing.T) {
 			input: []string{"one", "two", "three"},
 			def:   "two",
 			want: ` 1) one   
-[1;36m 2) two    [0m
+[1;36m 2) two   [0m
  3) three 
 Choose number from list, or just [enter] for [1;36mtwo[0m
 > `,
@@ -144,7 +144,7 @@ Choose number from list, or just [enter] for [1;36mtwo[0m
  3) three 
  4) four  
  5) five  
-[1;36m 6) six    [0m
+[1;36m 6) six   [0m
 Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
@@ -156,7 +156,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
  3) three   9) nine   
  4) four   10) ten    
  5) five   11) eleven 
-[1;36m 6) six     [0m12) twelve 
+[1;36m 6) six    [0m12) twelve 
 Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
@@ -168,7 +168,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
  3) three   9) nine   
  4) four   10) ten    
  5) five   11) eleven 
-[1;36m 6) six     [0m
+[1;36m 6) six    [0m
 Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
@@ -224,7 +224,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
  8) basiclb-test-project-delete   27) scaler-microsite              
  9) basiclb-test-project2         28) scaler-test-ui-delete         
 10) basiclb-tester-delete-me      29) stack-terraform               
-11) basiclb-tester-project        [1;36m30) stackinabox                    [0m
+11) basiclb-tester-project        [1;36m30) stackinabox                   [0m
 12) bucketsite-test               31) stackinaboxtester             
 13) cloud-logging-generator       32) sustained-racer-323200        
 14) cloudicons                    33) todo-microsite                
@@ -244,6 +244,7 @@ Choose number from list, or just [enter] for [1;36mstackinabox[0m
 				listSelect(tc.input, tc.def)
 			})
 
+			fmt.Println(name)
 			fmt.Println(diff.Diff(got, tc.want))
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", tc.want, got)
@@ -557,7 +558,7 @@ func TestGetProjects(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := projects()
+			got, err := Projects()
 
 			gotfiltered := []string{}
 
