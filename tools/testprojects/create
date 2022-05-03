@@ -68,10 +68,19 @@ section_open "Schedule regular tests"
 section_close
 
 section_open "Install Cloud Function that emails build results."
-    gcloud functions deploy subscribeMailgun --trigger-topic cloud-builds \
-   --project=$PROJECT --runtime nodejs16 --source cloudfunction
+    gcloud functions deploy subscribeMailgun --runtime go116 \
+    --trigger-topic cloud-builds \
+    --entry-point HandleBuild --source email-notifier \
+    --region=$REGION --project=$PROJECT 
 section_close
 
+
+section_open "Install Cloud Function aggregates testing data"
+    gcloud functions deploy collateTestData --runtime go116 \
+    --trigger-topic cloud-builds \
+    --entry-point RecordTest --source test-collector \
+    --region=$REGION --project=$PROJECT --set-env-vars PROJECT=$PROJECT
+section_close
 
 
 

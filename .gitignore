@@ -2,6 +2,7 @@
 cmd2*
 cmd/old*
 cmd/terraform.tfvars
-creds.json
-tools/testprojects/cloudfunctiongo/cmd/config.json
-tools/testprojects/cloudfunctiongo/config.json
+**/creds.json
+**/config.json
+**/credentials.json
+**/.DS_Store
