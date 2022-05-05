@@ -24,7 +24,7 @@ section_open "Create Project, Enable Billing, Enable Services "
 section_close
 
 section_open "Create remote-builder Container in project"
-    gcloud builds submit --config=remote-builder/cloudbuild.yaml terraform-tester/. --project=$PROJECT
+    gcloud builds submit --config=terraform-tester/cloudbuild.yaml terraform-tester/. --project=$PROJECT
 section_close
 
 
