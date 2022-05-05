@@ -575,9 +575,18 @@ func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBill
 	for _, v := range p {
 		go func(p *cloudresourcemanager.Project) {
 			defer wg.Done()
-			if p.LifecycleState == "ACTIVE" {
+			if p.LifecycleState == "ACTIVE" && p.Name != "" {
 				proj := fmt.Sprintf("projects/%s", p.ProjectId)
-				tmp, _ := svc.Projects.GetBillingInfo(proj).Do()
+				tmp, err := svc.Projects.GetBillingInfo(proj).Do()
+				if err != nil {
+					if strings.Contains(err.Error(), "The caller does not have permission") {
+						fmt.Printf("project: %+v\n", p)
+						return
+					}
+
+					fmt.Printf("error: %s\n", err)
+					return
+				}
 
 				pwb := projectWithBilling{p.Name, tmp.BillingEnabled}
 				res = append(res, pwb)
@@ -1035,7 +1044,7 @@ func listSelect(sl []string, def string) string {
 }
 
 func printWithDefault(idx, width int, value, def string) bool {
-	sp := buildSpacer(value, width)
+	sp := buildSpacer(cleanTerminalCharsFromString(value), width)
 
 	if value == def {
 		fmt.Printf("%s%2d) %s %s%s", TERMCYANB, idx, value, sp, TERMCLEAR)
