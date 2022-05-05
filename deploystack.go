@@ -47,7 +47,7 @@ const (
 	// TERMCYANB is the terminal code for bold cyan text
 	TERMCYANB = "\033[1;36m"
 	// TERMCYANREV is the terminal code for black on cyan text
-	TERMCYANREV = "\033[36m"
+	TERMCYANREV = "\u001b[46m"
 	// TERMRED is the terminal code for red text
 	TERMRED = "\033[0;31m"
 	// TERMREDB is the terminal code for bold red text
@@ -68,12 +68,6 @@ func ClearScreen() {
 }
 
 var (
-	divider   = ""
-	opts      = option.WithCredentialsFile("")
-	credspath = ""
-)
-
-var (
 	// ErrorBillingInvalidAccount is the error you get if you pass in a bad
 	// Billing Account ID
 	ErrorBillingInvalidAccount = fmt.Errorf("not a valid billing account")
@@ -86,32 +80,37 @@ var (
 	// ErrorProjectInvalidCharacters is an error when you try and pass bad
 	// characters into a CreateProjectCall
 	ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
+	// Divider is a text element that draws a horizontal line
+	Divider   = ""
+	opts      = option.WithCredentialsFile("")
+	credspath = ""
 )
 
 func init() {
 	var err error
-	divider, err = buildDivider()
+	Divider, err = BuildDivider(0)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func buildDivider() (string, error) {
+func BuildDivider(width int) (string, error) {
 	de := 80
-	width := de
-	cmd := exec.Command("stty", "size")
-	cmd.Stdin = os.Stdin
-	out, err := cmd.Output()
-	if err != nil {
-		width = de
-	}
-
-	sl := strings.Split(string(out), " ")
-
-	if len(sl) > 1 {
-		width, err = strconv.Atoi(strings.TrimSpace(sl[1]))
+	if width == 0 {
+		cmd := exec.Command("stty", "size")
+		cmd.Stdin = os.Stdin
+		out, err := cmd.Output()
 		if err != nil {
 			width = de
+		}
+
+		sl := strings.Split(string(out), " ")
+
+		if len(sl) > 1 {
+			width, err = strconv.Atoi(strings.TrimSpace(sl[1]))
+			if err != nil {
+				width = de
+			}
 		}
 	}
 
@@ -219,7 +218,7 @@ func (c *Custom) Collect() error {
 
 // PrintHeader prints out the header for a DeployStack
 func (c Config) PrintHeader() {
-	fmt.Printf("%s\n", divider)
+	fmt.Printf("%s\n", Divider)
 	fmt.Printf("%s%s%s\n", TERMCYANB, c.Title, TERMCLEAR)
 	fmt.Printf("%s\n", c.Description)
 
@@ -229,7 +228,7 @@ func (c Config) PrintHeader() {
 	}
 
 	fmt.Printf("It's going to take around %s%d %s%s\n", TERMCYAN, c.Duration, timestring, TERMCLEAR)
-	fmt.Printf("%s\n", divider)
+	fmt.Printf("%s\n", Divider)
 }
 
 // Process runs through all of the options in a config and collects all of the
@@ -479,16 +478,16 @@ func NewSection(title string) Section {
 
 // Open prints out the header for a Section.
 func (s Section) Open() {
-	fmt.Printf("%s\n", divider)
+	fmt.Printf("%s\n", Divider)
 	fmt.Printf("%s%s%s\n", TERMCYAN, s.Title, TERMCLEAR)
-	fmt.Printf("%s\n", divider)
+	fmt.Printf("%s\n", Divider)
 }
 
 // Close prints out the footer for a Section.
 func (s Section) Close() {
-	fmt.Printf("%s\n", divider)
+	fmt.Printf("%s\n", Divider)
 	fmt.Printf("%s%s - %sdone%s\n", TERMCYAN, s.Title, TERMCYANB, TERMCLEAR)
-	fmt.Printf("%s\n", divider)
+	fmt.Printf("%s\n", Divider)
 }
 
 // ProjectID gets the currently set default project

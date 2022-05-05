@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/remote-builder', '.' ]
-images:
-- 'gcr.io/$PROJECT_ID/remote-builder'
-tags: ['cloud-builders-community']
+FROM gcr.io/google.com/cloudsdktool/cloud-sdk
+RUN apt-get update &&\
+    apt-get install -y gnupg software-properties-common curl &&\
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - &&\
+    apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" && \
+    apt-get update &&\
+    apt-get install terraform 

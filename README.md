@@ -13,10 +13,10 @@ whatnot you can just do this.
 1. Edit the `config.json` file
 1. Edit the `description.txt` file
 
-Running `./install` should spin up the goapp and collect the config items the 
+Running `./deploystack install` should spin up the goapp and collect the config items the 
 stack needs to run through the deployment
 
-Running `./uninstall` will destory the whole thing. 
+Running `./deploystack uninstall` will destory the whole thing. 
 
 ### Details
 Authors are required to make or edit 4 files. 
@@ -116,8 +116,8 @@ print out to the user.  Json files don't do well with newlines.
 Test is a shell script that tests the individual pieces of the infrastructure 
 and tests the desired state at the end of the install. 
 
-There are a few functions in the global file that will help you run one of 
-these.
+There are a few functions in the template test file that will help you run one 
+of these.
 
 * `section_open` - a display function that hellps communicate what is going on.
 * `section_close` - paired with section_open

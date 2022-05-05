@@ -6,3 +6,4 @@ cmd/terraform.tfvars
 **/config.json
 **/credentials.json
 **/.DS_Store
+tools/installfile/output.txt

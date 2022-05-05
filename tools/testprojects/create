@@ -24,7 +24,7 @@ section_open "Create Project, Enable Billing, Enable Services "
 section_close
 
 section_open "Create remote-builder Container in project"
-    gcloud builds submit --config=remote-builder/cloudbuild.yaml remote-builder/. --project=$PROJECT
+    gcloud builds submit --config=remote-builder/cloudbuild.yaml terraform-tester/. --project=$PROJECT
 section_close
 
 
@@ -32,7 +32,7 @@ section_open "Grant Build Service account correct permissions"
     CB_SA_EMAIL=$PROJECT_NUMBER@cloudbuild.gserviceaccount.com
     gcloud projects add-iam-policy-binding $PROJECT --member=serviceAccount:$CB_SA_EMAIL --role='roles/iam.serviceAccountUser' 
     gcloud projects add-iam-policy-binding $PROJECT --member=serviceAccount:$CB_SA_EMAIL --role='roles/compute.instanceAdmin.v1'
-    gcloud projects add-iam-policy-binding $PROJECT --member=serviceAccount:$CB_SA_EMAIL  --role='roles/iam.serviceAccountActor'
+    gcloud projects add-iam-policy-binding $PROJECT --member=serviceAccount:$CB_SA_EMAIL --role='roles/iam.serviceAccountActor'
     gcloud projects add-iam-policy-binding $PROJECT --member=serviceAccount:$CB_SA_EMAIL --role='roles/owner'
 section_close
 
