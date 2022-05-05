@@ -7,3 +7,4 @@ cmd/terraform.tfvars
 **/credentials.json
 **/.DS_Store
 tools/installfile/output.txt
+test_files/regions_*

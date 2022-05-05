@@ -385,104 +385,56 @@ func captureOutput(f func()) string {
 	return string(out)
 }
 
+func regionHelper(file string) ([]string, error) {
+	result := []string{}
+	dat, err := ioutil.ReadFile(file)
+	if err != nil {
+		return result, fmt.Errorf("unable to read region file (%s): %s", file, err)
+	}
+
+	temp := strings.Split(string(dat), "\n")
+
+	for _, v := range temp {
+		if v == "" {
+			continue
+		}
+		full := strings.Split(v, "/")
+		result = append(result, strings.TrimSpace(full[len(full)-1]))
+	}
+
+	sort.Strings(result)
+
+	return result, nil
+}
+
 func TestGetRegions(t *testing.T) {
+	cRegions, err := regionHelper("test_files/regions_compute.txt")
+	if err != nil {
+		t.Fatalf("got error during preloading: %s", err)
+	}
+
+	fRegions, err := regionHelper("test_files/regions_functions.txt")
+	if err != nil {
+		t.Fatalf("got error during preloading: %s", err)
+	}
+
+	rRegions, err := regionHelper("test_files/regions_run.txt")
+	if err != nil {
+		t.Fatalf("got error during preloading: %s", err)
+	}
+
+	for i, v := range rRegions {
+		fmt.Printf("%d:%s\n", i, v)
+	}
+
 	tests := map[string]struct {
 		product string
 		project string
 		want    []string
 	}{
-		"computeRegions": {product: "compute", project: projectID, want: []string{
-			"asia-east1",
-			"asia-east2",
-			"asia-northeast1",
-			"asia-northeast2",
-			"asia-northeast3",
-			"asia-south1",
-			"asia-south2",
-			"asia-southeast1",
-			"asia-southeast2",
-			"australia-southeast1",
-			"australia-southeast2",
-			"europe-central2",
-			"europe-north1",
-			"europe-west1",
-			"europe-west2",
-			"europe-west3",
-			"europe-west4",
-			"europe-west6",
-			"europe-west8",
-			"europe-west9",
-			"northamerica-northeast1",
-			"northamerica-northeast2",
-			"southamerica-east1",
-			"southamerica-west1",
-			"us-central1",
-			"us-east1",
-			"us-east4",
-			"us-west1",
-			"us-west2",
-			"us-west3",
-			"us-west4",
-		}},
-		"functionsRegions": {product: "functions", project: projectID, want: []string{
-			"asia-east1",
-			"asia-east2",
-			"asia-northeast1",
-			"asia-northeast2",
-			"asia-northeast3",
-			"asia-south1",
-			"asia-southeast1",
-			"asia-southeast2",
-			"australia-southeast1",
-			"europe-central2",
-			"europe-west1",
-			"europe-west2",
-			"europe-west3",
-			"europe-west6",
-			"northamerica-northeast1",
-			"southamerica-east1",
-			"us-central1",
-			"us-east1",
-			"us-east4",
-			"us-west1",
-			"us-west2",
-			"us-west3",
-			"us-west4",
-		}},
-		"runRegions": {product: "run", project: projectID, want: []string{
-			"asia-east1",
-			"asia-east2",
-			"asia-northeast1",
-			"asia-northeast2",
-			"asia-northeast3",
-			"asia-south1",
-			"asia-south2",
-			"asia-southeast1",
-			"asia-southeast2",
-			"australia-southeast1",
-			"australia-southeast2",
-			"europe-central2",
-			"europe-north1",
-			"europe-southwest1",
-			"europe-west1",
-			"europe-west2",
-			"europe-west3",
-			"europe-west4",
-			"europe-west6",
-			"europe-west8",
-			"europe-west9",
-			"northamerica-northeast1",
-			"northamerica-northeast2",
-			"southamerica-east1",
-			"southamerica-west1",
-			"us-central1",
-			"us-east1",
-			"us-east4",
-			"us-west1",
-			"us-west2",
-			"us-west3",
-			"us-west4",
-		}},
+		"computeRegions":   {product: "compute", project: projectID, want: cRegions},
+		"functionsRegions": {product: "functions", project: projectID, want: fRegions},
+		"runRegions":       {product: "run", project: projectID, want: rRegions},
 	}
 
 	for name, tc := range tests {
@@ -495,7 +447,7 @@ func TestGetRegions(t *testing.T) {
 			sort.Strings(got)
 
 			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}
 		})
 	}
