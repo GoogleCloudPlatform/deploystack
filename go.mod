@@ -1,4 +1,4 @@
-module github.com/tpryan/deploystack
+module github.com/GoogleCloudPlatform/deploystack
 
 go 1.17
 
