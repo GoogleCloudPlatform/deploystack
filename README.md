@@ -10,8 +10,8 @@ whatnot you can just do this.
 
 1. Clone this project.
 1. Add your `main.tf` file
-1. Edit the `config.json` file
-1. Edit the `description.txt` file
+1. Edit the `deploystack.json` file
+1. Edit the `deploystack.txt` file
 
 Running `./deploystack install` should spin up the goapp and collect the config items the 
 stack needs to run through the deployment
@@ -22,8 +22,8 @@ Running `./deploystack uninstall` will destory the whole thing.
 Authors are required to make or edit 4 files. 
 
 * `main.tf`
-* `config.json`
-* `description.txt`
+* `deploystack.json`
+* `deploystack.txt`
 * `test`
 
 The following files need to be included but shoudln't need to be edited at all:
@@ -57,7 +57,7 @@ variable "zone" {
 }
 ```
 
-### `config.json`
+### `deploystack.json`
 This config will be read by the golang helper to prompt the user to create a 
 tfvars file that will drive the terraform script. 
 
@@ -108,7 +108,7 @@ tfvars file that will drive the terraform script.
 "default": "3"
 ```
 
-### `description.txt`
+### `deploystack.txt`
 This file allows you to add a formatted description to the configuration to 
 print out to the user.  Json files don't do well with newlines. 
 
