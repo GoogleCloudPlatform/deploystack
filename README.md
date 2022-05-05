@@ -28,10 +28,8 @@ Authors are required to make or edit 4 files.
 
 The following files need to be included but shoudln't need to be edited at all:
 
-* `install`
+* `deploystack`
 * `main.go`
-* `global`
-* `uninstall`
 * `test.yaml`
 
 ### `main.tf`
