@@ -362,7 +362,7 @@ func TestStackPrintSettings(t *testing.T) {
 		s.PrintSettings()
 	})
 
-	want := `[36mProject Details [0m 
+	want := `[46mProject Details [0m 
 Region: [1;36mtest-a[0m
 Zone:   [1;36mtest[0m
 `
@@ -391,7 +391,7 @@ func TestGetRegions(t *testing.T) {
 		project string
 		want    []string
 	}{
-		"1": {product: "compute", project: projectID, want: []string{
+		"computeRegions": {product: "compute", project: projectID, want: []string{
 			"asia-east1",
 			"asia-east2",
 			"asia-northeast1",
@@ -411,6 +411,7 @@ func TestGetRegions(t *testing.T) {
 			"europe-west4",
 			"europe-west6",
 			"europe-west8",
+			"europe-west9",
 			"northamerica-northeast1",
 			"northamerica-northeast2",
 			"southamerica-east1",
@@ -423,7 +424,7 @@ func TestGetRegions(t *testing.T) {
 			"us-west3",
 			"us-west4",
 		}},
-		"2": {product: "functions", project: projectID, want: []string{
+		"functionsRegions": {product: "functions", project: projectID, want: []string{
 			"asia-east1",
 			"asia-east2",
 			"asia-northeast1",
@@ -448,7 +449,7 @@ func TestGetRegions(t *testing.T) {
 			"us-west3",
 			"us-west4",
 		}},
-		"3": {product: "run", project: projectID, want: []string{
+		"runRegions": {product: "run", project: projectID, want: []string{
 			"asia-east1",
 			"asia-east2",
 			"asia-northeast1",
@@ -462,12 +463,14 @@ func TestGetRegions(t *testing.T) {
 			"australia-southeast2",
 			"europe-central2",
 			"europe-north1",
+			"europe-southwest1",
 			"europe-west1",
 			"europe-west2",
 			"europe-west3",
 			"europe-west4",
 			"europe-west6",
 			"europe-west8",
+			"europe-west9",
 			"northamerica-northeast1",
 			"northamerica-northeast2",
 			"southamerica-east1",
