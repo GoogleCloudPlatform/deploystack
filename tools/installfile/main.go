@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tpryan/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack"
 )
 
 var lineLength = 80
