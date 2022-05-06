@@ -1,7 +1,7 @@
 DIR="../../test_files"
 
-GOOGLE_APPLICATION_CREDENTIALS="../../creds.json" && gcloud compute regions list --format="value(name)" > $DIR/regions_compute.txt
-GOOGLE_APPLICATION_CREDENTIALS="../../creds.json" && gcloud run regions list --format="value(name)" > $DIR/regions_run.txt
-GOOGLE_APPLICATION_CREDENTIALS="../../creds.json" && gcloud functions regions list --format="value(name)" > $DIR/regions_functions.txt
+gcloud compute regions list --format="value(name)" > $DIR/regions_compute.txt
+gcloud run regions list --format="value(name)" > $DIR/regions_run.txt
+gcloud functions regions list --format="value(name)" > $DIR/regions_functions.txt
 
 echo "Region files have been updated."
