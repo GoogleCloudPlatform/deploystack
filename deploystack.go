@@ -599,8 +599,8 @@ func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBill
 }
 
 // billingAccounts gets a list of the billing accounts a user has access to
-func billingAccounts() ([]string, error) {
-	resp := []string{}
+func billingAccounts() ([]*cloudbilling.BillingAccount, error) {
+	resp := []*cloudbilling.BillingAccount{}
 	ctx := context.Background()
 	svc, err := cloudbilling.NewService(ctx, opts)
 	if err != nil {
@@ -612,13 +612,7 @@ func billingAccounts() ([]string, error) {
 		return resp, err
 	}
 
-	for _, v := range results.BillingAccounts {
-		resp = append(resp, strings.Replace(v.Name, "billingAccounts/", "", -1))
-	}
-
-	sort.Strings(resp)
-
-	return resp, nil
+	return results.BillingAccounts, nil
 }
 
 // BillingAccountProjectAttach will enable billing in a given project
@@ -671,11 +665,24 @@ func BillingAccountManage() (string, error) {
 		return "", fmt.Errorf("could not get list of billing accounts: %s", err)
 	}
 
-	if len(accounts) == 1 {
-		return accounts[0], nil
+	labeled := []string{}
+
+	for _, v := range accounts {
+		labeled = append(labeled, fmt.Sprintf("%s (%s)", v.DisplayName, strings.ReplaceAll(v.Name, "billingAccounts/", "")))
 	}
 
-	return listSelect(accounts, accounts[0]), nil
+	if len(accounts) == 1 {
+		return extractAccount(labeled[0]), nil
+	}
+
+	result := listSelect(labeled, labeled[0])
+
+	return extractAccount(result), nil
+}
+
+func extractAccount(s string) string {
+	sl := strings.Split(s, "(")
+	return strings.ReplaceAll(sl[1], ")", "")
 }
 
 // projectCreate does the work of actually creating a new project in your
