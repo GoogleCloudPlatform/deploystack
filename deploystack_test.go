@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/kylelemons/godebug/diff"
+	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/option"
 )
 
@@ -538,16 +539,18 @@ func TestGetProjects(t *testing.T) {
 
 func TestGetBillingAccounts(t *testing.T) {
 	tests := map[string]struct {
-		want []string
+		want []*cloudbilling.BillingAccount
 	}{
-		"NoErrorNoAccounts": {want: []string{}},
+		"NoErrorNoAccounts": {want: []*cloudbilling.BillingAccount{}},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got, err := billingAccounts()
 
-			sort.Strings(tc.want)
+			sort.Slice(got[:], func(i, j int) bool {
+				return got[i].DisplayName < got[j].DisplayName
+			})
 
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
