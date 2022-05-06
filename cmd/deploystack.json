@@ -1,6 +1,5 @@
 {	
 	"title":"BASICLB",
-	"description":"A quick test of things with other things",
 	"duration":5,
 	"collect_project":true,
 	"collect_region":true,

@@ -186,16 +186,23 @@ type Config struct {
 // Custom represents a custom setting that we would like to collect from a user
 // We will collect these settings from the user before continuing.
 type Custom struct {
-	Name        string
-	Description string
-	Default     string
-	Value       string
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Default     string   `json:"default"`
+	Value       string   `json:"value"`
+	Options     []string `json:"options"`
 }
 
 // Collect will collect a value for a Custom from a user
 func (c *Custom) Collect() error {
-	result := ""
 	fmt.Printf("%s%s: %s\n", TERMCYANB, c.Description, TERMCLEAR)
+
+	if len(c.Options) > 0 {
+		c.Value = listSelect(c.Options, c.Default)
+		return nil
+	}
+
+	result := ""
 	fmt.Printf("Enter value, or just [enter] for %s%s%s\n", TERMCYANB, c.Default, TERMCLEAR)
 
 	reader := bufio.NewReader(os.Stdin)
@@ -433,7 +440,7 @@ func (s Stack) PrintSettings() {
 
 	fmt.Printf("%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
-	if s, ok := s.Settings["project_id"]; ok {
+	if s, ok := s.Settings["project_id"]; ok && len(s) > 0 {
 		printSetting("project_id", s, longest)
 	}
 
