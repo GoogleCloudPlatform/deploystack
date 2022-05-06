@@ -3,3 +3,4 @@ costsentry
 todo
 scaler
 yesornosite
+deploystack

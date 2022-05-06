@@ -73,8 +73,12 @@ func HandleBuild(ctx context.Context, m PubSubMessage) error {
 		return fmt.Errorf("cannot convert json: %s", err)
 	}
 
-	// The test rig only has one step.
-	if len(build.Steps) != 1 {
+	if build.Substitutions["TRIGGER_NAME"] == "Test-Procedure" {
+		fmt.Printf("Don't notify\n")
+		return nil
+	}
+
+	if build.Substitutions["TRIGGER_NAME"] == "Test-Procedure-push" {
 		fmt.Printf("Don't notify\n")
 		return nil
 	}
