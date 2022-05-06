@@ -259,9 +259,8 @@ Choose number from list, or just [enter] for [1;36mstackinabox[0m
 				listSelect(tc.input, tc.def)
 			})
 
-			fmt.Println(name)
-			fmt.Println(diff.Diff(got, tc.want))
 			if !reflect.DeepEqual(tc.want, got) {
+				fmt.Println(diff.Diff(got, tc.want))
 				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", tc.want, got)
 			}
 		})
@@ -421,10 +420,6 @@ func TestGetRegions(t *testing.T) {
 	rRegions, err := regionHelper("test_files/regions_run.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
-	}
-
-	for i, v := range rRegions {
-		fmt.Printf("%d:%s\n", i, v)
 	}
 
 	tests := map[string]struct {

@@ -648,8 +648,6 @@ func BillingAccountProjectAttach(project, account string) error {
 		}
 	}
 
-	fmt.Printf("LoopErr: %s\n", err)
-
 	if strings.Contains(looperr.Error(), "Request contains an invalid argument") {
 		return ErrorBillingInvalidAccount
 	}
