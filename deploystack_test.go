@@ -61,10 +61,17 @@ func TestReadConfig(t *testing.T) {
 		file string
 		desc string
 		want Stack
+		err  error
 	}{
-		"1": {
-			file: "test_files/config.json",
-			desc: "test_files/description.txt",
+		"error": {
+			file: "z.json",
+			desc: "z.txt",
+			want: Stack{},
+			err:  fmt.Errorf("unable to read config file: open z.json: no such file or directory"),
+		},
+		"no_custom": {
+			file: "test_files/no_customs/deploystack.json",
+			desc: "test_files/no_customs/deploystack.txt",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -76,13 +83,64 @@ func TestReadConfig(t *testing.T) {
 					RegionDefault: "us-central1",
 				},
 			},
+			err: nil,
+		},
+		"custom": {
+			file: "test_files/customs/deploystack.json",
+			desc: "test_files/customs/deploystack.txt",
+			want: Stack{
+				Config: Config{
+					Title:         "TESTCONFIG",
+					Description:   "A test string for usage with this stuff.",
+					Duration:      5,
+					Project:       false,
+					Region:        false,
+					RegionType:    "",
+					RegionDefault: "",
+					CustomSettings: []Custom{
+						{Name: "nodes", Description: "Nodes", Default: "3"},
+					},
+				},
+			},
+			err: nil,
+		},
+		"custom_options": {
+			file: "test_files/customs_options/deploystack.json",
+			desc: "test_files/customs_options/deploystack.txt",
+			want: Stack{
+				Config: Config{
+					Title:         "TESTCONFIG",
+					Description:   "A test string for usage with this stuff.",
+					Duration:      5,
+					Project:       false,
+					Region:        false,
+					RegionType:    "",
+					RegionDefault: "",
+
+					CustomSettings: []Custom{
+						{
+							Name:        "nodes",
+							Description: "Nodes",
+							Default:     "3",
+							Options:     []string{"1", "2", "3"},
+						},
+					},
+				},
+			},
+			err: nil,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			s := NewStack()
-			s.ReadConfig(tc.file, tc.desc)
+			err := s.ReadConfig(tc.file, tc.desc)
+
+			if err != tc.err {
+				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
+					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
+				}
+			}
 
 			compareValues(tc.want.Config.Title, s.Config.Title, t)
 			compareValues(tc.want.Config.Description, s.Config.Description, t)
@@ -91,6 +149,9 @@ func TestReadConfig(t *testing.T) {
 			compareValues(tc.want.Config.Region, s.Config.Region, t)
 			compareValues(tc.want.Config.RegionType, s.Config.RegionType, t)
 			compareValues(tc.want.Config.RegionDefault, s.Config.RegionDefault, t)
+			for i, v := range s.Config.CustomSettings {
+				compareValues(tc.want.Config.CustomSettings[i], v, t)
+			}
 		})
 	}
 }
@@ -98,6 +159,72 @@ func TestReadConfig(t *testing.T) {
 func compareValues(want interface{}, got interface{}, t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
 		t.Fatalf("expected: \n|%v|\ngot: \n|%v|", want, got)
+	}
+}
+
+func TestProcessCustoms(t *testing.T) {
+	tests := map[string]struct {
+		file string
+		desc string
+		want string
+		err  error
+	}{
+		"custom_options": {
+			file: "test_files/customs_options/deploystack.json",
+			desc: "test_files/customs_options/deploystack.txt",
+			want: `********************************************************************************
+[1;36mTESTCONFIG[0m
+A test string for usage with this stuff.
+It's going to take around [0;36m5 minutes[0m
+********************************************************************************
+ 1) 1 
+ 2) 2 
+[1;36m 3) 3 [0m
+Choose number from list, or just [enter] for [1;36m3[0m
+> [46mProject Details [0m 
+Nodes: [1;36m3[0m
+`,
+			err: nil,
+		},
+		"custom": {
+			file: "test_files/customs/deploystack.json",
+			desc: "test_files/customs/deploystack.txt",
+			want: `********************************************************************************
+[1;36mTESTCONFIG[0m
+A test string for usage with this stuff.
+It's going to take around [0;36m5 minutes[0m
+********************************************************************************
+[1;36mNodes: [0m
+Enter value, or just [enter] for [1;36m3[0m
+> [46mProject Details [0m 
+Nodes: [1;36m3[0m
+`,
+			err: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			s := NewStack()
+			err := s.ReadConfig(tc.file, tc.desc)
+
+			if err != tc.err {
+				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
+					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
+				}
+			}
+
+			got := captureOutput(func() {
+				if err := s.Process("terraform.tfvars"); err != nil {
+					log.Fatalf("problemn collecting the configurations: %s", err)
+				}
+			})
+
+			if !reflect.DeepEqual(tc.want, got) {
+				fmt.Println(diff.Diff(got, tc.want))
+				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", tc.want, got)
+			}
+		})
 	}
 }
 

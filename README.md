@@ -102,12 +102,69 @@ tfvars file that will drive the terraform script.
 | name            | string  | The name of the variable                                                             |
 | description     | string  | The description of the variable to prompt the user with                              |
 | default         | string  | A default value for the variable.                                                    |
+| options         | array   | An array of options to turn this into a custom select interface                      |
 
+### UI Controls
+
+#### Header
+```json
+  "title":"BASICLB",
+  "duration":5,
+```
+
+```txt
+This process will create the following:
+
+	* Frontend - Cloud Run Service 
+	* Middleware - Cloud Run Service
+	* Backend - Cloud Sql MySQL instance 
+	* Cache - Cloud Memorystore
+	* Secrets - Cloud Secret Manager
+
+All of these will spin up configured in a 3 tier application that delievers a
+TODO app to show all of these pieces working together.  
+```
+![UI for Project Selector](assets/ui_header.png)
+
+
+#### Project Selector
+```json
+  "collect_project":true
+```
+![UI for Project Selector](assets/ui_choose_project.png)
+
+#### Region Selector
+```json
+  "collect_region":true,
+  "region_type":"functions",
+  "region_default":"us-central1",
+```
+![UI for Region Selector](assets/ui_change_region.png)
+
+#### Zone Selector
+```json
+  "collect_zone":true
+```
+![UI for Zone Selector](assets/ui_choose_zone.png)
+
+
+#### Custom Settings - no options
 ```json
 "name":"nodes",
 "description":"Please enter the number of nodes",
 "default": "3"
 ```
+![UI for Custom Settings with no options](assets/ui_custom_no_options.png)
+
+#### Custom Settings - options
+```json
+"name":"nodes",
+"description":"Please enter the number of nodes",
+"default": "3"
+"options": ["1", "2", "3"]
+```
+![UI for Custom Settings with options](assets/ui_custom_options.png)
+
 
 ### `deploystack.txt`
 
@@ -181,9 +238,6 @@ printf "You got the end the of your test with everything working. \n"
 printf "$DIVIDER"
 ```
 
-## Testing
-
-In order to test teh
 
 ## Testing this Repo
 

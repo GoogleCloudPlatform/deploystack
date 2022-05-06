@@ -1,0 +1,11 @@
+{	
+	"title":"TESTCONFIG",
+	"duration":5,
+	"custom_settings":[
+		{	
+			"name":"nodes",
+			"description":"Nodes", 
+			"default": "3"
+		}
+	]
+}
