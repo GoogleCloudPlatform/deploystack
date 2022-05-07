@@ -177,6 +177,7 @@ func TestProcessCustoms(t *testing.T) {
 A test string for usage with this stuff.
 It's going to take around [0;36m5 minutes[0m
 ********************************************************************************
+[1;36mNodes: [0m
  1) 1 
  2) 2 
 [1;36m 3) 3 [0m
