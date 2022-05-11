@@ -73,22 +73,9 @@ func HandleBuild(ctx context.Context, m PubSubMessage) error {
 		return fmt.Errorf("cannot convert json: %s", err)
 	}
 
-	if build.Substitutions["TRIGGER_NAME"] == "Test-Procedure" {
+	if !strings.Contains(build.Substitutions["TRIGGER_NAME"], "Test-Procedure") {
 		fmt.Printf("Don't notify\n")
 		return nil
-	}
-
-	if build.Substitutions["TRIGGER_NAME"] == "Test-Procedure-push" {
-		fmt.Printf("Don't notify\n")
-		return nil
-	}
-
-	// The test rig does not use Cloud Functions. Exclude from reports.
-	if build.Source != nil && build.Source.StorageSource != nil {
-		if strings.Contains(build.Source.StorageSource.Bucket, "gcf-sources") {
-			fmt.Printf("Don't notify\n")
-			return nil
-		}
 	}
 
 	msg := Message{
