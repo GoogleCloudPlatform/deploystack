@@ -18,7 +18,6 @@ package deploystack
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
@@ -32,7 +31,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"text/template"
 
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudfunctions/v1"
@@ -1172,85 +1170,4 @@ type PostalAddress struct {
 	Locality           string
 	AddressLines       []string
 	Recipients         []string
-}
-
-// YAML outputs the content of this structure into the contact format needed for
-// domain registration
-func (d DomainRegistrarContact) YAML() (string, error) {
-	yaml := `allContacts:
-  email: '{{ .Email}}'
-  phoneNumber: '{{.Phone}}'
-  postalAddress: 
-    regionCode: '{{ .PostalAddress.RegionCode}}'
-    postalCode: '{{ .PostalAddress.PostalCode}}'
-    administrativeArea: '{{ .PostalAddress.AdministrativeArea}}'
-    locality: '{{ .PostalAddress.Locality}}'
-    addressLines: [{{range $element := .PostalAddress.AddressLines}}'{{$element}}'{{end}}]
-    recipients: [{{range $element := .PostalAddress.Recipients}}'{{$element}}'{{end}}]`
-
-	t, err := template.New("yaml").Parse(yaml)
-	if err != nil {
-		return "", fmt.Errorf("error parsing the yaml template %s", err)
-	}
-	var tpl bytes.Buffer
-	err = t.Execute(&tpl, d)
-	if err != nil {
-		return "", fmt.Errorf("error executing the yaml template %s", err)
-	}
-
-	return tpl.String(), nil
-}
-
-func newDomainRegistrarContact() DomainRegistrarContact {
-	d := DomainRegistrarContact{}
-	d.PostalAddress.AddressLines = []string{}
-	d.PostalAddress.Recipients = []string{}
-	return d
-}
-
-// RegistratContactManage manages collecting domain registraton information
-// from the user
-func RegistratContactManage(file string) error {
-	d := newDomainRegistrarContact()
-
-	fmt.Printf("%s\n", Divider)
-	fmt.Printf("Domain registration requires some contact data. This process only asks for the absolutely mandatory ones. \n")
-	fmt.Printf("The domain will be registered with user privacy enabled, so that your contact info will not be public. \n")
-	fmt.Printf("This will create a file, so that you never have to do it again. \n")
-	fmt.Printf("This file will only exist locally, or in your Cloud Shell environment.  \n")
-
-	items := Customs{
-		{Name: "email", Description: "Enter an email address", Default: "person@example.com"},
-		{Name: "phone", Description: "Enter a phone number. (Please enter with country code - +1 555 555 5555 for US for example)", Default: "+14155551234"},
-		{Name: "country", Description: "Enter a country code", Default: "US"},
-		{Name: "postalcode", Description: "Enter a postal code", Default: "94502"},
-		{Name: "state", Description: "Enter a state or administrative area", Default: "CA"},
-		{Name: "city", Description: "Enter a city", Default: "San Francisco"},
-		{Name: "address", Description: "Enter an address", Default: "345 Spear Street"},
-		{Name: "name", Description: "Enter name", Default: "Googler"},
-	}
-
-	if err := items.Collect(); err != nil {
-		return err
-	}
-
-	d.Email = items.Get("email").Value
-	d.Phone = items.Get("phone").Value
-	d.PostalAddress.RegionCode = items.Get("country").Value
-	d.PostalAddress.PostalCode = items.Get("postalcode").Value
-	d.PostalAddress.AdministrativeArea = items.Get("state").Value
-	d.PostalAddress.Locality = items.Get("city").Value
-	d.PostalAddress.AddressLines = append(d.PostalAddress.AddressLines, items.Get("address").Value)
-	d.PostalAddress.Recipients = append(d.PostalAddress.Recipients, items.Get("name").Value)
-
-	yaml, err := d.YAML()
-	if err != nil {
-		return err
-	}
-
-	if err := os.WriteFile(file, []byte(yaml), 0o644); err != nil {
-		return err
-	}
-
-	return nil
 }
