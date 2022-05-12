@@ -18,6 +18,7 @@ package deploystack
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
@@ -31,6 +32,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"text/template"
 
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudfunctions/v1"
@@ -169,18 +171,19 @@ func HandleFlags() Flags {
 // be in a json file. The idea is minimal programming has to be done to setup
 // a DeployStack and export out a tfvars file for terraform part of solution.
 type Config struct {
-	Title          string            `json:"title"`
-	Description    string            `json:"description"`
-	Duration       int               `json:"duration"`
-	Project        bool              `json:"collect_project"`
-	ProjectNumber  bool              `json:"collect_project_number"`
-	BillingAccount bool              `json:"collect_billing_account"`
-	Region         bool              `json:"collect_region"`
-	RegionType     string            `json:"region_type"`
-	RegionDefault  string            `json:"region_default"`
-	Zone           bool              `json:"collect_zone"`
-	HardSet        map[string]string `json:"hard_settings"`
-	CustomSettings []Custom          `json:"custom_settings"`
+	Title            string            `json:"title"`
+	Description      string            `json:"description"`
+	Duration         int               `json:"duration"`
+	Project          bool              `json:"collect_project"`
+	ProjectNumber    bool              `json:"collect_project_number"`
+	BillingAccount   bool              `json:"collect_billing_account"`
+	Region           bool              `json:"collect_region"`
+	RegionType       string            `json:"region_type"`
+	RegionDefault    string            `json:"region_default"`
+	Zone             bool              `json:"collect_zone"`
+	HardSet          map[string]string `json:"hard_settings"`
+	CustomSettings   []Custom          `json:"custom_settings"`
+	RegistrarContact bool              `json:"collect_registrar_contact"`
 }
 
 // Custom represents a custom setting that we would like to collect from a user
@@ -218,6 +221,29 @@ func (c *Custom) Collect() error {
 		c.Value = result
 		break
 
+	}
+
+	return nil
+}
+
+type Customs []Custom
+
+func (cs Customs) Get(name string) Custom {
+	for _, v := range cs {
+		if v.Name == name {
+			return v
+		}
+	}
+
+	return Custom{}
+}
+
+func (cs *Customs) Collect() error {
+	for i, v := range *(cs) {
+		if err := v.Collect(); err != nil {
+			return fmt.Errorf("error getting custom value (%s) from user:  %s", v.Name, err)
+		}
+		(*cs)[i] = v
 	}
 
 	return nil
@@ -285,6 +311,12 @@ func (c Config) Process(s *Stack, output string) error {
 		s.AddSetting("project_number", projectnumber)
 	}
 
+	if c.RegistrarContact {
+		if err = RegistratContactManage("contact.yaml"); err != nil {
+			log.Fatalf(err.Error())
+		}
+	}
+
 	if c.BillingAccount {
 
 		ba, err := BillingAccountManage()
@@ -309,6 +341,105 @@ func (c Config) Process(s *Stack, output string) error {
 
 	s.PrintSettings()
 	s.TerraformFile(output)
+	return nil
+}
+
+// DomainRegistrarContact represents the data required to register a domain
+// with a public registrar.
+type DomainRegistrarContact struct {
+	Email         string
+	Phone         string
+	PostalAddress PostalAddress
+}
+
+// PostalAddress represents the mail address in a DomainRegistrarContact
+type PostalAddress struct {
+	RegionCode         string
+	PostalCode         string
+	AdministrativeArea string
+	Locality           string
+	AddressLines       []string
+	Recipients         []string
+}
+
+// YAML outputs the content of this structure into the contact format needed for
+// domain registration
+func (d DomainRegistrarContact) YAML() (string, error) {
+	yaml := `allContacts:
+  email: '{{ .Email}}'
+  phoneNumber: '{{.Phone}}'
+  postalAddress: 
+    regionCode: '{{ .PostalAddress.RegionCode}}'
+    postalCode: '{{ .PostalAddress.PostalCode}}'
+    administrativeArea: '{{ .PostalAddress.AdministrativeArea}}'
+    locality: '{{ .PostalAddress.Locality}}'
+    addressLines: [{{range $element := .PostalAddress.AddressLines}}'{{$element}}'{{end}}]
+    recipients: [{{range $element := .PostalAddress.Recipients}}'{{$element}}'{{end}}]`
+
+	t, err := template.New("yaml").Parse(yaml)
+	if err != nil {
+		return "", fmt.Errorf("error parsing the yaml template %s", err)
+	}
+	var tpl bytes.Buffer
+	err = t.Execute(&tpl, d)
+	if err != nil {
+		return "", fmt.Errorf("error executing the yaml template %s", err)
+	}
+
+	return tpl.String(), nil
+}
+
+func newDomainRegistrarContact() DomainRegistrarContact {
+	d := DomainRegistrarContact{}
+	d.PostalAddress.AddressLines = []string{}
+	d.PostalAddress.Recipients = []string{}
+	return d
+}
+
+// RegistratContactManage manages collecting domain registraton information
+// from the user
+func RegistratContactManage(file string) error {
+	d := newDomainRegistrarContact()
+
+	fmt.Printf("%s\n", Divider)
+	fmt.Printf("Domain registration requires some contact data. This process only asks for the absolutely mandatory ones. \n")
+	fmt.Printf("The domain will be registered with user privacy enabled, so that your contact info will not be public. \n")
+	fmt.Printf("This will create a file, so that you never have to do it again. \n")
+	fmt.Printf("This file will only exist locally, or in your Cloud Shell environment.  \n")
+
+	items := Customs{
+		{Name: "email", Description: "Enter an email address", Default: "person@example.com"},
+		{Name: "phone", Description: "Enter a phone number. (Please enter with country code - +1 555 555 5555 for US for example)", Default: "+14155551234"},
+		{Name: "country", Description: "Enter a country code", Default: "US"},
+		{Name: "postalcode", Description: "Enter a postal code", Default: "94502"},
+		{Name: "state", Description: "Enter a state or administrative area", Default: "CA"},
+		{Name: "city", Description: "Enter a city", Default: "San Francisco"},
+		{Name: "address", Description: "Enter an address", Default: "345 Spear Street"},
+		{Name: "name", Description: "Enter name", Default: "Googler"},
+	}
+
+	if err := items.Collect(); err != nil {
+		return err
+	}
+
+	d.Email = items.Get("email").Value
+	d.Phone = items.Get("phone").Value
+	d.PostalAddress.RegionCode = items.Get("country").Value
+	d.PostalAddress.PostalCode = items.Get("postalcode").Value
+	d.PostalAddress.AdministrativeArea = items.Get("state").Value
+	d.PostalAddress.Locality = items.Get("city").Value
+	d.PostalAddress.AddressLines = append(d.PostalAddress.AddressLines, items.Get("address").Value)
+	d.PostalAddress.Recipients = append(d.PostalAddress.Recipients, items.Get("name").Value)
+
+	yaml, err := d.YAML()
+	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(file, []byte(yaml), 0o644); err != nil {
+		return err
+	}
+
 	return nil
 }
 

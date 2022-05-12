@@ -56,6 +56,45 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func TestDomainRegistrarContactYAML(t *testing.T) {
+	tests := map[string]struct {
+		file    string
+		contact DomainRegistrarContact
+	}{
+		"simple": {
+			file: "test_files/contact_sample.yaml",
+			contact: DomainRegistrarContact{
+				"you@example.com",
+				"+1 555 555 1234",
+				PostalAddress{
+					"US",
+					"94105",
+					"CA",
+					"San Francisco",
+					[]string{"345 Spear Street"},
+					[]string{"Your Name"},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			dat, err := os.ReadFile(tc.file)
+			if err != nil {
+				t.Fatalf("err could not get file for testing: (%s)", err)
+			}
+
+			want := string(dat)
+			got := tc.contact.YAML()
+			if !reflect.DeepEqual(want, got) {
+				fmt.Println(diff.Diff(want, got))
+				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", want, got)
+			}
+		})
+	}
+}
+
 func TestReadConfig(t *testing.T) {
 	tests := map[string]struct {
 		file string
