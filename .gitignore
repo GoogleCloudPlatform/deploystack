@@ -10,3 +10,4 @@ test_files/regions_*
 tools/testprojects/email-notifier/cmd/config.json
 tools/testprojects/email-notifier/config.json
 cmd/contact.yaml
+terraform.tfvars
