@@ -114,21 +114,21 @@ func DomainsSearch(project, domain string) ([]*domainspb.RegisterParameters, err
 	return resp.RegisterParameters, nil
 }
 
-func DomainIsAvailable(project, domain string) (bool, error) {
+func DomainIsAvailable(project, domain string) (bool, *domainspb.RegisterParameters, error) {
 	list, err := DomainsSearch(project, domain)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	for _, v := range list {
 		if v.DomainName == domain {
 			if v.Availability.String() == "AVAILABLE" {
-				return true, nil
+				return true, v, nil
 			}
-			return false, nil
+			return false, nil, err
 		}
 	}
 
-	return false, nil
+	return false, nil, err
 }
 
 func DomainsIsVerified(project, domain string) (bool, error) {

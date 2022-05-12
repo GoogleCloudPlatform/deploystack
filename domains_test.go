@@ -59,34 +59,43 @@ func TestDomainRegistrarContactYAML(t *testing.T) {
 
 func TestDomainIsAvailable(t *testing.T) {
 	tests := map[string]struct {
-		domain string
-		want   bool
-		err    error
+		domain    string
+		wantAvail bool
+		wantCost  string
+		err       error
 	}{
 		"example.com": {
-			domain: "example.com",
-			want:   false,
-			err:    nil,
+			domain:    "example.com",
+			wantAvail: false,
+			wantCost:  "",
+			err:       nil,
 		},
 		"dsadsahcashfhfdsh.com": {
-			domain: "dsadsahcashfhfdsh.com",
-			want:   true,
-			err:    nil,
+			domain:    "dsadsahcashfhfdsh.com",
+			wantAvail: true,
+			wantCost:  "12USD",
+			err:       nil,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := DomainIsAvailable(projectID, tc.domain)
+			got, d, err := DomainIsAvailable(projectID, tc.domain)
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
 				}
 			}
 
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Logf("project: %s domain %s", projectID, tc.domain)
-				t.Fatalf("expected: %v got: %v", tc.want, got)
+			if !reflect.DeepEqual(tc.wantAvail, got) {
+				t.Fatalf("expected: %v got: %v", tc.wantAvail, got)
+			}
+
+			if got {
+				cost := fmt.Sprintf("%d%s", d.YearlyPrice.Units, d.YearlyPrice.CurrencyCode)
+				if !reflect.DeepEqual(tc.wantCost, cost) {
+					t.Fatalf("expected: %v got: %v", tc.wantCost, cost)
+				}
 			}
 		})
 	}
