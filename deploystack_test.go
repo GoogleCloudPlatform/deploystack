@@ -60,6 +60,7 @@ func TestDomainRegistrarContactYAML(t *testing.T) {
 	tests := map[string]struct {
 		file    string
 		contact DomainRegistrarContact
+		err     error
 	}{
 		"simple": {
 			file: "test_files/contact_sample.yaml",
@@ -75,6 +76,7 @@ func TestDomainRegistrarContactYAML(t *testing.T) {
 					[]string{"Your Name"},
 				},
 			},
+			err: nil,
 		},
 	}
 
@@ -86,7 +88,14 @@ func TestDomainRegistrarContactYAML(t *testing.T) {
 			}
 
 			want := string(dat)
-			got := tc.contact.YAML()
+			got, err := tc.contact.YAML()
+
+			if err != tc.err {
+				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
+					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
+				}
+			}
+
 			if !reflect.DeepEqual(want, got) {
 				fmt.Println(diff.Diff(want, got))
 				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", want, got)
