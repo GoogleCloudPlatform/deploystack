@@ -60,19 +60,19 @@ func TestDomainRegistrarContactYAML(t *testing.T) {
 func TestDomainIsAvailable(t *testing.T) {
 	tests := map[string]struct {
 		domain    string
-		wantAvail bool
+		wantAvail string
 		wantCost  string
 		err       error
 	}{
 		"example.com": {
 			domain:    "example.com",
-			wantAvail: false,
+			wantAvail: "UNAVAILABLE",
 			wantCost:  "",
 			err:       nil,
 		},
 		"dsadsahcashfhfdsh.com": {
 			domain:    "dsadsahcashfhfdsh.com",
-			wantAvail: true,
+			wantAvail: "AVAILABLE",
 			wantCost:  "12USD",
 			err:       nil,
 		},
@@ -80,19 +80,20 @@ func TestDomainIsAvailable(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, d, err := DomainIsAvailable(projectID, tc.domain)
+			got, err := DomainIsAvailable(projectID, tc.domain)
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
 				}
 			}
 
-			if !reflect.DeepEqual(tc.wantAvail, got) {
-				t.Fatalf("expected: %v got: %v", tc.wantAvail, got)
-			}
+			if got != nil {
 
-			if got {
-				cost := fmt.Sprintf("%d%s", d.YearlyPrice.Units, d.YearlyPrice.CurrencyCode)
+				if !reflect.DeepEqual(tc.wantAvail, got.Availability.String()) {
+					t.Fatalf("expected: %v got: %v", tc.wantAvail, got)
+				}
+
+				cost := fmt.Sprintf("%d%s", got.YearlyPrice.Units, got.YearlyPrice.CurrencyCode)
 				if !reflect.DeepEqual(tc.wantCost, cost) {
 					t.Fatalf("expected: %v got: %v", tc.wantCost, cost)
 				}

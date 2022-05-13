@@ -12,6 +12,24 @@ import (
 	domainspb "google.golang.org/genproto/googleapis/cloud/domains/v1beta1"
 )
 
+// DomainRegistrarContact represents the data required to register a domain
+// with a public registrar.
+type DomainRegistrarContact struct {
+	Email         string
+	Phone         string
+	PostalAddress PostalAddress
+}
+
+// PostalAddress represents the mail address in a DomainRegistrarContact
+type PostalAddress struct {
+	RegionCode         string
+	PostalCode         string
+	AdministrativeArea string
+	Locality           string
+	AddressLines       []string
+	Recipients         []string
+}
+
 // YAML outputs the content of this structure into the contact format needed for
 // domain registration
 func (d DomainRegistrarContact) YAML() (string, error) {
@@ -114,21 +132,21 @@ func DomainsSearch(project, domain string) ([]*domainspb.RegisterParameters, err
 	return resp.RegisterParameters, nil
 }
 
-func DomainIsAvailable(project, domain string) (bool, *domainspb.RegisterParameters, error) {
+func DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error) {
 	list, err := DomainsSearch(project, domain)
 	if err != nil {
-		return false, nil, err
+		return nil, err
 	}
 	for _, v := range list {
 		if v.DomainName == domain {
 			if v.Availability.String() == "AVAILABLE" {
-				return true, v, nil
+				return v, nil
 			}
-			return false, nil, err
+			return nil, err
 		}
 	}
 
-	return false, nil, err
+	return nil, err
 }
 
 func DomainsIsVerified(project, domain string) (bool, error) {

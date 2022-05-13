@@ -1153,21 +1153,3 @@ func ServiceEnable(project, service string) error {
 
 	return nil
 }
-
-// DomainRegistrarContact represents the data required to register a domain
-// with a public registrar.
-type DomainRegistrarContact struct {
-	Email         string
-	Phone         string
-	PostalAddress PostalAddress
-}
-
-// PostalAddress represents the mail address in a DomainRegistrarContact
-type PostalAddress struct {
-	RegionCode         string
-	PostalCode         string
-	AdministrativeArea string
-	Locality           string
-	AddressLines       []string
-	Recipients         []string
-}
