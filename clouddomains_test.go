@@ -12,12 +12,12 @@ import (
 func TestDomainRegistrarContactYAML(t *testing.T) {
 	tests := map[string]struct {
 		file    string
-		contact DomainRegistrarContact
+		contact ContactData
 		err     error
 	}{
 		"simple": {
 			file: "test_files/contact_sample.yaml",
-			contact: DomainRegistrarContact{
+			contact: ContactData{DomainRegistrarContact{
 				"you@example.com",
 				"+1 555 555 1234",
 				PostalAddress{
@@ -28,7 +28,7 @@ func TestDomainRegistrarContactYAML(t *testing.T) {
 					[]string{"345 Spear Street"},
 					[]string{"Your Name"},
 				},
-			},
+			}},
 			err: nil,
 		},
 	}
@@ -52,6 +52,47 @@ func TestDomainRegistrarContactYAML(t *testing.T) {
 			if !reflect.DeepEqual(want, got) {
 				fmt.Println(diff.Diff(want, got))
 				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", want, got)
+			}
+		})
+	}
+}
+
+func TestDomainRegistrarContactReadYAML(t *testing.T) {
+	tests := map[string]struct {
+		file string
+		want ContactData
+		err  error
+	}{
+		"simple": {
+			file: "test_files/contact_sample.yaml",
+			want: ContactData{DomainRegistrarContact{
+				"you@example.com",
+				"+1 555 555 1234",
+				PostalAddress{
+					"US",
+					"94105",
+					"CA",
+					"San Francisco",
+					[]string{"345 Spear Street"},
+					[]string{"Your Name"},
+				},
+			}},
+			err: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := newContactDataFromFile(tc.file)
+
+			if err != tc.err {
+				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
+					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
+				}
+			}
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v got: %v", tc.want, got)
 			}
 		})
 	}
