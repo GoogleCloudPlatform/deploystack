@@ -449,7 +449,7 @@ func (s Stack) PrintSettings() {
 
 	longest := longestLengh(keys)
 
-	fmt.Printf("%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
+	fmt.Printf("\n%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
 	if s, ok := s.Settings["project_id"]; ok && len(s) > 0 {
 		printSetting("project_id", s, longest)
@@ -690,9 +690,11 @@ func BillingAccountManage() (string, error) {
 	}
 
 	if len(accounts) == 1 {
+		fmt.Printf("\nOnly found one billing account. Using : %s%s%s.\n", TERMCYAN, accounts[0].DisplayName, TERMCLEAR)
 		return extractAccount(labeled[0]), nil
 	}
 
+	fmt.Printf("\n%sPlease select one of your billing accounts to use with this project%s.\n", TERMCYAN, TERMCLEAR)
 	result := listSelect(labeled, labeled[0])
 
 	return extractAccount(result), nil
