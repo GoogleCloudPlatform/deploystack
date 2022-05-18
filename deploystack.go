@@ -215,10 +215,8 @@ func (c *Custom) Collect() error {
 
 	for {
 		fmt.Print("> ")
-		text, err := reader.ReadString('\n')
-		if err != nil {
-			return fmt.Errorf("error reading from Stdin: %s", err)
-		}
+		// TODO: make the error handling here correct.
+		text, _ := reader.ReadString('\n')
 		text = strings.Replace(text, "\n", "", -1)
 		result = text
 		if len(text) == 0 {
