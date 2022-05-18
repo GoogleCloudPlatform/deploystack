@@ -92,6 +92,7 @@ tfvars file that will drive the terraform script.
 | duration        | number  | An estimate as to how long this installation takes                                   |
 | collect_project | boolean | Whether or not to walk the user through picking or creating a project.               |
 | collect_region  | boolean | Whether or not to walk the user through picking a regions                            |
+| register_domain | boolean | Whether or not to walk the user through registering a domain                         |
 | region_type     | string  | Which product to select a region for                                                 |
 |                 |         | Options: compute, run, functions                                                     |
 | region_default  | string  | The highlighted and default choice for region.                                       |
@@ -165,6 +166,13 @@ TODO app to show all of these pieces working together.
 "options": ["1", "2", "3"]
 ```
 ![UI for Custom Settings with options](assets/ui_custom_options.png)
+
+
+#### Domain Registration
+```json
+  "register_domain":true
+```
+![UI for Domain Registration](assets/ui_register_domain.png)
 
 
 ### `deploystack.txt`

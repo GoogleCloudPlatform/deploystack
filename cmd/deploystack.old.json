@@ -1,5 +1,5 @@
 {	
-	"title":"YESORNOSITE",
+	"title":"BASICLB",
 	"duration":5,
 	"collect_project":true,
 	"collect_region":true,
@@ -10,12 +10,6 @@
 			"name":"nodes",
 			"description":"Please enter the number of nodes", 
 			"default": "3"
-		},
-		{
-			"name": "bucket",
-			"description": "the name of the Google Cloud Bucket to use in this application",
-			"default": "bucket",
-			"prepend_project": true
-		  }
+		}
 	]
 }

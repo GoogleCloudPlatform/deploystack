@@ -175,12 +175,14 @@ type Config struct {
 	Project        bool              `json:"collect_project"`
 	ProjectNumber  bool              `json:"collect_project_number"`
 	BillingAccount bool              `json:"collect_billing_account"`
+	Domain         bool              `json:"register_domain"`
 	Region         bool              `json:"collect_region"`
 	RegionType     string            `json:"region_type"`
 	RegionDefault  string            `json:"region_default"`
 	Zone           bool              `json:"collect_zone"`
 	HardSet        map[string]string `json:"hard_settings"`
 	CustomSettings []Custom          `json:"custom_settings"`
+	// RegistrarContact bool              `json:"collect_registrar_contact"`
 }
 
 // Custom represents a custom setting that we would like to collect from a user
@@ -211,12 +213,19 @@ func (c *Custom) Collect() error {
 	}
 
 	result := ""
-	fmt.Printf("Enter value, or just [enter] for %s%s%s\n", TERMCYANB, def, TERMCLEAR)
+
+	if len(c.Default) > 0 {
+		fmt.Printf("Enter value, or just [enter] for %s%s%s\n", TERMCYANB, c.Default, TERMCLEAR)
+	} else {
+		fmt.Printf("Enter value: \n")
+	}
+
 
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
 		fmt.Print("> ")
+		// TODO: make the error handling here correct.
 		text, _ := reader.ReadString('\n')
 		text = strings.Replace(text, "\n", "", -1)
 		result = text
@@ -224,8 +233,33 @@ func (c *Custom) Collect() error {
 			result = def
 		}
 		c.Value = result
-		break
+		if len(result) > 0 {
+			break
+		}
 
+	}
+
+	return nil
+}
+
+type Customs []Custom
+
+func (cs Customs) Get(name string) Custom {
+	for _, v := range cs {
+		if v.Name == name {
+			return v
+		}
+	}
+
+	return Custom{}
+}
+
+func (cs *Customs) Collect() error {
+	for i, v := range *(cs) {
+		if err := v.Collect(); err != nil {
+			return fmt.Errorf("error getting custom value (%s) from user:  %s", v.Name, err)
+		}
+		(*cs)[i] = v
 	}
 
 	return nil
@@ -264,6 +298,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Project && len(project) == 0 {
 		project, err = ProjectManage()
 		if err != nil {
+			// TODO: Do proper error trapping
 			log.Fatalf(err.Error())
 		}
 		s.AddSetting("project_id", project)
@@ -272,6 +307,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Region && len(region) == 0 {
 		region, err = RegionManage(project, c.RegionType, c.RegionDefault)
 		if err != nil {
+			// TODO: Do proper error trapping
 			log.Fatalf(err.Error())
 		}
 		s.AddSetting("Region", region)
@@ -280,6 +316,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Zone && len(zone) == 0 {
 		zone, err = ZoneManage(project, region)
 		if err != nil {
+			// TODO: Do proper error trapping
 			log.Fatalf(err.Error())
 		}
 		s.AddSetting("zone", zone)
@@ -288,15 +325,26 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.ProjectNumber {
 		projectnumber, err = ProjectNumber(project)
 		if err != nil {
+			// TODO: Do proper error trapping
 			log.Fatalf(err.Error())
 		}
 		s.AddSetting("project_number", projectnumber)
+	}
+
+	if c.Domain {
+		domain, err := DomainManage(s)
+		if err != nil {
+			// TODO: Do proper error trapping
+			log.Fatalf(err.Error())
+		}
+		s.AddSetting("domain", domain)
 	}
 
 	if c.BillingAccount {
 
 		ba, err := BillingAccountManage()
 		if err != nil {
+			// TODO: Do proper error trapping
 			log.Fatalf(err.Error())
 		}
 		billingaccount = ba
@@ -311,6 +359,7 @@ func (c Config) Process(s *Stack, output string) error {
 			v.project = project
 
 			if err := v.Collect(); err != nil {
+				// TODO: Do proper error trapping
 				log.Fatalf("error getting custom value from user:  %s", err)
 			}
 			s.AddSetting(v.Name, v.Value)
