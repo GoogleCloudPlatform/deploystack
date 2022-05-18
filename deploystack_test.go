@@ -182,7 +182,8 @@ It's going to take around [0;36m5 minutes[0m
  2) 2 
 [1;36m 3) 3 [0m
 Choose number from list, or just [enter] for [1;36m3[0m
-> [46mProject Details [0m 
+> 
+[46mProject Details [0m 
 Nodes: [1;36m3[0m
 `,
 			err: nil,
@@ -197,7 +198,8 @@ It's going to take around [0;36m5 minutes[0m
 ********************************************************************************
 [1;36mNodes: [0m
 Enter value, or just [enter] for [1;36m3[0m
-> [46mProject Details [0m 
+> 
+[46mProject Details [0m 
 Nodes: [1;36m3[0m
 `,
 			err: nil,
@@ -490,7 +492,8 @@ func TestStackPrintSettings(t *testing.T) {
 		s.PrintSettings()
 	})
 
-	want := `[46mProject Details [0m 
+	want := `
+[46mProject Details [0m 
 Region: [1;36mtest-a[0m
 Zone:   [1;36mtest[0m
 `

@@ -104,6 +104,7 @@ tfvars file that will drive the terraform script.
 | description     | string  | The description of the variable to prompt the user with                              |
 | default         | string  | A default value for the variable.                                                    |
 | options         | array   | An array of options to turn this into a custom select interface                      |
+| prepend_project | bool    | Whether or not to prepend the project id to the default value. Useful for resources like buckets that have to have globally unique names.                       |
 
 ### UI Controls
 

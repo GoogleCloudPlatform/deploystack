@@ -188,28 +188,38 @@ type Config struct {
 // Custom represents a custom setting that we would like to collect from a user
 // We will collect these settings from the user before continuing.
 type Custom struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Default     string   `json:"default"`
-	Value       string   `json:"value"`
-	Options     []string `json:"options"`
+	Name           string   `json:"name"`
+	Description    string   `json:"description"`
+	Default        string   `json:"default"`
+	Value          string   `json:"value"`
+	Options        []string `json:"options"`
+	PrependProject bool     `json:"prepend_project"`
+	project        string
 }
 
 // Collect will collect a value for a Custom from a user
 func (c *Custom) Collect() error {
 	fmt.Printf("%s%s: %s\n", TERMCYANB, c.Description, TERMCLEAR)
 
+	def := c.Default
+
+	if c.PrependProject {
+		def = fmt.Sprintf("%s-%s", c.project, c.Default)
+	}
+
 	if len(c.Options) > 0 {
-		c.Value = listSelect(c.Options, c.Default)
+		c.Value = listSelect(c.Options, def)
 		return nil
 	}
 
 	result := ""
+
 	if len(c.Default) > 0 {
 		fmt.Printf("Enter value, or just [enter] for %s%s%s\n", TERMCYANB, c.Default, TERMCLEAR)
 	} else {
 		fmt.Printf("Enter value: \n")
 	}
+
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -222,7 +232,7 @@ func (c *Custom) Collect() error {
 		text = strings.Replace(text, "\n", "", -1)
 		result = text
 		if len(text) == 0 {
-			result = c.Default
+			result = def
 		}
 		c.Value = result
 		if len(result) > 0 {
@@ -347,6 +357,9 @@ func (c Config) Process(s *Stack, output string) error {
 		temp := s.GetSetting(v.Name)
 
 		if len(temp) < 1 {
+
+			v.project = project
+
 			if err := v.Collect(); err != nil {
 				// TODO: Do proper error trapping
 				log.Fatalf("error getting custom value from user:  %s", err)
@@ -487,7 +500,7 @@ func (s Stack) PrintSettings() {
 
 	longest := longestLengh(keys)
 
-	fmt.Printf("%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
+	fmt.Printf("\n%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
 	if s, ok := s.Settings["project_id"]; ok && len(s) > 0 {
 		printSetting("project_id", s, longest)
@@ -728,9 +741,11 @@ func BillingAccountManage() (string, error) {
 	}
 
 	if len(accounts) == 1 {
+		fmt.Printf("\nOnly found one billing account. Using : %s%s%s.\n", TERMCYAN, accounts[0].DisplayName, TERMCLEAR)
 		return extractAccount(labeled[0]), nil
 	}
 
+	fmt.Printf("\n%sPlease select one of your billing accounts to use with this project%s.\n", TERMCYAN, TERMCLEAR)
 	result := listSelect(labeled, labeled[0])
 
 	return extractAccount(result), nil
