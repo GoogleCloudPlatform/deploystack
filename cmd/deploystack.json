@@ -1,5 +1,21 @@
 {	
 	"title":"YESORNOSITE",
 	"duration":5,
-	"collect_registrar_contact": true
-}	
+	"collect_project":true,
+	"collect_region":true,
+	"region_type":"functions",
+	"region_default":"us-central1",
+	"custom_settings":[
+		{	
+			"name":"nodes",
+			"description":"Please enter the number of nodes", 
+			"default": "3"
+		},
+		{
+			"name": "bucket",
+			"description": "the name of the Google Cloud Bucket to use in this application",
+			"default": "bucket",
+			"prepend_project": true
+		  }
+	]
+}
