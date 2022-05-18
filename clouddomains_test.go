@@ -121,7 +121,7 @@ func TestDomainIsAvailable(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := DomainIsAvailable(projectID, tc.domain)
+			got, err := domainIsAvailable(projectID, tc.domain)
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
@@ -133,11 +133,13 @@ func TestDomainIsAvailable(t *testing.T) {
 				if !reflect.DeepEqual(tc.wantAvail, got.Availability.String()) {
 					t.Fatalf("expected: %v got: %v", tc.wantAvail, got)
 				}
-
-				cost := fmt.Sprintf("%d%s", got.YearlyPrice.Units, got.YearlyPrice.CurrencyCode)
-				if !reflect.DeepEqual(tc.wantCost, cost) {
-					t.Fatalf("expected: %v got: %v", tc.wantCost, cost)
+				if got.Availability.String() == "AVAILABLE" {
+					cost := fmt.Sprintf("%d%s", got.YearlyPrice.Units, got.YearlyPrice.CurrencyCode)
+					if !reflect.DeepEqual(tc.wantCost, cost) {
+						t.Fatalf("expected: %v got: %v", tc.wantCost, cost)
+					}
 				}
+
 			}
 		})
 	}
@@ -166,7 +168,7 @@ func TestDomainIsVerified(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := DomainsIsVerified(tc.project, tc.domain)
+			got, err := domainsIsVerified(tc.project, tc.domain)
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)

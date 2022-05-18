@@ -3,16 +3,43 @@ package deploystack
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"text/template"
 
 	domains "cloud.google.com/go/domains/apiv1beta1"
 	"google.golang.org/api/iterator"
 	domainspb "google.golang.org/genproto/googleapis/cloud/domains/v1beta1"
-	"google.golang.org/genproto/googleapis/type/money"
 	"google.golang.org/genproto/googleapis/type/postaladdress"
 	"gopkg.in/yaml.v2"
+)
+
+var (
+	// ErrorDomainUntenable is returned when a domain isn't available for registration, but
+	// is also not owned by the user. It can't be used in this app
+	ErrorDomainUntenable = fmt.Errorf("domain is not available, and not owned by attempting user")
+	// ErrorDomainUserDeny is returned when an user declines the choice to purchase.
+	ErrorDomainUserDeny = fmt.Errorf("user said no to buying the domain")
+)
+
+var msgDomainRegisterContactExplanation = fmt.Sprintf(`Domain registration requires some contact data. This process only asks for the 
+absolutely mandatory ones. The domain will be registered with user privacy 
+enabled, so that your contact info will not be public. This will create a file, 
+so that you never have to do it again. 
+%sThis file will only exist locally, or in your Cloud Shell environment.%s  
+`, TERMCYAN, TERMCLEAR)
+
+var (
+	msgDomainRegisterHeader      = fmt.Sprintf("%sManage Domain Registration %s", TERMCYANREV, TERMCLEAR)
+	msgDomainContactHeader       = fmt.Sprintf("Managing Domain contact information")
+	msgDomainContactFileWrite    = fmt.Sprintf("Your information was recorded and placed in a file for your future use.")
+	msgDomainContactFileRead     = fmt.Sprintf("Your information was read from the local contact file.")
+	msgDomainAvailablityHeader   = fmt.Sprintf("Managing Domain Availability")
+	msgDomainAvailablityVerified = fmt.Sprintf("Domain is unavailable for purchase, but records show you are verified as the owner, so it can be used for this application.")
+	msgDomainPurchase            = fmt.Sprintf("%sBuying a domain is not reversable, saying 'y' will incur a charge.%s", TERMREDB, TERMCLEAR)
+	msgDomainRegisterSuccess     = fmt.Sprintf("%sDomain Registered%s. \n", TERMCYANB, TERMCLEAR)
 )
 
 // ContactData represents the structure that we need for Registrar Contact
@@ -66,6 +93,8 @@ func (c ContactData) YAML() (string, error) {
 	return tpl.String(), nil
 }
 
+// DomainContact outputs a varible in the format that Domain Registration
+// API needs.
 func (c ContactData) DomainContact() (domainspb.ContactSettings, error) {
 	dc := domainspb.ContactSettings{}
 
@@ -117,16 +146,99 @@ func newContactDataFromFile(file string) (ContactData, error) {
 	return c, nil
 }
 
-// RegistratContactManage manages collecting domain registraton information
+// DomainManage walks a user through the porocess of collecting contact info and
+// registering a domain.
+func DomainManage(s *Stack) (string, error) {
+	fmt.Println(Divider)
+	fmt.Println(msgDomainRegisterHeader)
+	fmt.Println(Divider)
+	fmt.Println(msgDomainContactHeader)
+
+	contactfile := "contact.yaml"
+	contact := ContactData{}
+	domain := ""
+	project := s.GetSetting("project_id")
+
+	if _, err := os.Stat(contactfile); errors.Is(err, os.ErrNotExist) {
+		contact, err = RegistrarContactManage(contactfile)
+		if err != nil {
+			return "", fmt.Errorf("error getting contact data %s", err)
+		}
+	} else {
+		contact, err = newContactDataFromFile(contactfile)
+		if err != nil {
+			contact, err = RegistrarContactManage(contactfile)
+			if err != nil {
+				return "", fmt.Errorf("error getting contact data %s", err)
+			}
+		} else {
+			fmt.Println(msgDomainContactFileRead)
+		}
+	}
+
+	item := Custom{Name: "domain", Description: "Enter a domain you wish to purchase and use for this application"}
+
+	if err := item.Collect(); err != nil {
+		return "", fmt.Errorf("trouble getting domain from keyboard: %s", err)
+	}
+
+	domain = item.Value
+
+	fmt.Println(Divider)
+	fmt.Println(msgDomainAvailablityHeader)
+
+	domainInfo, err := domainIsAvailable(project, domain)
+	if err != nil {
+		return "", fmt.Errorf("error checking domain %s", err)
+	}
+
+	if domainInfo.Availability == domainspb.RegisterParameters_UNAVAILABLE {
+
+		isVerified, err := domainsIsVerified(project, domain)
+		if err != nil {
+			return "", fmt.Errorf("error verifying domain %s", err)
+		}
+		// If not, fail and ask the user to repick
+		if !isVerified {
+			return "", ErrorDomainUntenable
+		}
+
+		fmt.Println(msgDomainAvailablityVerified)
+		return domain, nil
+	}
+
+	fmt.Println(msgDomainPurchase)
+	fmt.Printf("%sCost for %s%s%s%s will be %s%d%s%s%s.  Continue?%s\n",
+		TERMREDB, TERMCYAN, domain, TERMCLEAR, TERMREDB,
+		TERMCYAN,
+		domainInfo.YearlyPrice.Units, domainInfo.YearlyPrice.CurrencyCode,
+		TERMCLEAR, TERMREDB, TERMCLEAR)
+	choice := Custom{Name: "choice", Description: "y or n?"}
+
+	if err := choice.Collect(); err != nil {
+		return "", fmt.Errorf("trouble getting domain from keyboard: %s", err)
+	}
+
+	if strings.ToLower(choice.Value) != "y" && strings.ToLower(choice.Value) != "yes" {
+		return "", ErrorDomainUserDeny
+	}
+
+	if err := domainRegister(project, domainInfo, contact); err != nil {
+		return "", fmt.Errorf("error registering domain %s", err)
+	}
+	fmt.Println(Divider)
+	fmt.Println(msgDomainRegisterSuccess)
+	return domain, nil
+}
+
+// RegistrarContactManage manages collecting domain registraton information
 // from the user
-func RegistratContactManage(file string) error {
+func RegistrarContactManage(file string) (ContactData, error) {
 	d := newContactData()
 
-	fmt.Printf("%s\n", Divider)
-	fmt.Printf("Domain registration requires some contact data. This process only asks for the absolutely mandatory ones. \n")
-	fmt.Printf("The domain will be registered with user privacy enabled, so that your contact info will not be public. \n")
-	fmt.Printf("This will create a file, so that you never have to do it again. \n")
-	fmt.Printf("This file will only exist locally, or in your Cloud Shell environment.  \n")
+	fmt.Println(Divider)
+	fmt.Printf(msgDomainRegisterContactExplanation)
+	fmt.Println(Divider)
 
 	items := Customs{
 		{Name: "email", Description: "Enter an email address", Default: "person@example.com"},
@@ -140,7 +252,7 @@ func RegistratContactManage(file string) error {
 	}
 
 	if err := items.Collect(); err != nil {
-		return err
+		return d, err
 	}
 
 	d.AllContacts.Email = items.Get("email").Value
@@ -154,17 +266,18 @@ func RegistratContactManage(file string) error {
 
 	yaml, err := d.YAML()
 	if err != nil {
-		return err
+		return d, err
 	}
 
 	if err := os.WriteFile(file, []byte(yaml), 0o644); err != nil {
-		return err
+		return d, err
 	}
+	fmt.Println(msgDomainContactFileWrite)
 
-	return nil
+	return d, nil
 }
 
-func DomainsSearch(project, domain string) ([]*domainspb.RegisterParameters, error) {
+func domainsSearch(project, domain string) ([]*domainspb.RegisterParameters, error) {
 	ctx := context.Background()
 
 	c, err := domains.NewClient(ctx)
@@ -185,24 +298,21 @@ func DomainsSearch(project, domain string) ([]*domainspb.RegisterParameters, err
 	return resp.RegisterParameters, nil
 }
 
-func DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error) {
-	list, err := DomainsSearch(project, domain)
+func domainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error) {
+	list, err := domainsSearch(project, domain)
 	if err != nil {
 		return nil, err
 	}
 	for _, v := range list {
 		if v.DomainName == domain {
-			if v.Availability.String() == "AVAILABLE" {
-				return v, nil
-			}
-			return nil, err
+			return v, err
 		}
 	}
 
 	return nil, err
 }
 
-func DomainsIsVerified(project, domain string) (bool, error) {
+func domainsIsVerified(project, domain string) (bool, error) {
 	ctx := context.Background()
 
 	c, err := domains.NewClient(ctx)
@@ -233,7 +343,7 @@ func DomainsIsVerified(project, domain string) (bool, error) {
 	return false, nil
 }
 
-func DomainRegister(project, domain, dnszone string, cost *money.Money, contact ContactData) error {
+func domainRegister(project string, domaininfo *domainspb.RegisterParameters, contact ContactData) error {
 	ctx := context.Background()
 
 	parent := fmt.Sprintf("projects/%s/locations/global", project)
@@ -265,8 +375,8 @@ func DomainRegister(project, domain, dnszone string, cost *money.Money, contact 
 	}
 
 	reg := domainspb.Registration{
-		Name:            fmt.Sprintf("%s/registrations/%s", parent, domain),
-		DomainName:      domain,
+		Name:            fmt.Sprintf("%s/registrations/%s", parent, domaininfo.DomainName),
+		DomainName:      domaininfo.DomainName,
 		DnsSettings:     &dnssettings,
 		ContactSettings: &dnscontact,
 	}
@@ -274,10 +384,12 @@ func DomainRegister(project, domain, dnszone string, cost *money.Money, contact 
 	req := &domainspb.RegisterDomainRequest{
 		Registration: &reg,
 		Parent:       parent,
-		YearlyPrice:  cost,
+		YearlyPrice:  domaininfo.YearlyPrice,
 	}
 
-	c.RegisterDomain(ctx, req)
+	if _, err := c.RegisterDomain(ctx, req); err != nil {
+		return err
+	}
 
 	return nil
 }
