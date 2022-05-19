@@ -32,6 +32,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/nyaruka/phonenumbers"
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudfunctions/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -68,6 +69,9 @@ func ClearScreen() {
 }
 
 var (
+	// ErrorCustomNotValidPhoneNumber is the error you get when you fail phone
+	// number validation.
+	ErrorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
 	// ErrorBillingInvalidAccount is the error you get if you pass in a bad
 	// Billing Account ID
 	ErrorBillingInvalidAccount = fmt.Errorf("not a valid billing account")
@@ -94,6 +98,8 @@ func init() {
 	}
 }
 
+// BuildDivider captures the size of the terminal screen to build a horizontal
+// divider.
 func BuildDivider(width int) (string, error) {
 	de := 80
 	if width == 0 {
@@ -194,6 +200,7 @@ type Custom struct {
 	Value          string   `json:"value"`
 	Options        []string `json:"options"`
 	PrependProject bool     `json:"prepend_project"`
+	Validation     string   `json:"validation,omitempty"`
 	project        string
 }
 
@@ -220,7 +227,6 @@ func (c *Custom) Collect() error {
 		fmt.Printf("Enter value: \n")
 	}
 
-
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -229,6 +235,19 @@ func (c *Custom) Collect() error {
 		text, _ := reader.ReadString('\n')
 		text = strings.Replace(text, "\n", "", -1)
 		result = text
+
+		switch c.Validation {
+
+		case "phonenumber":
+			num, err := massagePhoneNumber(text)
+			if err != nil {
+				fmt.Printf("%sThat's not a valid phone number. Please try again.%s\n", TERMRED, TERMCLEAR)
+				continue
+			}
+			result = num
+		default:
+		}
+
 		if len(text) == 0 {
 			result = def
 		}
@@ -242,8 +261,23 @@ func (c *Custom) Collect() error {
 	return nil
 }
 
+func massagePhoneNumber(s string) (string, error) {
+	num, err := phonenumbers.Parse(s, "US")
+	if err != nil {
+		return "", ErrorCustomNotValidPhoneNumber
+	}
+	result := phonenumbers.Format(num, phonenumbers.INTERNATIONAL)
+	result = strings.Replace(result, " ", ".", 1)
+	result = strings.ReplaceAll(result, "-", "")
+	result = strings.ReplaceAll(result, " ", "")
+
+	return result, nil
+}
+
+// Customs are a slice of Custom variables.
 type Customs []Custom
 
+// Get returns one Custom Variable
 func (cs Customs) Get(name string) Custom {
 	for _, v := range cs {
 		if v.Name == name {
@@ -254,6 +288,8 @@ func (cs Customs) Get(name string) Custom {
 	return Custom{}
 }
 
+// Collect calls the collect method of all of the Custom variables in the
+// collection in the order in which they were placed there.
 func (cs *Customs) Collect() error {
 	for i, v := range *(cs) {
 		if err := v.Collect(); err != nil {
@@ -298,8 +334,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Project && len(project) == 0 {
 		project, err = ProjectManage()
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
 		}
 		s.AddSetting("project_id", project)
 	}
@@ -307,8 +342,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Region && len(region) == 0 {
 		region, err = RegionManage(project, c.RegionType, c.RegionDefault)
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing region settings: %s", err))
 		}
 		s.AddSetting("Region", region)
 	}
@@ -316,8 +350,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Zone && len(zone) == 0 {
 		zone, err = ZoneManage(project, region)
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing zone settings: %s", err))
 		}
 		s.AddSetting("zone", zone)
 	}
@@ -325,8 +358,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.ProjectNumber {
 		projectnumber, err = ProjectNumber(project)
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing project number settings: %s", err))
 		}
 		s.AddSetting("project_number", projectnumber)
 	}
@@ -334,8 +366,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Domain {
 		domain, err := DomainManage(s)
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error handling domain registration: %s", err))
 		}
 		s.AddSetting("domain", domain)
 	}
@@ -344,8 +375,7 @@ func (c Config) Process(s *Stack, output string) error {
 
 		ba, err := BillingAccountManage()
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing billing settings: %s", err))
 		}
 		billingaccount = ba
 		s.AddSetting("billing_account", billingaccount)
@@ -359,8 +389,7 @@ func (c Config) Process(s *Stack, output string) error {
 			v.project = project
 
 			if err := v.Collect(); err != nil {
-				// TODO: Do proper error trapping
-				log.Fatalf("error getting custom value from user:  %s", err)
+				handleProcessError(fmt.Errorf("error getting custom value from user: %s", err))
 			}
 			s.AddSetting(v.Name, v.Value)
 		}
@@ -370,6 +399,14 @@ func (c Config) Process(s *Stack, output string) error {
 	s.PrintSettings()
 	s.TerraformFile(output)
 	return nil
+}
+
+func handleProcessError(err error) {
+	fmt.Printf("\n\n%sThere was an issue collecting the information it takes to run this application.                             %s\n", TERMREDREV, TERMCLEAR)
+	fmt.Printf("%sPlease try again. if it persists, please report at https://github.com/GoogleCloudPlatform/deploystack/issues %s\n\n", TERMREDB, TERMCLEAR)
+	fmt.Printf("Extra diagnostic information:\n")
+	fmt.Println(err)
+	os.Exit(1)
 }
 
 // NewConfig returns a Config object from a file read.
