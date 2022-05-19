@@ -159,23 +159,6 @@ func DomainManage(s *Stack) (string, error) {
 	domain := ""
 	project := s.GetSetting("project_id")
 
-	if _, err := os.Stat(contactfile); errors.Is(err, os.ErrNotExist) {
-		contact, err = RegistrarContactManage(contactfile)
-		if err != nil {
-			return "", fmt.Errorf("error getting contact data %s", err)
-		}
-	} else {
-		contact, err = newContactDataFromFile(contactfile)
-		if err != nil {
-			contact, err = RegistrarContactManage(contactfile)
-			if err != nil {
-				return "", fmt.Errorf("error getting contact data %s", err)
-			}
-		} else {
-			fmt.Println(msgDomainContactFileRead)
-		}
-	}
-
 	item := Custom{Name: "domain", Description: "Enter a domain you wish to purchase and use for this application"}
 
 	if err := item.Collect(); err != nil {
@@ -205,6 +188,23 @@ func DomainManage(s *Stack) (string, error) {
 
 		fmt.Println(msgDomainAvailablityVerified)
 		return domain, nil
+	}
+
+	if _, err := os.Stat(contactfile); errors.Is(err, os.ErrNotExist) {
+		contact, err = RegistrarContactManage(contactfile)
+		if err != nil {
+			return "", fmt.Errorf("error getting contact data %s", err)
+		}
+	} else {
+		contact, err = newContactDataFromFile(contactfile)
+		if err != nil {
+			contact, err = RegistrarContactManage(contactfile)
+			if err != nil {
+				return "", fmt.Errorf("error getting contact data %s", err)
+			}
+		} else {
+			fmt.Println(msgDomainContactFileRead)
+		}
 	}
 
 	fmt.Println(msgDomainPurchase)
@@ -242,7 +242,7 @@ func RegistrarContactManage(file string) (ContactData, error) {
 
 	items := Customs{
 		{Name: "email", Description: "Enter an email address", Default: "person@example.com"},
-		{Name: "phone", Description: "Enter a phone number. (Please enter with country code - +1 555 555 5555 for US for example)", Default: "+14155551234"},
+		{Name: "phone", Description: "Enter a phone number. (Please enter with country code - +1 555 555 5555 for US for example)", Default: "+14155551234", Validation: "phonenumber"},
 		{Name: "country", Description: "Enter a country code", Default: "US"},
 		{Name: "postalcode", Description: "Enter a postal code", Default: "94502"},
 		{Name: "state", Description: "Enter a state or administrative area", Default: "CA"},

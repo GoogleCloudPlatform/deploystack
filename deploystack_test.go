@@ -754,20 +754,26 @@ func remove(l []string, item string) []string {
 	return l
 }
 
-// func TestDeleteProject(t *testing.T) {
-// 	tests := map[string]struct {
-// 		input string
-// 	}{
-// 		"1": {input: "aprojectthatisthirtycharacter"},
-// 		"2": {input: "aprojecttodeleteplease"},
-// 	}
+func TestMassgePhoneNumber(t *testing.T) {
+	tests := map[string]struct {
+		input string
+		want  string
+		err   error
+	}{
+		"Good":  {"800 555 1234", "+1.8005551234", nil},
+		"Weird": {"d746fd83843", "+1.74683843", nil},
+		"BAD":   {"dghdhdfuejfhfhfhrghfhfhdhgreh", "", ErrorCustomNotValidPhoneNumber},
+	}
 
-// 	for name, tc := range tests {
-// 		t.Run(name, func(t *testing.T) {
-// 			err := DeleteProjectCall(tc.input)
-// 			if err != nil {
-// 				t.Fatalf("expected: no error, got: %v", err)
-// 			}
-// 		})
-// 	}
-// }
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := massagePhoneNumber(tc.input)
+			if err != tc.err {
+				t.Fatalf("expected: %v, got: %v", tc.err, err)
+			}
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}

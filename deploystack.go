@@ -32,6 +32,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/nyaruka/phonenumbers"
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudfunctions/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -194,6 +195,7 @@ type Custom struct {
 	Value          string   `json:"value"`
 	Options        []string `json:"options"`
 	PrependProject bool     `json:"prepend_project"`
+	Validation     string   `json:"validation,omitempty"`
 	project        string
 }
 
@@ -220,7 +222,6 @@ func (c *Custom) Collect() error {
 		fmt.Printf("Enter value: \n")
 	}
 
-
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -229,6 +230,19 @@ func (c *Custom) Collect() error {
 		text, _ := reader.ReadString('\n')
 		text = strings.Replace(text, "\n", "", -1)
 		result = text
+
+		switch c.Validation {
+
+		case "phonenumber":
+			num, err := massagePhoneNumber(text)
+			if err != nil {
+				fmt.Printf("%sThat's not a valid phone number. Please try again.%s\n", TERMRED, TERMCLEAR)
+				continue
+			}
+			result = num
+		default:
+		}
+
 		if len(text) == 0 {
 			result = def
 		}
@@ -240,6 +254,21 @@ func (c *Custom) Collect() error {
 	}
 
 	return nil
+}
+
+var ErrorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
+
+func massagePhoneNumber(s string) (string, error) {
+	num, err := phonenumbers.Parse(s, "US")
+	if err != nil {
+		return "", ErrorCustomNotValidPhoneNumber
+	}
+	result := phonenumbers.Format(num, phonenumbers.INTERNATIONAL)
+	result = strings.Replace(result, " ", ".", 1)
+	result = strings.ReplaceAll(result, "-", "")
+	result = strings.ReplaceAll(result, " ", "")
+
+	return result, nil
 }
 
 type Customs []Custom
@@ -334,8 +363,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Domain {
 		domain, err := DomainManage(s)
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error handling domain registration: %s", err))
 		}
 		s.AddSetting("domain", domain)
 	}
@@ -370,6 +398,14 @@ func (c Config) Process(s *Stack, output string) error {
 	s.PrintSettings()
 	s.TerraformFile(output)
 	return nil
+}
+
+func handleProcessError(err error) {
+	fmt.Printf("\n\n%sThere was an issue collecting the information it takes to run this application.                             %s\n", TERMREDREV, TERMCLEAR)
+	fmt.Printf("%sPlease try again. if it persists, please report at https://github.com/GoogleCloudPlatform/deploystack/issues %s\n\n", TERMREDB, TERMCLEAR)
+	fmt.Printf("Extra diagnostic information:\n")
+	fmt.Println(err)
+	os.Exit(1)
 }
 
 // NewConfig returns a Config object from a file read.
