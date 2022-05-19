@@ -69,6 +69,9 @@ func ClearScreen() {
 }
 
 var (
+	// ErrorCustomNotValidPhoneNumber is the error you get when you fail phone
+	// number validation.
+	ErrorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
 	// ErrorBillingInvalidAccount is the error you get if you pass in a bad
 	// Billing Account ID
 	ErrorBillingInvalidAccount = fmt.Errorf("not a valid billing account")
@@ -95,6 +98,8 @@ func init() {
 	}
 }
 
+// BuildDivider captures the size of the terminal screen to build a horizontal
+// divider.
 func BuildDivider(width int) (string, error) {
 	de := 80
 	if width == 0 {
@@ -256,8 +261,6 @@ func (c *Custom) Collect() error {
 	return nil
 }
 
-var ErrorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
-
 func massagePhoneNumber(s string) (string, error) {
 	num, err := phonenumbers.Parse(s, "US")
 	if err != nil {
@@ -271,8 +274,10 @@ func massagePhoneNumber(s string) (string, error) {
 	return result, nil
 }
 
+// Customs are a slice of Custom variables.
 type Customs []Custom
 
+// Get returns one Custom Variable
 func (cs Customs) Get(name string) Custom {
 	for _, v := range cs {
 		if v.Name == name {
@@ -283,6 +288,8 @@ func (cs Customs) Get(name string) Custom {
 	return Custom{}
 }
 
+// Collect calls the collect method of all of the Custom variables in the
+// collection in the order in which they were placed there.
 func (cs *Customs) Collect() error {
 	for i, v := range *(cs) {
 		if err := v.Collect(); err != nil {
@@ -327,8 +334,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Project && len(project) == 0 {
 		project, err = ProjectManage()
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
 		}
 		s.AddSetting("project_id", project)
 	}
@@ -336,8 +342,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Region && len(region) == 0 {
 		region, err = RegionManage(project, c.RegionType, c.RegionDefault)
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing region settings: %s", err))
 		}
 		s.AddSetting("Region", region)
 	}
@@ -345,8 +350,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Zone && len(zone) == 0 {
 		zone, err = ZoneManage(project, region)
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing zone settings: %s", err))
 		}
 		s.AddSetting("zone", zone)
 	}
@@ -354,8 +358,7 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.ProjectNumber {
 		projectnumber, err = ProjectNumber(project)
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing project number settings: %s", err))
 		}
 		s.AddSetting("project_number", projectnumber)
 	}
@@ -372,8 +375,7 @@ func (c Config) Process(s *Stack, output string) error {
 
 		ba, err := BillingAccountManage()
 		if err != nil {
-			// TODO: Do proper error trapping
-			log.Fatalf(err.Error())
+			handleProcessError(fmt.Errorf("error managing billing settings: %s", err))
 		}
 		billingaccount = ba
 		s.AddSetting("billing_account", billingaccount)
@@ -387,8 +389,7 @@ func (c Config) Process(s *Stack, output string) error {
 			v.project = project
 
 			if err := v.Collect(); err != nil {
-				// TODO: Do proper error trapping
-				log.Fatalf("error getting custom value from user:  %s", err)
+				handleProcessError(fmt.Errorf("error getting custom value from user: %s", err))
 			}
 			s.AddSetting(v.Name, v.Value)
 		}
