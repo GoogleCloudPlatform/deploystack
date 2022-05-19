@@ -1,4 +1,5 @@
 # DeployStack
+[![GoDoc](https://godoc.org/github.com/GoogleCloudPlatform/deploystack?status.svg)](https://godoc.org/github.com/GoogleCloudPlatform/deploystack)
 
 This project is to centralize all of the tools and processes to get terminal
 interfaces for collecting information from users for use with DeployStack.
