@@ -359,32 +359,26 @@ func domainRegister(project string, domaininfo *domainspb.RegisterParameters, co
 		return err
 	}
 
-	dnsprovider := domainspb.DnsSettings_CustomDns_{
-		CustomDns: &domainspb.DnsSettings_CustomDns{
-			NameServers: []string{
-				"ns-cloud-e1.googledomains.com",
-				"ns-cloud-e2.googledomains.com",
-				"ns-cloud-e3.googledomains.com",
-				"ns-cloud-e4.googledomains.com",
-			},
-		},
-	}
-
-	dnssettings := domainspb.DnsSettings{
-		DnsProvider: &dnsprovider,
-	}
-
-	reg := domainspb.Registration{
-		Name:            fmt.Sprintf("%s/registrations/%s", parent, domaininfo.DomainName),
-		DomainName:      domaininfo.DomainName,
-		DnsSettings:     &dnssettings,
-		ContactSettings: &dnscontact,
-	}
-
 	req := &domainspb.RegisterDomainRequest{
-		Registration: &reg,
-		Parent:       parent,
-		YearlyPrice:  domaininfo.YearlyPrice,
+		Registration: &domainspb.Registration{
+			Name:       fmt.Sprintf("%s/registrations/%s", parent, domaininfo.DomainName),
+			DomainName: domaininfo.DomainName,
+			DnsSettings: &domainspb.DnsSettings{
+				DnsProvider: &domainspb.DnsSettings_CustomDns_{
+					CustomDns: &domainspb.DnsSettings_CustomDns{
+						NameServers: []string{
+							"ns-cloud-e1.googledomains.com",
+							"ns-cloud-e2.googledomains.com",
+							"ns-cloud-e3.googledomains.com",
+							"ns-cloud-e4.googledomains.com",
+						},
+					},
+				},
+			},
+			ContactSettings: &dnscontact,
+		},
+		Parent:      parent,
+		YearlyPrice: domaininfo.YearlyPrice,
 	}
 
 	if _, err := c.RegisterDomain(ctx, req); err != nil {
