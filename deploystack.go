@@ -36,7 +36,6 @@ import (
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudfunctions/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
-	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/run/v1"
 	"google.golang.org/api/serviceusage/v1"
@@ -215,7 +214,7 @@ func (c *Custom) Collect() error {
 	}
 
 	if len(c.Options) > 0 {
-		c.Value = listSelect(c.Options, def)
+		c.Value = listSelect(toLabeledValueSlice(c.Options), def).value
 		return nil
 	}
 
@@ -533,7 +532,7 @@ func (s Stack) PrintSettings() {
 		keys = append(keys, i)
 	}
 
-	longest := longestLengh(keys)
+	longest := longestLength(toLabeledValueSlice(keys))
 
 	fmt.Printf("\n%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
@@ -781,9 +780,9 @@ func BillingAccountManage() (string, error) {
 	}
 
 	fmt.Printf("\n%sPlease select one of your billing accounts to use with this project%s.\n", TERMCYAN, TERMCLEAR)
-	result := listSelect(labeled, labeled[0])
+	result := listSelect(toLabeledValueSlice(labeled), labeled[0])
 
-	return extractAccount(result), nil
+	return extractAccount(result.value), nil
 }
 
 func extractAccount(s string) string {
@@ -862,7 +861,7 @@ func ProjectManage() (string, error) {
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
 	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
 
-	project = listSelect(projdis, project)
+	project = listSelect(toLabeledValueSlice(projdis), project).value
 
 	if project == createString {
 		project, err = projectPrompt()
@@ -982,30 +981,6 @@ func regionsRun(project string) ([]string, error) {
 	return resp, nil
 }
 
-// regionsCompute will return a list of regions for Compute Engine
-func regionsCompute(project string) ([]string, error) {
-	resp := []string{}
-
-	ctx := context.Background()
-	svc, err := compute.NewService(ctx, opts)
-	if err != nil {
-		return resp, err
-	}
-
-	results, err := svc.Regions.List(project).Do()
-	if err != nil {
-		return resp, err
-	}
-
-	for _, v := range results.Items {
-		resp = append(resp, v.Name)
-	}
-
-	sort.Strings(resp)
-
-	return resp, nil
-}
-
 // RegionManage promps a user to select a region.
 func RegionManage(project, product, def string) (string, error) {
 	fmt.Printf("Enabling service to poll...\n")
@@ -1029,35 +1004,9 @@ func RegionManage(project, product, def string) (string, error) {
 		return "", err
 	}
 	fmt.Printf("%sChoose a valid region to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	region := listSelect(regions, def)
+	region := listSelect(toLabeledValueSlice(regions), def)
 
-	return region, nil
-}
-
-// zones will return a list of zones in a given region
-func zones(project, region string) ([]string, error) {
-	resp := []string{}
-
-	ctx := context.Background()
-	svc, err := compute.NewService(ctx, opts)
-	if err != nil {
-		return resp, err
-	}
-
-	filter := fmt.Sprintf("name=%s*", region)
-
-	results, err := svc.Zones.List(project).Filter(filter).Do()
-	if err != nil {
-		return resp, err
-	}
-
-	for _, v := range results.Items {
-		resp = append(resp, v.Name)
-	}
-
-	sort.Strings(resp)
-
-	return resp, nil
+	return region.value, nil
 }
 
 // ZoneManage promps a user to select a zone.
@@ -1074,22 +1023,53 @@ func ZoneManage(project, region string) (string, error) {
 	}
 
 	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	zone := listSelect(zones, zones[0])
-	return zone, nil
+	zone := listSelect(toLabeledValueSlice(zones), zones[0])
+	return zone.value, nil
+}
+
+type labeledValue struct {
+	value string
+	label string
+}
+
+type labeledValues []labeledValue
+
+func (l labeledValues) find(value string) labeledValue {
+	for _, v := range l {
+		if v.value == value {
+			return v
+		}
+	}
+	return labeledValue{}
+}
+
+func (l *labeledValues) sort() {
+	sort.Slice(*l, func(i, j int) bool {
+		return (*l)[i].label < (*l)[j].label
+	})
+}
+
+func toLabeledValueSlice(sl []string) labeledValues {
+	r := labeledValues{}
+
+	for _, v := range sl {
+		r = append(r, labeledValue{v, v})
+	}
+	return r
 }
 
 // listSelect presents a slice of strings as a list from which
 // the user can select. It also highlights and preesnts behvaior for the
 // default
-func listSelect(sl []string, def string) string {
+func listSelect(sl labeledValues, def string) labeledValue {
 	itemCount := len(sl)
 	halfcount := int(math.Ceil(float64(itemCount / 2)))
-	width := longestLengh(sl)
+	width := longestLength(sl)
 	defaultExists := false
 
 	if itemCount < 11 {
 		for i, v := range sl {
-			if ok := printWithDefault(i+1, width, v, def); ok {
+			if ok := printWithDefault(i+1, width, v.value, v.label, def); ok {
 				defaultExists = true
 			}
 			fmt.Printf("\n")
@@ -1102,7 +1082,7 @@ func listSelect(sl []string, def string) string {
 
 		for i := 0; i < halfcount; i++ {
 			v := sl[i]
-			if ok := printWithDefault(i+1, width, v, def); ok {
+			if ok := printWithDefault(i+1, width, v.value, v.label, def); ok {
 				defaultExists = true
 			}
 
@@ -1114,7 +1094,7 @@ func listSelect(sl []string, def string) string {
 			}
 
 			v2 := sl[idx-1]
-			if ok := printWithDefault(idx, width, v2, def); ok {
+			if ok := printWithDefault(idx, width, v2.value, v2.label, def); ok {
 				defaultExists = true
 			}
 
@@ -1122,7 +1102,7 @@ func listSelect(sl []string, def string) string {
 		}
 	}
 
-	answer := def
+	answer := sl.find(def)
 	reader := bufio.NewReader(os.Stdin)
 	if defaultExists {
 		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, def, TERMCLEAR)
@@ -1154,14 +1134,14 @@ func listSelect(sl []string, def string) string {
 	return answer
 }
 
-func printWithDefault(idx, width int, value, def string) bool {
-	sp := buildSpacer(cleanTerminalCharsFromString(value), width)
+func printWithDefault(idx, width int, value, label, def string) bool {
+	sp := buildSpacer(cleanTerminalCharsFromString(label), width)
 
 	if value == def {
-		fmt.Printf("%s%2d) %s %s%s", TERMCYANB, idx, value, sp, TERMCLEAR)
+		fmt.Printf("%s%2d) %s %s%s", TERMCYANB, idx, label, sp, TERMCLEAR)
 		return true
 	}
-	fmt.Printf("%2d) %s %s", idx, value, sp)
+	fmt.Printf("%2d) %s %s", idx, label, sp)
 	return false
 }
 
@@ -1175,12 +1155,12 @@ func buildSpacer(s string, l int) string {
 	return sb.String()
 }
 
-func longestLengh(sl []string) int {
+func longestLength(sl []labeledValue) int {
 	longest := 0
 
 	for _, v := range sl {
-		if len(v) > longest {
-			longest = len(cleanTerminalCharsFromString(v))
+		if len(v.label) > longest {
+			longest = len(cleanTerminalCharsFromString(v.label))
 		}
 	}
 
