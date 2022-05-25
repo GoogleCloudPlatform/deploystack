@@ -269,7 +269,7 @@ Choose number from list, or just [enter] for [1;36mus-central1-a[0m
 
 func TestSelectFromListRender(t *testing.T) {
 	tests := map[string]struct {
-		input labeledValues
+		input LabeledValues
 		def   string
 		want  string
 	}{

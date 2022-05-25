@@ -4,26 +4,27 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"google.golang.org/api/compute/v1"
 )
 
 // DiskProjects are the list of projects for disk images for Compute Engine
-var DiskProjects = labeledValues{
-	labeledValue{label: "CentOS", value: "centos-cloud"},
-	labeledValue{label: "Container-Optimized OS (COS)", value: "cos-cloud"},
-	labeledValue{label: "Debian", value: "debian-cloud"},
-	labeledValue{label: "Fedora CoreOS", value: "fedora-coreos-cloud"},
-	labeledValue{label: "Red Hat Enterprise Linux (RHEL)", value: "rhel-cloud"},
-	labeledValue{label: "Red Hat Enterprise Linux (RHEL) for SAP", value: "rhel-sap-cloud"},
-	labeledValue{label: "Rocky Linux", value: "rocky-linux-cloud"},
-	labeledValue{label: "SQL Server", value: "windows-sql-cloud"},
-	labeledValue{label: "SUSE Linux Enterprise Server (SLES)", value: "suse-cloud"},
-	labeledValue{label: "SUSE Linux Enterprise Server (SLES) for SAP", value: "suse-cloud"},
-	labeledValue{label: "SUSE Linux Enterprise Server (SLES) BYOS", value: "suse-byos-cloud"},
-	labeledValue{label: "Ubuntu LTS", value: "ubuntu-os-cloud"},
-	labeledValue{label: "Ubuntu Pro", value: "ubuntu-os-pro-cloud"},
-	labeledValue{label: "Windows Server", value: "windows-cloud"},
+var DiskProjects = LabeledValues{
+	LabeledValue{Label: "CentOS", Value: "centos-cloud"},
+	LabeledValue{Label: "Container-Optimized OS (COS)", Value: "cos-cloud"},
+	LabeledValue{Label: "Debian", Value: "debian-cloud"},
+	LabeledValue{Label: "Fedora CoreOS", Value: "fedora-coreos-cloud"},
+	LabeledValue{Label: "Red Hat Enterprise Linux (RHEL)", Value: "rhel-cloud"},
+	LabeledValue{Label: "Red Hat Enterprise Linux (RHEL) for SAP", Value: "rhel-sap-cloud"},
+	LabeledValue{Label: "Rocky Linux", Value: "rocky-linux-cloud"},
+	LabeledValue{Label: "SQL Server", Value: "windows-sql-cloud"},
+	LabeledValue{Label: "SUSE Linux Enterprise Server (SLES)", Value: "suse-cloud"},
+	LabeledValue{Label: "SUSE Linux Enterprise Server (SLES) for SAP", Value: "suse-cloud"},
+	LabeledValue{Label: "SUSE Linux Enterprise Server (SLES) BYOS", Value: "suse-byos-cloud"},
+	LabeledValue{Label: "Ubuntu LTS", Value: "ubuntu-os-cloud"},
+	LabeledValue{Label: "Ubuntu Pro", Value: "ubuntu-os-pro-cloud"},
+	LabeledValue{Label: "Windows Server", Value: "windows-cloud"},
 }
 
 // regionsCompute will return a list of regions for Compute Engine
@@ -76,8 +77,12 @@ func zones(project, region string) ([]string, error) {
 	return resp, nil
 }
 
-func machineTypes(project, zone string) (labeledValues, error) {
-	resp := labeledValues{}
+func MachineTypes(project, zone string) (*compute.MachineTypeList, error) {
+	return machineTypes(project, zone)
+}
+
+func machineTypes(project, zone string) (*compute.MachineTypeList, error) {
+	resp := &compute.MachineTypeList{}
 	ctx := context.Background()
 	svc, err := compute.NewService(ctx, opts)
 	if err != nil {
@@ -89,22 +94,14 @@ func machineTypes(project, zone string) (labeledValues, error) {
 		return resp, err
 	}
 
-	for _, v := range results.Items {
-		lb := labeledValue{}
-		lb.value = v.Name
-		mb := formatMBToGB(v.MemoryMb)
-		lb.label = fmt.Sprintf("%s CPUs: %d Mem: %s", v.Name, v.GuestCpus, mb)
-
-		resp = append(resp, lb)
-	}
-
-	return resp, nil
+	return results, nil
 }
 
 func formatMBToGB(i int64) string {
 	return fmt.Sprintf("%d GB", i/1024)
 }
 
+// TODO: Write tests for this function
 func diskTypes(project string) (*compute.ImageList, error) {
 	resp := &compute.ImageList{}
 	ctx := context.Background()
@@ -121,9 +118,55 @@ func diskTypes(project string) (*compute.ImageList, error) {
 	return results, nil
 }
 
-func getListOfDiskFamilies(imgs *compute.ImageList) labeledValues {
+func GetListOfMachineTypeFamily(imgs *compute.MachineTypeList) LabeledValues {
+	fam := make(map[string]string)
+	lb := LabeledValues{}
+
+	for _, v := range imgs.Items {
+		parts := strings.Split(v.Name, "-")
+
+		key := fmt.Sprintf("%s %s", parts[0], parts[1])
+		fam[key] = fmt.Sprintf("%s-%s", parts[0], parts[1])
+	}
+
+	for i, v := range fam {
+		if i == "" {
+			continue
+		}
+		lb = append(lb, LabeledValue{v, i})
+	}
+	lb.sort()
+	return lb
+}
+
+func GetListOfMachineTypeByFamily(imgs *compute.MachineTypeList, family string) LabeledValues {
+	lb := LabeledValues{}
+
+	tempTypes := []compute.MachineType{}
+
+	for _, v := range imgs.Items {
+		if strings.Contains(v.Name, family) {
+			tempTypes = append(tempTypes, *v)
+		}
+	}
+
+	sort.Slice(tempTypes, func(i, j int) bool {
+		return tempTypes[i].GuestCpus < tempTypes[j].GuestCpus
+	})
+
+	for _, v := range tempTypes {
+		if strings.Contains(v.Name, family) {
+			value := v.Name
+			label := fmt.Sprintf("%s %s", v.Name, v.Description)
+			lb = append(lb, LabeledValue{value, label})
+		}
+	}
+	return lb
+}
+
+func getListOfImageFamilies(imgs *compute.ImageList) LabeledValues {
 	fam := make(map[string]bool)
-	lb := labeledValues{}
+	lb := LabeledValues{}
 
 	for _, v := range imgs.Items {
 		fam[v.Family] = false
@@ -133,23 +176,24 @@ func getListOfDiskFamilies(imgs *compute.ImageList) labeledValues {
 		if i == "" {
 			continue
 		}
-		lb = append(lb, labeledValue{i, i})
+		lb = append(lb, LabeledValue{i, i})
 	}
 	lb.sort()
 	return lb
 }
 
-func getListOfDiskTypes(imgs *compute.ImageList, family string) labeledValues {
-	lb := labeledValues{}
+func getListOfImageTypesByFamily(imgs *compute.ImageList, project, family string) LabeledValues {
+	lb := LabeledValues{}
 
 	for _, v := range imgs.Items {
 		if v.Family == family {
-			lb = append(lb, labeledValue{v.Name, v.Name})
+			value := fmt.Sprintf("%s/%s", project, v.Name)
+			lb = append(lb, LabeledValue{value, v.Name})
 		}
 	}
 
 	last := lb[len(lb)-1]
-	last.label = fmt.Sprintf("%s (Latest)", last.value)
+	last.Label = fmt.Sprintf("%s (Latest)", last.Label)
 	lb[len(lb)-1] = last
 	lb.sort()
 

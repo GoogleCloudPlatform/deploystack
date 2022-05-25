@@ -60,6 +60,13 @@ const (
 	TERMCLEARSCREEN = "\033[2J"
 	// TERMGREY is the terminal code for grey text
 	TERMGREY = "\033[1;30m"
+
+	// DefaultRegion is the default compute region used in compute calls.
+	DefaultRegion = "us-central1"
+	// DefaultMachineType is the default compute machine type used in compute calls.
+	DefaultMachineType = "n1-standard"
+	// DefaultImageProject is the default project for images used in compute calls.
+	DefaultImageProject = "debian-cloud"
 )
 
 // ClearScreen will clear out a terminal screen.
@@ -214,7 +221,7 @@ func (c *Custom) Collect() error {
 	}
 
 	if len(c.Options) > 0 {
-		c.Value = listSelect(toLabeledValueSlice(c.Options), def).value
+		c.Value = listSelect(toLabeledValueSlice(c.Options), def).Value
 		return nil
 	}
 
@@ -230,10 +237,16 @@ func (c *Custom) Collect() error {
 
 	for {
 		fmt.Print("> ")
-		// TODO: make the error handling here correct.
-		text, _ := reader.ReadString('\n')
+		text, err := reader.ReadString('\n')
+		if err != nil && err.Error() != "EOF" {
+			return err
+		}
 		text = strings.Replace(text, "\n", "", -1)
 		result = text
+
+		if len(text) == 0 {
+			text = def
+		}
 
 		switch c.Validation {
 
@@ -244,12 +257,35 @@ func (c *Custom) Collect() error {
 				continue
 			}
 			result = num
+		case "integer":
+			_, err := strconv.Atoi(text)
+			if err != nil {
+				fmt.Printf("%sYour answer '%s' not a valid integer. Please try again.%s\n", TERMRED, text, TERMCLEAR)
+				continue
+			}
+			result = text
+		case "yesorno":
+			text = strings.TrimSpace(strings.ToLower(text))
+			yesList := " yes y "
+			noList := " no n "
+
+			if !strings.Contains(yesList+noList, text) {
+				fmt.Printf("%sYour answer '%s' is neither 'yes' nor 'no'. Please try again.%s\n", TERMRED, text, TERMCLEAR)
+				continue
+			}
+
+			if strings.Contains(yesList, text) {
+				result = "yes"
+			}
+
+			if strings.Contains(noList, text) {
+				result = "no"
+			}
+
 		default:
+			result = text
 		}
 
-		if len(text) == 0 {
-			result = def
-		}
 		c.Value = result
 		if len(result) > 0 {
 			break
@@ -782,7 +818,7 @@ func BillingAccountManage() (string, error) {
 	fmt.Printf("\n%sPlease select one of your billing accounts to use with this project%s.\n", TERMCYAN, TERMCLEAR)
 	result := listSelect(toLabeledValueSlice(labeled), labeled[0])
 
-	return extractAccount(result.value), nil
+	return extractAccount(result.Value), nil
 }
 
 func extractAccount(s string) string {
@@ -861,7 +897,7 @@ func ProjectManage() (string, error) {
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
 	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
 
-	project = listSelect(toLabeledValueSlice(projdis), project).value
+	project = listSelect(toLabeledValueSlice(projdis), project).Value
 
 	if project == createString {
 		project, err = projectPrompt()
@@ -1006,7 +1042,7 @@ func RegionManage(project, product, def string) (string, error) {
 	fmt.Printf("%sChoose a valid region to use for this application. %s\n", TERMCYANB, TERMCLEAR)
 	region := listSelect(toLabeledValueSlice(regions), def)
 
-	return region.value, nil
+	return region.Value, nil
 }
 
 // ZoneManage promps a user to select a zone.
@@ -1024,36 +1060,36 @@ func ZoneManage(project, region string) (string, error) {
 
 	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", TERMCYANB, TERMCLEAR)
 	zone := listSelect(toLabeledValueSlice(zones), zones[0])
-	return zone.value, nil
+	return zone.Value, nil
 }
 
-type labeledValue struct {
-	value string
-	label string
+type LabeledValue struct {
+	Value string
+	Label string
 }
 
-type labeledValues []labeledValue
+type LabeledValues []LabeledValue
 
-func (l labeledValues) find(value string) labeledValue {
+func (l LabeledValues) find(value string) LabeledValue {
 	for _, v := range l {
-		if v.value == value {
+		if v.Value == value {
 			return v
 		}
 	}
-	return labeledValue{}
+	return LabeledValue{}
 }
 
-func (l *labeledValues) sort() {
+func (l *LabeledValues) sort() {
 	sort.Slice(*l, func(i, j int) bool {
-		return (*l)[i].label < (*l)[j].label
+		return (*l)[i].Label < (*l)[j].Label
 	})
 }
 
-func toLabeledValueSlice(sl []string) labeledValues {
-	r := labeledValues{}
+func toLabeledValueSlice(sl []string) LabeledValues {
+	r := LabeledValues{}
 
 	for _, v := range sl {
-		r = append(r, labeledValue{v, v})
+		r = append(r, LabeledValue{v, v})
 	}
 	return r
 }
@@ -1061,7 +1097,7 @@ func toLabeledValueSlice(sl []string) labeledValues {
 // listSelect presents a slice of strings as a list from which
 // the user can select. It also highlights and preesnts behvaior for the
 // default
-func listSelect(sl labeledValues, def string) labeledValue {
+func listSelect(sl LabeledValues, def string) LabeledValue {
 	itemCount := len(sl)
 	halfcount := int(math.Ceil(float64(itemCount / 2)))
 	width := longestLength(sl)
@@ -1069,7 +1105,7 @@ func listSelect(sl labeledValues, def string) labeledValue {
 
 	if itemCount < 11 {
 		for i, v := range sl {
-			if ok := printWithDefault(i+1, width, v.value, v.label, def); ok {
+			if ok := printWithDefault(i+1, width, v.Value, v.Label, def); ok {
 				defaultExists = true
 			}
 			fmt.Printf("\n")
@@ -1082,7 +1118,7 @@ func listSelect(sl labeledValues, def string) labeledValue {
 
 		for i := 0; i < halfcount; i++ {
 			v := sl[i]
-			if ok := printWithDefault(i+1, width, v.value, v.label, def); ok {
+			if ok := printWithDefault(i+1, width, v.Value, v.Label, def); ok {
 				defaultExists = true
 			}
 
@@ -1094,7 +1130,7 @@ func listSelect(sl labeledValues, def string) labeledValue {
 			}
 
 			v2 := sl[idx-1]
-			if ok := printWithDefault(idx, width, v2.value, v2.label, def); ok {
+			if ok := printWithDefault(idx, width, v2.Value, v2.Label, def); ok {
 				defaultExists = true
 			}
 
@@ -1105,7 +1141,7 @@ func listSelect(sl labeledValues, def string) labeledValue {
 	answer := sl.find(def)
 	reader := bufio.NewReader(os.Stdin)
 	if defaultExists {
-		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, def, TERMCLEAR)
+		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, answer.Label, TERMCLEAR)
 	} else {
 		fmt.Printf("Choose number from list.\n")
 	}
@@ -1155,12 +1191,12 @@ func buildSpacer(s string, l int) string {
 	return sb.String()
 }
 
-func longestLength(sl []labeledValue) int {
+func longestLength(sl []LabeledValue) int {
 	longest := 0
 
 	for _, v := range sl {
-		if len(v.label) > longest {
-			longest = len(cleanTerminalCharsFromString(v.label))
+		if len(v.Label) > longest {
+			longest = len(cleanTerminalCharsFromString(v.Label))
 		}
 	}
 
