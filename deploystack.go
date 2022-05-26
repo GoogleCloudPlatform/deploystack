@@ -91,9 +91,10 @@ var (
 	// characters into a CreateProjectCall
 	ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
 	// Divider is a text element that draws a horizontal line
-	Divider   = ""
-	opts      = option.WithCredentialsFile("")
-	credspath = ""
+	Divider         = ""
+	opts            = option.WithCredentialsFile("")
+	credspath       = ""
+	enabledServices = make(map[string]bool)
 )
 
 func init() {
@@ -973,6 +974,10 @@ func regions(project, product string) ([]string, error) {
 func regionsFunctions(project string) ([]string, error) {
 	resp := []string{}
 
+	if err := ServiceEnable(project, "cloudfunctions.googleapis.com"); err != nil {
+		return resp, fmt.Errorf("error activating service for polling: %s", err)
+	}
+
 	ctx := context.Background()
 	svc, err := cloudfunctions.NewService(ctx, opts)
 	if err != nil {
@@ -997,6 +1002,10 @@ func regionsFunctions(project string) ([]string, error) {
 func regionsRun(project string) ([]string, error) {
 	resp := []string{}
 
+	if err := ServiceEnable(project, "run.googleapis.com"); err != nil {
+		return resp, fmt.Errorf("error activating service for polling: %s", err)
+	}
+
 	ctx := context.Background()
 	svc, err := run.NewService(ctx, opts)
 	if err != nil {
@@ -1019,21 +1028,6 @@ func regionsRun(project string) ([]string, error) {
 
 // RegionManage promps a user to select a region.
 func RegionManage(project, product, def string) (string, error) {
-	fmt.Printf("Enabling service to poll...\n")
-	service := "compute.googleapis.com"
-	switch product {
-	case "compute":
-		service = "compute.googleapis.com"
-	case "functions":
-		service = "cloudfunctions.googleapis.com"
-	case "run":
-		service = "run.googleapis.com"
-	}
-
-	if err := ServiceEnable(project, service); err != nil {
-		return "", fmt.Errorf("error activating service for polling: %s", err)
-	}
-
 	fmt.Printf("Polling for regions...\n")
 	regions, err := regions(project, product)
 	if err != nil {
@@ -1047,11 +1041,6 @@ func RegionManage(project, product, def string) (string, error) {
 
 // ZoneManage promps a user to select a zone.
 func ZoneManage(project, region string) (string, error) {
-	fmt.Printf("Enabling service to poll...\n")
-	if err := ServiceEnable(project, "compute.googleapis.com"); err != nil {
-		return "", fmt.Errorf("error activating service for polling: %s", err)
-	}
-
 	fmt.Printf("Polling for zones...\n")
 	zones, err := zones(project, region)
 	if err != nil {
@@ -1221,6 +1210,12 @@ func cleanTerminalCharsFromString(s string) string {
 // ServiceEnable enable a service in the selected project so that query calls
 // to various lists will work.
 func ServiceEnable(project, service string) error {
+	if _, ok := enabledServices[service]; ok {
+		return nil
+	}
+
+	fmt.Printf("Enabling service: %s...\n", service)
+
 	ctx := context.Background()
 	svc, err := serviceusage.NewService(ctx, opts)
 	if err != nil {
@@ -1235,6 +1230,8 @@ func ServiceEnable(project, service string) error {
 	if !strings.Contains(string(op.Response), "ENABLED") {
 		return ServiceEnable(project, service)
 	}
+
+	enabledServices[service] = true
 
 	return nil
 }

@@ -6,11 +6,6 @@ import (
 
 // DiskTypeManage promps a user to select a disk type.
 func DiskTypeManage(project string) (string, error) {
-	fmt.Printf("Enabling service to poll...\n")
-	if err := ServiceEnable(project, "compute.googleapis.com"); err != nil {
-		return "", fmt.Errorf("error activating service for polling: %s", err)
-	}
-
 	fmt.Printf("Choose an operating system\n")
 	familyProject := listSelect(DiskProjects, DefaultImageProject)
 
@@ -49,13 +44,8 @@ func MachineTypeManage(project, zone string) (string, error) {
 	fmt.Printf("%shttps://cloud.google.com/compute/docs/machine-types%s\n", TERMCYANB, TERMCLEAR)
 	fmt.Println(Divider)
 
-	fmt.Printf("Enabling service to poll...\n")
-	if err := ServiceEnable(project, "compute.googleapis.com"); err != nil {
-		return "", fmt.Errorf("error activating service for polling: %s", err)
-	}
-
 	fmt.Printf("Polling for machine types...\n")
-	types, err := MachineTypes(project, zone)
+	types, err := machineTypes(project, zone)
 	if err != nil {
 		return "", fmt.Errorf("error polling for machine types : %s", err)
 	}

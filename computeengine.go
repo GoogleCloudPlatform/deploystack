@@ -9,6 +9,8 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
+var computeService *compute.Service
+
 // DiskProjects are the list of projects for disk images for Compute Engine
 var DiskProjects = LabeledValues{
 	LabeledValue{Label: "CentOS", Value: "centos-cloud"},
@@ -31,8 +33,7 @@ var DiskProjects = LabeledValues{
 func regionsCompute(project string) ([]string, error) {
 	resp := []string{}
 
-	ctx := context.Background()
-	svc, err := compute.NewService(ctx, opts)
+	svc, err := getComputeService(project)
 	if err != nil {
 		return resp, err
 	}
@@ -51,12 +52,31 @@ func regionsCompute(project string) ([]string, error) {
 	return resp, nil
 }
 
+func getComputeService(project string) (*compute.Service, error) {
+	if computeService != nil {
+		return computeService, nil
+	}
+
+	if err := ServiceEnable(project, "compute.googleapis.com"); err != nil {
+		return nil, fmt.Errorf("error activating service for polling: %s", err)
+	}
+
+	ctx := context.Background()
+	svc, err := compute.NewService(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	computeService = svc
+
+	return svc, nil
+}
+
 // zones will return a list of zones in a given region
 func zones(project, region string) ([]string, error) {
 	resp := []string{}
 
-	ctx := context.Background()
-	svc, err := compute.NewService(ctx, opts)
+	svc, err := getComputeService(project)
 	if err != nil {
 		return resp, err
 	}
@@ -77,14 +97,10 @@ func zones(project, region string) ([]string, error) {
 	return resp, nil
 }
 
-func MachineTypes(project, zone string) (*compute.MachineTypeList, error) {
-	return machineTypes(project, zone)
-}
-
 func machineTypes(project, zone string) (*compute.MachineTypeList, error) {
 	resp := &compute.MachineTypeList{}
-	ctx := context.Background()
-	svc, err := compute.NewService(ctx, opts)
+
+	svc, err := getComputeService(project)
 	if err != nil {
 		return resp, err
 	}
@@ -104,8 +120,8 @@ func formatMBToGB(i int64) string {
 // TODO: Write tests for this function
 func diskTypes(project string) (*compute.ImageList, error) {
 	resp := &compute.ImageList{}
-	ctx := context.Background()
-	svc, err := compute.NewService(ctx, opts)
+
+	svc, err := getComputeService(project)
 	if err != nil {
 		return resp, err
 	}
