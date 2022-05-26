@@ -4,37 +4,38 @@ import (
 	"fmt"
 )
 
-// DiskTypeManage promps a user to select a disk type.
-func DiskTypeManage(project string) (string, error) {
-	fmt.Printf("Choose an operating system\n")
-	familyProject := listSelect(DiskProjects, DefaultImageProject)
+// ImageManage promps a user to select a disk type.
+func ImageManage(project string) (string, error) {
+	fmt.Println(Divider)
+	fmt.Printf("There are a large number of machine images to choose from. For more infomration, \n")
+	fmt.Printf("please refer to the following link for more infomation about machine images.\n")
+	fmt.Printf("%shttps://cloud.google.com/compute/docs/images%s\n", TERMCYANB, TERMCLEAR)
+	fmt.Println(Divider)
 
-	fmt.Printf("Polling for %s disk images...\n", familyProject.Value)
-	types, err := diskTypes(familyProject.Value)
+	colorPrintln("Choose an operating system.", TERMCYANB)
+	ImageTypeProject := listSelect(DiskProjects, DefaultImageProject)
+
+	fmt.Printf("Polling for %s images...\n", ImageTypeProject.Value)
+	images, err := images(ImageTypeProject.Value)
 	if err != nil {
 		return "", err
 	}
 
-	diskTypes := LabeledValues{}
+	families := getListOfImageFamilies(images)
 
-	for _, v := range types.Items {
-		lv := LabeledValue{}
-		lv.Label = v.Name
-		lv.Value = v.Name
-		diskTypes = append(diskTypes, lv)
-	}
+	colorPrintln("Choose a disk family to use for this application.", TERMCYANB)
+	family := listSelect(families, families[0].Value)
 
-	famtypes := getListOfImageFamilies(types)
+	imagesByFam := getListOfImageTypesByFamily(images, ImageTypeProject.Value, family.Value)
 
-	fmt.Printf("%sChoose a disk family to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	diskfamily := listSelect(famtypes, famtypes[0].Value)
-
-	typesbyfam := getListOfImageTypesByFamily(types, familyProject.Value, diskfamily.Value)
-
-	fmt.Printf("%sChoose a disk type to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	result := listSelect(typesbyfam, typesbyfam[len(typesbyfam)-1].Value)
+	colorPrintln("Choose a disk type to use for this application.", TERMCYANB)
+	result := listSelect(imagesByFam, imagesByFam[len(imagesByFam)-1].Value)
 
 	return result.Value, nil
+}
+
+func colorPrintln(msg, color string) {
+	fmt.Printf("%s%s %s\n", color, msg, TERMCLEAR)
 }
 
 func MachineTypeManage(project, zone string) (string, error) {
@@ -119,7 +120,7 @@ func GCEInstanceManage(project, basename string) (map[string]string, error) {
 	if err != nil {
 		return configs, err
 	}
-	configs["instance-image"], err = DiskTypeManage(project)
+	configs["instance-image"], err = ImageManage(project)
 	if err != nil {
 		return configs, err
 	}

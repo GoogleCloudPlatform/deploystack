@@ -118,7 +118,7 @@ func formatMBToGB(i int64) string {
 }
 
 // TODO: Write tests for this function
-func diskTypes(project string) (*compute.ImageList, error) {
+func images(project string) (*compute.ImageList, error) {
 	resp := &compute.ImageList{}
 
 	svc, err := getComputeService(project)
