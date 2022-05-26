@@ -118,20 +118,46 @@ func formatMBToGB(i int64) string {
 }
 
 // TODO: Write tests for this function
-func images(project string) (*compute.ImageList, error) {
+func images(project, imageproject string) (*compute.ImageList, error) {
 	resp := &compute.ImageList{}
 
 	svc, err := getComputeService(project)
 	if err != nil {
 		return resp, err
 	}
-
-	results, err := svc.Images.List(project).Do()
+	results, err := svc.Images.List(imageproject).Do()
 	if err != nil {
 		return resp, err
 	}
 
 	return results, nil
+}
+
+func GetLatestImage(project, imageproject string) (string, error) {
+	resp := ""
+
+	svc, err := getComputeService(project)
+	if err != nil {
+		return resp, err
+	}
+
+	filter := fmt.Sprintf("(family=\"%s\")", DefaultImageFamily)
+	results, err := svc.Images.List(imageproject).Filter(filter).Do()
+	if err != nil {
+		return resp, err
+	}
+
+	sort.Slice(results.Items, func(i, j int) bool {
+		return results.Items[i].CreationTimestamp > results.Items[j].CreationTimestamp
+	})
+
+	for _, v := range results.Items {
+		if v.Deprecated == nil {
+			return v.Name, nil
+		}
+	}
+
+	return "", fmt.Errorf("error: could not find ")
 }
 
 func GetListOfMachineTypeFamily(imgs *compute.MachineTypeList) LabeledValues {
