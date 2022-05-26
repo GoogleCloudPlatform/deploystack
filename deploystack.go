@@ -384,6 +384,14 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	if c.Zone && len(zone) == 0 {
+
+		if !c.Region {
+			region, err = RegionManage(project, "compute", DefaultRegion)
+			if err != nil {
+				handleProcessError(fmt.Errorf("error managing region settings: %s", err))
+			}
+		}
+
 		zone, err = ZoneManage(project, region)
 		if err != nil {
 			handleProcessError(fmt.Errorf("error managing zone settings: %s", err))
