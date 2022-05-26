@@ -16,7 +16,7 @@ func ImageManage(project string) (string, error) {
 	ImageTypeProject := listSelect(DiskProjects, DefaultImageProject)
 
 	fmt.Printf("Polling for %s images...\n", ImageTypeProject.Value)
-	images, err := images(ImageTypeProject.Value)
+	images, err := images(project, ImageTypeProject.Value)
 	if err != nil {
 		return "", err
 	}
