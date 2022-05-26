@@ -31,6 +31,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/nyaruka/phonenumbers"
 	"google.golang.org/api/cloudbilling/v1"
@@ -67,6 +68,8 @@ const (
 	DefaultMachineType = "n1-standard"
 	// DefaultImageProject is the default project for images used in compute calls.
 	DefaultImageProject = "debian-cloud"
+	// DefaultImageFamily is the default project for images used in compute calls.
+	DefaultImageFamily = "debian-11"
 )
 
 // ClearScreen will clear out a terminal screen.
@@ -1222,24 +1225,50 @@ func ServiceEnable(project, service string) error {
 		return nil
 	}
 
-	fmt.Printf("Enabling service: %s...\n", service)
-
 	ctx := context.Background()
 	svc, err := serviceusage.NewService(ctx, opts)
 	if err != nil {
 		return err
 	}
+
 	s := fmt.Sprintf("projects/%s/services/%s", project, service)
+	current, err := svc.Services.Get(s).Do()
+	if err != nil {
+		return err
+	}
+
+	if current.State == "ENABLED" {
+		fmt.Printf("Service %s already enabled in project %s: ..\n", service, project)
+		enabledServices[service] = true
+		return nil
+	}
+
+	fmt.Printf("Enabling service %s in project %s.\n", service, project)
 	op, err := svc.Services.Enable(s, &serviceusage.EnableServiceRequest{}).Do()
 	if err != nil {
 		return fmt.Errorf("could not enable service: %s", err)
 	}
 
 	if !strings.Contains(string(op.Response), "ENABLED") {
-		return ServiceEnable(project, service)
+
+		fmt.Printf("Waiting for service to be enabled...")
+
+		for i := 0; i < 60; i++ {
+			current, err = svc.Services.Get(s).Do()
+			if err != nil {
+				return err
+			}
+			if current.State == "ENABLED" {
+				fmt.Printf("complete.\n")
+				enabledServices[service] = true
+				return nil
+			}
+			fmt.Printf(".")
+			time.Sleep(1 * time.Second)
+		}
+
 	}
 
 	enabledServices[service] = true
-
 	return nil
 }
