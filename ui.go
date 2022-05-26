@@ -73,33 +73,71 @@ func MachineTypeManage(project, zone string) (string, error) {
 	return result.Value, nil
 }
 
-func GCEInstanceManage(project string) (map[string]string, error) {
-	// err := errors.New("")
+func GCEInstanceManage(project, basename string) (map[string]string, error) {
+	var err error
 	configs := make(map[string]string)
 
-	// configs["region"], err = RegionManage(project, "compute", DefaultRegion)
-	// if err != nil {
-	// 	return configs, err
-	// }
+	defaultConfig := map[string]string{
+		"instance-image":        "debian-cloud/debian-10-buster-v20220519",
+		"instance-disksize":     "200",
+		"instance-disktype":     "pd-standard",
+		"instance-tags":         "http-server,https-server",
+		"instance-name":         fmt.Sprintf("%s-instance", basename),
+		"region":                "us-central1",
+		"zone":                  "us-central1-a",
+		"instance-machine-type": "n1-standard-1",
+	}
 
-	// configs["zone"], err = ZoneManage(project, configs["region"])
-	// if err != nil {
-	// 	return configs, err
-	// }
+	chooseDefault := Custom{
+		Name:        "choosedefault",
+		Description: "Do you want to use the default? ('No' means custom)",
+		Default:     "yes",
+		Validation:  "yesorno",
+	}
 
-	// configs["machine-type"], err = MachineTypeManage(project, configs["zone"])
-	// if err != nil {
-	// 	return configs, err
-	// }
-	// configs["image"], err = DiskTypeManage(project)
-	// if err != nil {
-	// 	return configs, err
-	// }
+	if err := chooseDefault.Collect(); err != nil {
+		return configs, err
+	}
+
+	if chooseDefault.Value == "yes" {
+		return defaultConfig, nil
+	}
+
+	nameItem := Custom{
+		Name:        "name",
+		Description: "Enter the name of the instance",
+		Default:     fmt.Sprintf("%s-instance", basename),
+	}
+
+	if err := nameItem.Collect(); err != nil {
+		return configs, err
+	}
+
+	configs["instance-name"] = nameItem.Value
+
+	configs["region"], err = RegionManage(project, "compute", DefaultRegion)
+	if err != nil {
+		return configs, err
+	}
+
+	configs["zone"], err = ZoneManage(project, configs["region"])
+	if err != nil {
+		return configs, err
+	}
+
+	configs["instance-machine-type"], err = MachineTypeManage(project, configs["zone"])
+	if err != nil {
+		return configs, err
+	}
+	configs["instance-image"], err = DiskTypeManage(project)
+	if err != nil {
+		return configs, err
+	}
 
 	items := Customs{
-		{Name: "disksize", Description: "Enter the size of the boot disk you want in GB", Default: "200", Validation: "integer"},
-		{Name: "disktype", Description: "Enter the type of the boot disk you want", Default: "pd-standard", Options: []string{"pd-standard", "pd-balanced", "pd-ssd"}},
-		{Name: "webserver", Description: "Do you want this to be a webserver? ", Default: "no", Validation: "yesorno"},
+		{Name: "instance-disksize", Description: "Enter the size of the boot disk you want in GB", Default: "200", Validation: "integer"},
+		{Name: "instance-disktype", Description: "Enter the type of the boot disk you want", Default: "pd-standard", Options: []string{"pd-standard", "pd-balanced", "pd-ssd"}},
+		{Name: "webserver", Description: "Do you want this to be a webserver (Expose ports 80 & 443)? ", Default: "no", Validation: "yesorno"},
 	}
 
 	if err := items.Collect(); err != nil {
@@ -107,7 +145,13 @@ func GCEInstanceManage(project string) (map[string]string, error) {
 	}
 
 	for _, v := range items {
+		if v.Name == "webserver" {
+			configs["instance-tags"] = "http-server,https-server"
+			continue
+		}
+
 		configs[v.Name] = v.Value
+
 	}
 
 	return configs, nil
