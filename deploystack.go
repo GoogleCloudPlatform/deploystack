@@ -547,7 +547,7 @@ func (s Stack) GetSetting(key string) string {
 
 // Terraform returns all of the settings as a Terraform variables format.
 func (s Stack) Terraform() string {
-	result := ""
+	result := strings.Builder{}
 
 	keys := []string{}
 	for i := range s.Settings {
@@ -562,13 +562,35 @@ func (s Stack) Terraform() string {
 		}
 		label := strings.ToLower(strings.ReplaceAll(v, " ", "_"))
 		val := s.Settings[v]
+
 		if len(val) < 1 {
 			continue
 		}
-		result = result + fmt.Sprintf("%s=\"%s\"\n", label, val)
+
+		if val[0:1] == "[" {
+			sb := strings.Builder{}
+			sb.WriteString("[")
+			tmp := strings.ReplaceAll(val, "[", "")
+			tmp = strings.ReplaceAll(tmp, "]", "")
+			sl := strings.Split(tmp, ",")
+
+			for i, v := range sl {
+				sl[i] = fmt.Sprintf("\"%s\"", v)
+			}
+
+			delimtext := strings.Join(sl, ",")
+
+			sb.WriteString(delimtext)
+			sb.WriteString("]")
+			result.WriteString(fmt.Sprintf("%s=%s\n", label, sb.String()))
+			continue
+		}
+
+		result.WriteString(fmt.Sprintf("%s=\"%s\"\n", label, val))
+
 	}
 
-	return result
+	return result.String()
 }
 
 // TerraformFile exports TFVars format to input file.
