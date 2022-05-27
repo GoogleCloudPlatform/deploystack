@@ -36,10 +36,8 @@ import (
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudfunctions/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
-	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/run/v1"
-	"google.golang.org/api/serviceusage/v1"
 )
 
 const (
@@ -61,6 +59,15 @@ const (
 	TERMCLEARSCREEN = "\033[2J"
 	// TERMGREY is the terminal code for grey text
 	TERMGREY = "\033[1;30m"
+
+	// DefaultRegion is the default compute region used in compute calls.
+	DefaultRegion = "us-central1"
+	// DefaultMachineType is the default compute machine type used in compute calls.
+	DefaultMachineType = "n1-standard"
+	// DefaultImageProject is the default project for images used in compute calls.
+	DefaultImageProject = "debian-cloud"
+	// DefaultImageFamily is the default project for images used in compute calls.
+	DefaultImageFamily = "debian-11"
 )
 
 // ClearScreen will clear out a terminal screen.
@@ -175,20 +182,20 @@ func HandleFlags() Flags {
 // be in a json file. The idea is minimal programming has to be done to setup
 // a DeployStack and export out a tfvars file for terraform part of solution.
 type Config struct {
-	Title          string            `json:"title"`
-	Description    string            `json:"description"`
-	Duration       int               `json:"duration"`
-	Project        bool              `json:"collect_project"`
-	ProjectNumber  bool              `json:"collect_project_number"`
-	BillingAccount bool              `json:"collect_billing_account"`
-	Domain         bool              `json:"register_domain"`
-	Region         bool              `json:"collect_region"`
-	RegionType     string            `json:"region_type"`
-	RegionDefault  string            `json:"region_default"`
-	Zone           bool              `json:"collect_zone"`
-	HardSet        map[string]string `json:"hard_settings"`
-	CustomSettings []Custom          `json:"custom_settings"`
-	// RegistrarContact bool              `json:"collect_registrar_contact"`
+	Title                string            `json:"title"`
+	Description          string            `json:"description"`
+	Duration             int               `json:"duration"`
+	Project              bool              `json:"collect_project"`
+	ProjectNumber        bool              `json:"collect_project_number"`
+	BillingAccount       bool              `json:"collect_billing_account"`
+	Domain               bool              `json:"register_domain"`
+	Region               bool              `json:"collect_region"`
+	RegionType           string            `json:"region_type"`
+	RegionDefault        string            `json:"region_default"`
+	Zone                 bool              `json:"collect_zone"`
+	HardSet              map[string]string `json:"hard_settings"`
+	CustomSettings       []Custom          `json:"custom_settings"`
+	ConfigureGCEInstance bool              `json:"configure_gce_instance"`
 }
 
 // Custom represents a custom setting that we would like to collect from a user
@@ -215,7 +222,7 @@ func (c *Custom) Collect() error {
 	}
 
 	if len(c.Options) > 0 {
-		c.Value = listSelect(c.Options, def)
+		c.Value = listSelect(toLabeledValueSlice(c.Options), def).Value
 		return nil
 	}
 
@@ -231,10 +238,16 @@ func (c *Custom) Collect() error {
 
 	for {
 		fmt.Print("> ")
-		// TODO: make the error handling here correct.
-		text, _ := reader.ReadString('\n')
+		text, err := reader.ReadString('\n')
+		if err != nil && err.Error() != "EOF" {
+			return err
+		}
 		text = strings.Replace(text, "\n", "", -1)
 		result = text
+
+		if len(text) == 0 {
+			text = def
+		}
 
 		switch c.Validation {
 
@@ -245,12 +258,35 @@ func (c *Custom) Collect() error {
 				continue
 			}
 			result = num
+		case "integer":
+			_, err := strconv.Atoi(text)
+			if err != nil {
+				fmt.Printf("%sYour answer '%s' not a valid integer. Please try again.%s\n", TERMRED, text, TERMCLEAR)
+				continue
+			}
+			result = text
+		case "yesorno":
+			text = strings.TrimSpace(strings.ToLower(text))
+			yesList := " yes y "
+			noList := " no n "
+
+			if !strings.Contains(yesList+noList, text) {
+				fmt.Printf("%sYour answer '%s' is neither 'yes' nor 'no'. Please try again.%s\n", TERMRED, text, TERMCLEAR)
+				continue
+			}
+
+			if strings.Contains(yesList, text) {
+				result = "yes"
+			}
+
+			if strings.Contains(noList, text) {
+				result = "no"
+			}
+
 		default:
+			result = text
 		}
 
-		if len(text) == 0 {
-			result = def
-		}
 		c.Value = result
 		if len(result) > 0 {
 			break
@@ -339,6 +375,22 @@ func (c Config) Process(s *Stack, output string) error {
 		s.AddSetting("project_id", project)
 	}
 
+	if c.ConfigureGCEInstance {
+		basename := s.GetSetting("basename")
+		config, err := GCEInstanceManage(project, basename)
+		if err != nil {
+			handleProcessError(fmt.Errorf("error managing compute instance settings: %s", err))
+		}
+
+		for i, v := range config {
+			s.AddSetting(i, v)
+		}
+
+	}
+
+	region = s.GetSetting("region")
+	zone = s.GetSetting("zone")
+
 	if c.Region && len(region) == 0 {
 		region, err = RegionManage(project, c.RegionType, c.RegionDefault)
 		if err != nil {
@@ -348,6 +400,14 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	if c.Zone && len(zone) == 0 {
+
+		if !c.Region {
+			region, err = RegionManage(project, "compute", DefaultRegion)
+			if err != nil {
+				handleProcessError(fmt.Errorf("error managing region settings: %s", err))
+			}
+		}
+
 		zone, err = ZoneManage(project, region)
 		if err != nil {
 			handleProcessError(fmt.Errorf("error managing zone settings: %s", err))
@@ -487,7 +547,7 @@ func (s Stack) GetSetting(key string) string {
 
 // Terraform returns all of the settings as a Terraform variables format.
 func (s Stack) Terraform() string {
-	result := ""
+	result := strings.Builder{}
 
 	keys := []string{}
 	for i := range s.Settings {
@@ -502,13 +562,35 @@ func (s Stack) Terraform() string {
 		}
 		label := strings.ToLower(strings.ReplaceAll(v, " ", "_"))
 		val := s.Settings[v]
+
 		if len(val) < 1 {
 			continue
 		}
-		result = result + fmt.Sprintf("%s=\"%s\"\n", label, val)
+
+		if val[0:1] == "[" {
+			sb := strings.Builder{}
+			sb.WriteString("[")
+			tmp := strings.ReplaceAll(val, "[", "")
+			tmp = strings.ReplaceAll(tmp, "]", "")
+			sl := strings.Split(tmp, ",")
+
+			for i, v := range sl {
+				sl[i] = fmt.Sprintf("\"%s\"", v)
+			}
+
+			delimtext := strings.Join(sl, ",")
+
+			sb.WriteString(delimtext)
+			sb.WriteString("]")
+			result.WriteString(fmt.Sprintf("%s=%s\n", label, sb.String()))
+			continue
+		}
+
+		result.WriteString(fmt.Sprintf("%s=\"%s\"\n", label, val))
+
 	}
 
-	return result
+	return result.String()
 }
 
 // TerraformFile exports TFVars format to input file.
@@ -533,7 +615,7 @@ func (s Stack) PrintSettings() {
 		keys = append(keys, i)
 	}
 
-	longest := longestLengh(keys)
+	longest := longestLength(toLabeledValueSlice(keys))
 
 	fmt.Printf("\n%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
@@ -781,9 +863,9 @@ func BillingAccountManage() (string, error) {
 	}
 
 	fmt.Printf("\n%sPlease select one of your billing accounts to use with this project%s.\n", TERMCYAN, TERMCLEAR)
-	result := listSelect(labeled, labeled[0])
+	result := listSelect(toLabeledValueSlice(labeled), labeled[0])
 
-	return extractAccount(result), nil
+	return extractAccount(result.Value), nil
 }
 
 func extractAccount(s string) string {
@@ -862,7 +944,7 @@ func ProjectManage() (string, error) {
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
 	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
 
-	project = listSelect(projdis, project)
+	project = listSelect(toLabeledValueSlice(projdis), project).Value
 
 	if project == createString {
 		project, err = projectPrompt()
@@ -938,6 +1020,10 @@ func regions(project, product string) ([]string, error) {
 func regionsFunctions(project string) ([]string, error) {
 	resp := []string{}
 
+	if err := ServiceEnable(project, "cloudfunctions.googleapis.com"); err != nil {
+		return resp, fmt.Errorf("error activating service for polling: %s", err)
+	}
+
 	ctx := context.Background()
 	svc, err := cloudfunctions.NewService(ctx, opts)
 	if err != nil {
@@ -962,6 +1048,10 @@ func regionsFunctions(project string) ([]string, error) {
 func regionsRun(project string) ([]string, error) {
 	resp := []string{}
 
+	if err := ServiceEnable(project, "run.googleapis.com"); err != nil {
+		return resp, fmt.Errorf("error activating service for polling: %s", err)
+	}
+
 	ctx := context.Background()
 	svc, err := run.NewService(ctx, opts)
 	if err != nil {
@@ -982,91 +1072,21 @@ func regionsRun(project string) ([]string, error) {
 	return resp, nil
 }
 
-// regionsCompute will return a list of regions for Compute Engine
-func regionsCompute(project string) ([]string, error) {
-	resp := []string{}
-
-	ctx := context.Background()
-	svc, err := compute.NewService(ctx, opts)
-	if err != nil {
-		return resp, err
-	}
-
-	results, err := svc.Regions.List(project).Do()
-	if err != nil {
-		return resp, err
-	}
-
-	for _, v := range results.Items {
-		resp = append(resp, v.Name)
-	}
-
-	sort.Strings(resp)
-
-	return resp, nil
-}
-
 // RegionManage promps a user to select a region.
 func RegionManage(project, product, def string) (string, error) {
-	fmt.Printf("Enabling service to poll...\n")
-	service := "compute.googleapis.com"
-	switch product {
-	case "compute":
-		service = "compute.googleapis.com"
-	case "functions":
-		service = "cloudfunctions.googleapis.com"
-	case "run":
-		service = "run.googleapis.com"
-	}
-
-	if err := ServiceEnable(project, service); err != nil {
-		return "", fmt.Errorf("error activating service for polling: %s", err)
-	}
-
 	fmt.Printf("Polling for regions...\n")
 	regions, err := regions(project, product)
 	if err != nil {
 		return "", err
 	}
 	fmt.Printf("%sChoose a valid region to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	region := listSelect(regions, def)
+	region := listSelect(toLabeledValueSlice(regions), def)
 
-	return region, nil
-}
-
-// zones will return a list of zones in a given region
-func zones(project, region string) ([]string, error) {
-	resp := []string{}
-
-	ctx := context.Background()
-	svc, err := compute.NewService(ctx, opts)
-	if err != nil {
-		return resp, err
-	}
-
-	filter := fmt.Sprintf("name=%s*", region)
-
-	results, err := svc.Zones.List(project).Filter(filter).Do()
-	if err != nil {
-		return resp, err
-	}
-
-	for _, v := range results.Items {
-		resp = append(resp, v.Name)
-	}
-
-	sort.Strings(resp)
-
-	return resp, nil
+	return region.Value, nil
 }
 
 // ZoneManage promps a user to select a zone.
 func ZoneManage(project, region string) (string, error) {
-	fmt.Printf("Enabling service to poll...\n")
-	if err := ServiceEnable(project, "compute.googleapis.com"); err != nil {
-		return "", fmt.Errorf("error activating service for polling: %s", err)
-	}
-
 	fmt.Printf("Polling for zones...\n")
 	zones, err := zones(project, region)
 	if err != nil {
@@ -1074,22 +1094,53 @@ func ZoneManage(project, region string) (string, error) {
 	}
 
 	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	zone := listSelect(zones, zones[0])
-	return zone, nil
+	zone := listSelect(toLabeledValueSlice(zones), zones[0])
+	return zone.Value, nil
+}
+
+type LabeledValue struct {
+	Value string
+	Label string
+}
+
+type LabeledValues []LabeledValue
+
+func (l LabeledValues) find(value string) LabeledValue {
+	for _, v := range l {
+		if v.Value == value {
+			return v
+		}
+	}
+	return LabeledValue{}
+}
+
+func (l *LabeledValues) sort() {
+	sort.Slice(*l, func(i, j int) bool {
+		return (*l)[i].Label < (*l)[j].Label
+	})
+}
+
+func toLabeledValueSlice(sl []string) LabeledValues {
+	r := LabeledValues{}
+
+	for _, v := range sl {
+		r = append(r, LabeledValue{v, v})
+	}
+	return r
 }
 
 // listSelect presents a slice of strings as a list from which
 // the user can select. It also highlights and preesnts behvaior for the
 // default
-func listSelect(sl []string, def string) string {
+func listSelect(sl LabeledValues, def string) LabeledValue {
 	itemCount := len(sl)
 	halfcount := int(math.Ceil(float64(itemCount / 2)))
-	width := longestLengh(sl)
+	width := longestLength(sl)
 	defaultExists := false
 
 	if itemCount < 11 {
 		for i, v := range sl {
-			if ok := printWithDefault(i+1, width, v, def); ok {
+			if ok := printWithDefault(i+1, width, v.Value, v.Label, def); ok {
 				defaultExists = true
 			}
 			fmt.Printf("\n")
@@ -1102,7 +1153,7 @@ func listSelect(sl []string, def string) string {
 
 		for i := 0; i < halfcount; i++ {
 			v := sl[i]
-			if ok := printWithDefault(i+1, width, v, def); ok {
+			if ok := printWithDefault(i+1, width, v.Value, v.Label, def); ok {
 				defaultExists = true
 			}
 
@@ -1114,7 +1165,7 @@ func listSelect(sl []string, def string) string {
 			}
 
 			v2 := sl[idx-1]
-			if ok := printWithDefault(idx, width, v2, def); ok {
+			if ok := printWithDefault(idx, width, v2.Value, v2.Label, def); ok {
 				defaultExists = true
 			}
 
@@ -1122,10 +1173,10 @@ func listSelect(sl []string, def string) string {
 		}
 	}
 
-	answer := def
+	answer := sl.find(def)
 	reader := bufio.NewReader(os.Stdin)
 	if defaultExists {
-		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, def, TERMCLEAR)
+		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, answer.Label, TERMCLEAR)
 	} else {
 		fmt.Printf("Choose number from list.\n")
 	}
@@ -1154,14 +1205,14 @@ func listSelect(sl []string, def string) string {
 	return answer
 }
 
-func printWithDefault(idx, width int, value, def string) bool {
-	sp := buildSpacer(cleanTerminalCharsFromString(value), width)
+func printWithDefault(idx, width int, value, label, def string) bool {
+	sp := buildSpacer(cleanTerminalCharsFromString(label), width)
 
 	if value == def {
-		fmt.Printf("%s%2d) %s %s%s", TERMCYANB, idx, value, sp, TERMCLEAR)
+		fmt.Printf("%s%2d) %s %s%s", TERMCYANB, idx, label, sp, TERMCLEAR)
 		return true
 	}
-	fmt.Printf("%2d) %s %s", idx, value, sp)
+	fmt.Printf("%2d) %s %s", idx, label, sp)
 	return false
 }
 
@@ -1175,12 +1226,12 @@ func buildSpacer(s string, l int) string {
 	return sb.String()
 }
 
-func longestLengh(sl []string) int {
+func longestLength(sl []LabeledValue) int {
 	longest := 0
 
 	for _, v := range sl {
-		if len(v) > longest {
-			longest = len(cleanTerminalCharsFromString(v))
+		if len(v.Label) > longest {
+			longest = len(cleanTerminalCharsFromString(v.Label))
 		}
 	}
 
@@ -1200,25 +1251,4 @@ func cleanTerminalCharsFromString(s string) string {
 	r = strings.ReplaceAll(r, TERMGREY, "")
 
 	return r
-}
-
-// ServiceEnable enable a service in the selected project so that query calls
-// to various lists will work.
-func ServiceEnable(project, service string) error {
-	ctx := context.Background()
-	svc, err := serviceusage.NewService(ctx, opts)
-	if err != nil {
-		return err
-	}
-	s := fmt.Sprintf("projects/%s/services/%s", project, service)
-	op, err := svc.Services.Enable(s, &serviceusage.EnableServiceRequest{}).Do()
-	if err != nil {
-		return fmt.Errorf("could not enable service: %s", err)
-	}
-
-	if !strings.Contains(string(op.Response), "ENABLED") {
-		return ServiceEnable(project, service)
-	}
-
-	return nil
 }

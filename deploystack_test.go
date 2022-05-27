@@ -240,8 +240,7 @@ func TestManageZone(t *testing.T) {
 		"1": {
 			project: projectID,
 			region:  "us-central1",
-			want: `Enabling service to poll...
-Polling for zones...
+			want: `Polling for zones...
 [1;36mChoose a valid zone to use for this application. [0m
 [1;36m 1) us-central1-a [0m
  2) us-central1-b 
@@ -269,12 +268,12 @@ Choose number from list, or just [enter] for [1;36mus-central1-a[0m
 
 func TestSelectFromListRender(t *testing.T) {
 	tests := map[string]struct {
-		input []string
+		input LabeledValues
 		def   string
 		want  string
 	}{
 		"1": {
-			input: []string{"one", "two", "three"},
+			input: toLabeledValueSlice([]string{"one", "two", "three"}),
 			def:   "two",
 			want: ` 1) one   
 [1;36m 2) two   [0m
@@ -283,7 +282,7 @@ Choose number from list, or just [enter] for [1;36mtwo[0m
 > `,
 		},
 		"2": {
-			input: []string{"one", "two", "three", "four", "five", "six"},
+			input: toLabeledValueSlice([]string{"one", "two", "three", "four", "five", "six"}),
 			def:   "six",
 			want: ` 1) one   
  2) two   
@@ -295,7 +294,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
 		"3": {
-			input: []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"},
+			input: toLabeledValueSlice([]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"}),
 			def:   "six",
 			want: ` 1) one     7) seven  
  2) two     8) eight  
@@ -307,7 +306,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
 		"4": {
-			input: []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"},
+			input: toLabeledValueSlice([]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"}),
 			def:   "six",
 			want: ` 1) one     7) seven  
  2) two     8) eight  
@@ -319,7 +318,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
 		"5": {
-			input: []string{
+			input: toLabeledValueSlice([]string{
 				"CREATE NEW PROJECT",
 				"aiab-test-project",
 				"appinabox-baslclb-tester",
@@ -358,7 +357,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 				"zprojectnamedeletefrzcl",
 				"zprojectnamedeletehgzcu",
 				"zprojectnamedeleteveday",
-			},
+			}),
 			def: "stackinabox",
 			want: ` 1) CREATE NEW PROJECT            20) microsites-appinabox          
  2) aiab-test-project             21) microsites-deploystack        
@@ -402,13 +401,16 @@ func TestStackTFvars(t *testing.T) {
 	s := NewStack()
 	s.AddSetting("project", "testproject")
 	s.AddSetting("boolean", "true")
+	s.AddSetting("set", "[item1,item2]")
 	got := s.Terraform()
 
 	want := `boolean="true"
 project="testproject"
+set=["item1","item2"]
 `
 
 	if got != want {
+		fmt.Println(diff.Diff(want, got))
 		t.Fatalf("expected: %v, got: %v", want, got)
 	}
 }
@@ -516,7 +518,7 @@ func captureOutput(f func()) string {
 	return string(out)
 }
 
-func regionHelper(file string) ([]string, error) {
+func listHelper(file string) ([]string, error) {
 	result := []string{}
 	dat, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -539,17 +541,17 @@ func regionHelper(file string) ([]string, error) {
 }
 
 func TestGetRegions(t *testing.T) {
-	cRegions, err := regionHelper("test_files/regions_compute.txt")
+	cRegions, err := listHelper("test_files/regions_compute.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
 
-	fRegions, err := regionHelper("test_files/regions_functions.txt")
+	fRegions, err := listHelper("test_files/regions_functions.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
 
-	rRegions, err := regionHelper("test_files/regions_run.txt")
+	rRegions, err := listHelper("test_files/regions_run.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
@@ -575,33 +577,6 @@ func TestGetRegions(t *testing.T) {
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
-			}
-		})
-	}
-}
-
-func TestGetZones(t *testing.T) {
-	tests := map[string]struct {
-		project string
-		region  string
-		want    []string
-	}{
-		"1": {project: projectID, region: "us-central1", want: []string{
-			"us-central1-a",
-			"us-central1-b",
-			"us-central1-c",
-			"us-central1-f",
-		}},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := zones(tc.project, tc.region)
-			if err != nil {
-				t.Fatalf("expected: no error, got: project-%s:%v", projectID, err)
-			}
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}
 		})
 	}
