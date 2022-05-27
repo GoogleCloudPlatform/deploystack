@@ -133,7 +133,7 @@ func images(project, imageproject string) (*compute.ImageList, error) {
 	return results, nil
 }
 
-func GetLatestImage(project, imageproject string) (string, error) {
+func GetLatestImage(project, imageproject, imagefamily string) (string, error) {
 	resp := ""
 
 	svc, err := getComputeService(project)
@@ -141,7 +141,7 @@ func GetLatestImage(project, imageproject string) (string, error) {
 		return resp, err
 	}
 
-	filter := fmt.Sprintf("(family=\"%s\")", DefaultImageFamily)
+	filter := fmt.Sprintf("(family=\"%s\")", imagefamily)
 	results, err := svc.Images.List(imageproject).Filter(filter).Do()
 	if err != nil {
 		return resp, err
@@ -153,7 +153,7 @@ func GetLatestImage(project, imageproject string) (string, error) {
 
 	for _, v := range results.Items {
 		if v.Deprecated == nil {
-			return v.Name, nil
+			return fmt.Sprintf("%s/%s", imageproject, v.Name), nil
 		}
 	}
 

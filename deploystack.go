@@ -185,20 +185,20 @@ func HandleFlags() Flags {
 // be in a json file. The idea is minimal programming has to be done to setup
 // a DeployStack and export out a tfvars file for terraform part of solution.
 type Config struct {
-	Title          string            `json:"title"`
-	Description    string            `json:"description"`
-	Duration       int               `json:"duration"`
-	Project        bool              `json:"collect_project"`
-	ProjectNumber  bool              `json:"collect_project_number"`
-	BillingAccount bool              `json:"collect_billing_account"`
-	Domain         bool              `json:"register_domain"`
-	Region         bool              `json:"collect_region"`
-	RegionType     string            `json:"region_type"`
-	RegionDefault  string            `json:"region_default"`
-	Zone           bool              `json:"collect_zone"`
-	HardSet        map[string]string `json:"hard_settings"`
-	CustomSettings []Custom          `json:"custom_settings"`
-	// RegistrarContact bool              `json:"collect_registrar_contact"`
+	Title                string            `json:"title"`
+	Description          string            `json:"description"`
+	Duration             int               `json:"duration"`
+	Project              bool              `json:"collect_project"`
+	ProjectNumber        bool              `json:"collect_project_number"`
+	BillingAccount       bool              `json:"collect_billing_account"`
+	Domain               bool              `json:"register_domain"`
+	Region               bool              `json:"collect_region"`
+	RegionType           string            `json:"region_type"`
+	RegionDefault        string            `json:"region_default"`
+	Zone                 bool              `json:"collect_zone"`
+	HardSet              map[string]string `json:"hard_settings"`
+	CustomSettings       []Custom          `json:"custom_settings"`
+	ConfigureGCEInstance bool              `json:"configure_gce_instance"`
 }
 
 // Custom represents a custom setting that we would like to collect from a user
@@ -377,6 +377,22 @@ func (c Config) Process(s *Stack, output string) error {
 		}
 		s.AddSetting("project_id", project)
 	}
+
+	if c.ConfigureGCEInstance {
+		basename := s.GetSetting("basename")
+		config, err := GCEInstanceManage(project, basename)
+		if err != nil {
+			handleProcessError(fmt.Errorf("error managing compute instance settings: %s", err))
+		}
+
+		for i, v := range config {
+			s.AddSetting(i, v)
+		}
+
+	}
+
+	region = s.GetSetting("region")
+	zone = s.GetSetting("zone")
 
 	if c.Region && len(region) == 0 {
 		region, err = RegionManage(project, c.RegionType, c.RegionDefault)

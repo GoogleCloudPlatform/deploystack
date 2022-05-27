@@ -2,6 +2,8 @@ package deploystack
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 )
 
 // ImageManage promps a user to select a disk type.
@@ -64,20 +66,81 @@ func MachineTypeManage(project, zone string) (string, error) {
 	return result.Value, nil
 }
 
-func GCEInstanceManage(project, basename string) (map[string]string, error) {
+type GCEInstanceConfig map[string]string
+
+func (gce GCEInstanceConfig) Print(title string) {
+	keys := []string{}
+	for i := range gce {
+		keys = append(keys, i)
+	}
+
+	longest := longestLength(toLabeledValueSlice(keys))
+
+	colorPrintln(title, TERMCYANREV)
+	exclude := []string{}
+
+	if s, ok := gce["instance-name"]; ok && len(s) > 0 {
+		printSetting("instance-name", s, longest)
+		exclude = append(exclude, "instance-name")
+	}
+
+	if s, ok := gce["region"]; ok && len(s) > 0 {
+		printSetting("region", s, longest)
+		exclude = append(exclude, "region")
+	}
+
+	if s, ok := gce["zone"]; ok && len(s) > 0 {
+		printSetting("zone", s, longest)
+		exclude = append(exclude, "zone")
+	}
+
+	ordered := []string{}
+	for i, v := range gce {
+		if strings.Contains(strings.Join(exclude, " "), i) {
+			continue
+		}
+		if len(v) < 1 {
+			continue
+		}
+
+		ordered = append(ordered, i)
+	}
+	sort.Strings(ordered)
+
+	for i := range ordered {
+		key := ordered[i]
+		printSetting(key, gce[key], longest)
+	}
+}
+
+func GCEInstanceManage(project, basename string) (GCEInstanceConfig, error) {
 	var err error
 	configs := make(map[string]string)
 
-	defaultConfig := map[string]string{
-		"instance-image":        "debian-cloud/debian-10-buster-v20220519",
+	defaultImage, err := GetLatestImage(project, DefaultImageProject, DefaultImageFamily)
+	if err != nil {
+		return configs, err
+	}
+
+	defaultConfig := GCEInstanceConfig{
+		"instance-image":        defaultImage,
 		"instance-disksize":     "200",
 		"instance-disktype":     "pd-standard",
-		"instance-tags":         "http-server,https-server",
+		"instance-tags":         "[http-server,https-server]",
 		"instance-name":         fmt.Sprintf("%s-instance", basename),
-		"region":                "us-central1",
-		"zone":                  "us-central1-a",
+		"region":                DefaultRegion,
+		"zone":                  fmt.Sprintf("%s-a", DefaultRegion),
 		"instance-machine-type": "n1-standard-1",
 	}
+
+	fmt.Println(Divider)
+	colorPrintln("Configure a Compute Engine Instance", TERMCYANB)
+	fmt.Printf("Let's walk through configuring a Compute Engine Instance (Virtual Machine). \n")
+	fmt.Printf("you can either accept a default configuration with settings that work for \n")
+	fmt.Printf("most trying out most use cases, or hand configure key settings. \n")
+	fmt.Println(Divider)
+
+	defaultConfig.Print("Default Configuration")
 
 	chooseDefault := Custom{
 		Name:        "choosedefault",
@@ -136,8 +199,8 @@ func GCEInstanceManage(project, basename string) (map[string]string, error) {
 	}
 
 	for _, v := range items {
-		if v.Name == "webserver" {
-			configs["instance-tags"] = "http-server,https-server"
+		if v.Name == "webserver" && v.Value == "yes" {
+			configs["instance-tags"] = "[http-server,https-server]"
 			continue
 		}
 
