@@ -18,7 +18,6 @@ package deploystack
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -30,14 +29,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/nyaruka/phonenumbers"
-	"google.golang.org/api/cloudbilling/v1"
-	"google.golang.org/api/cloudfunctions/v1"
-	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
-	"google.golang.org/api/run/v1"
 )
 
 const (
@@ -416,7 +410,7 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	if c.ProjectNumber {
-		projectnumber, err = ProjectNumber(project)
+		projectnumber, err = projectNumber(project)
 		if err != nil {
 			handleProcessError(fmt.Errorf("error managing project number settings: %s", err))
 		}
@@ -687,162 +681,6 @@ func ProjectID() (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// ProjectNumber will get the project_number for the input projectid
-func ProjectNumber(id string) (string, error) {
-	resp := ""
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, opts)
-	if err != nil {
-		return resp, err
-	}
-
-	results, err := svc.Projects.Get(id).Do()
-	if err != nil {
-		return resp, err
-	}
-
-	resp = strconv.Itoa(int(results.ProjectNumber))
-
-	return resp, nil
-}
-
-// Projects gets a list of the Projects a user has access to
-func Projects() ([]string, error) {
-	resp := []string{}
-	ctx := context.Background()
-
-	svc, err := cloudresourcemanager.NewService(ctx, opts)
-	if err != nil {
-		return resp, err
-	}
-
-	results, err := svc.Projects.List().Filter("lifecycleState=ACTIVE").Do()
-	if err != nil {
-		return resp, err
-	}
-	pwb, err := getBillingForProjects(results.Projects)
-	if err != nil {
-		return resp, err
-	}
-
-	sort.Slice(pwb, func(i, j int) bool {
-		return strings.ToLower(pwb[i].Name) < strings.ToLower(pwb[j].Name)
-	})
-
-	for _, v := range pwb {
-		if v.BillingEnabled {
-			resp = append(resp, v.Name)
-			continue
-		}
-
-		resp = append(resp, fmt.Sprintf("%s (Billing Disabled)", v.Name))
-
-	}
-
-	return resp, nil
-}
-
-type projectWithBilling struct {
-	Name           string
-	BillingEnabled bool
-}
-
-func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBilling, error) {
-	res := []projectWithBilling{}
-
-	ctx := context.Background()
-	svc, err := cloudbilling.NewService(ctx, opts)
-	if err != nil {
-		return res, err
-	}
-	var wg sync.WaitGroup
-	wg.Add(len(p))
-
-	for _, v := range p {
-		go func(p *cloudresourcemanager.Project) {
-			defer wg.Done()
-			if p.LifecycleState == "ACTIVE" && p.Name != "" {
-				proj := fmt.Sprintf("projects/%s", p.ProjectId)
-				tmp, err := svc.Projects.GetBillingInfo(proj).Do()
-				if err != nil {
-					if strings.Contains(err.Error(), "The caller does not have permission") {
-						fmt.Printf("project: %+v\n", p)
-						return
-					}
-
-					fmt.Printf("error: %s\n", err)
-					return
-				}
-
-				pwb := projectWithBilling{p.Name, tmp.BillingEnabled}
-				res = append(res, pwb)
-			}
-		}(v)
-	}
-	wg.Wait()
-
-	return res, nil
-}
-
-// billingAccounts gets a list of the billing accounts a user has access to
-func billingAccounts() ([]*cloudbilling.BillingAccount, error) {
-	resp := []*cloudbilling.BillingAccount{}
-	ctx := context.Background()
-	svc, err := cloudbilling.NewService(ctx, opts)
-	if err != nil {
-		return resp, err
-	}
-
-	results, err := svc.BillingAccounts.List().Do()
-	if err != nil {
-		return resp, err
-	}
-
-	return results.BillingAccounts, nil
-}
-
-// BillingAccountProjectAttach will enable billing in a given project
-func BillingAccountProjectAttach(project, account string) error {
-	retries := 10
-	ctx := context.Background()
-	svc, err := cloudbilling.NewService(ctx, opts)
-	if err != nil {
-		return err
-	}
-
-	ba := fmt.Sprintf("billingAccounts/%s", account)
-	proj := fmt.Sprintf("projects/%s", project)
-
-	cfg := cloudbilling.ProjectBillingInfo{
-		BillingAccountName: ba,
-	}
-
-	var looperr error
-	for i := 0; i < retries; i++ {
-		_, looperr = svc.Projects.UpdateBillingInfo(proj, &cfg).Do()
-		if looperr == nil {
-			return nil
-		}
-		if strings.Contains(looperr.Error(), "User is not authorized to get billing info") {
-			continue
-		}
-	}
-
-	if strings.Contains(looperr.Error(), "Request contains an invalid argument") {
-		return ErrorBillingInvalidAccount
-	}
-
-	if strings.Contains(looperr.Error(), "Not a valid billing account") {
-		return ErrorBillingInvalidAccount
-	}
-
-	if strings.Contains(looperr.Error(), "The caller does not have permission") {
-		return ErrorBillingNoPermission
-	}
-
-	return looperr
-}
-
 // BillingAccountManage either grabs the users only BillingAccount or
 // presents a list of BillingAccounts to select from.
 func BillingAccountManage() (string, error) {
@@ -873,49 +711,6 @@ func extractAccount(s string) string {
 	return strings.ReplaceAll(sl[1], ")", "")
 }
 
-// projectCreate does the work of actually creating a new project in your
-// GCP account
-func projectCreate(project string) error {
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, opts)
-	if err != nil {
-		return err
-	}
-
-	proj := cloudresourcemanager.Project{Name: project, ProjectId: project}
-
-	_, err = svc.Projects.Create(&proj).Do()
-	if err != nil {
-		if strings.Contains(err.Error(), "project_id must be at most 30 characters long") {
-			return ErrorProjectCreateTooLong
-		}
-		if strings.Contains(err.Error(), "project_id contains invalid characters") {
-			return ErrorProjectInvalidCharacters
-		}
-
-		return err
-	}
-
-	return nil
-}
-
-// projectDelete does the work of actually deleting an existing project in
-// your GCP account
-func projectDelete(project string) error {
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, opts)
-	if err != nil {
-		return err
-	}
-
-	_, err = svc.Projects.Delete(project).Do()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // ProjectManage promps a user to select a project.
 func ProjectManage() (string, error) {
 	createString := "CREATE NEW PROJECT"
@@ -924,7 +719,7 @@ func ProjectManage() (string, error) {
 		return "", err
 	}
 
-	projects, err := Projects()
+	projects, err := projects()
 	if err != nil {
 		return "", err
 	}
@@ -1014,62 +809,6 @@ func regions(project, product string) ([]string, error) {
 	}
 
 	return []string{}, fmt.Errorf("invalid product requested: %s", product)
-}
-
-// regionsFunctions will return a list of regions for Cloud Functions
-func regionsFunctions(project string) ([]string, error) {
-	resp := []string{}
-
-	if err := ServiceEnable(project, "cloudfunctions.googleapis.com"); err != nil {
-		return resp, fmt.Errorf("error activating service for polling: %s", err)
-	}
-
-	ctx := context.Background()
-	svc, err := cloudfunctions.NewService(ctx, opts)
-	if err != nil {
-		return resp, err
-	}
-
-	results, err := svc.Projects.Locations.List("projects/" + project).Do()
-	if err != nil {
-		return resp, err
-	}
-
-	for _, v := range results.Locations {
-		resp = append(resp, v.LocationId)
-	}
-
-	sort.Strings(resp)
-
-	return resp, nil
-}
-
-// regionsRun will return a list of regions for Cloud Run
-func regionsRun(project string) ([]string, error) {
-	resp := []string{}
-
-	if err := ServiceEnable(project, "run.googleapis.com"); err != nil {
-		return resp, fmt.Errorf("error activating service for polling: %s", err)
-	}
-
-	ctx := context.Background()
-	svc, err := run.NewService(ctx, opts)
-	if err != nil {
-		return resp, err
-	}
-
-	results, err := svc.Projects.Locations.List("projects/" + project).Do()
-	if err != nil {
-		return resp, err
-	}
-
-	for _, v := range results.Locations {
-		resp = append(resp, v.LocationId)
-	}
-
-	sort.Strings(resp)
-
-	return resp, nil
 }
 
 // RegionManage promps a user to select a region.

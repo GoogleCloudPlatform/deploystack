@@ -117,7 +117,6 @@ func formatMBToGB(i int64) string {
 	return fmt.Sprintf("%d GB", i/1024)
 }
 
-// TODO: Write tests for this function
 func images(project, imageproject string) (*compute.ImageList, error) {
 	resp := &compute.ImageList{}
 
@@ -130,10 +129,23 @@ func images(project, imageproject string) (*compute.ImageList, error) {
 		return resp, err
 	}
 
+	tmp := []*compute.Image{}
+	for _, v := range results.Items {
+		// fmt.Printf("%v", v.Name)
+		if v.Deprecated == nil {
+			// fmt.Printf("- not deprecated")
+			tmp = append(tmp, v)
+		}
+
+		// fmt.Printf("\n")
+	}
+
+	results.Items = tmp
+
 	return results, nil
 }
 
-func GetLatestImage(project, imageproject, imagefamily string) (string, error) {
+func getLatestImage(project, imageproject, imagefamily string) (string, error) {
 	resp := ""
 
 	svc, err := getComputeService(project)
@@ -160,7 +172,7 @@ func GetLatestImage(project, imageproject, imagefamily string) (string, error) {
 	return "", fmt.Errorf("error: could not find ")
 }
 
-func GetListOfMachineTypeFamily(imgs *compute.MachineTypeList) LabeledValues {
+func getListOfMachineTypeFamily(imgs *compute.MachineTypeList) LabeledValues {
 	fam := make(map[string]string)
 	lb := LabeledValues{}
 
@@ -171,17 +183,17 @@ func GetListOfMachineTypeFamily(imgs *compute.MachineTypeList) LabeledValues {
 		fam[key] = fmt.Sprintf("%s-%s", parts[0], parts[1])
 	}
 
-	for i, v := range fam {
-		if i == "" {
+	for key, value := range fam {
+		if key == "" {
 			continue
 		}
-		lb = append(lb, LabeledValue{v, i})
+		lb = append(lb, LabeledValue{value, key})
 	}
 	lb.sort()
 	return lb
 }
 
-func GetListOfMachineTypeByFamily(imgs *compute.MachineTypeList, family string) LabeledValues {
+func getListOfMachineTypeByFamily(imgs *compute.MachineTypeList, family string) LabeledValues {
 	lb := LabeledValues{}
 
 	tempTypes := []compute.MachineType{}
