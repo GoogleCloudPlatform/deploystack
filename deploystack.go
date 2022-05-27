@@ -31,7 +31,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/nyaruka/phonenumbers"
 	"google.golang.org/api/cloudbilling/v1"
@@ -39,7 +38,6 @@ import (
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/run/v1"
-	"google.golang.org/api/serviceusage/v1"
 )
 
 const (
@@ -94,10 +92,9 @@ var (
 	// characters into a CreateProjectCall
 	ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
 	// Divider is a text element that draws a horizontal line
-	Divider         = ""
-	opts            = option.WithCredentialsFile("")
-	credspath       = ""
-	enabledServices = make(map[string]bool)
+	Divider   = ""
+	opts      = option.WithCredentialsFile("")
+	credspath = ""
 )
 
 func init() {
@@ -1232,59 +1229,4 @@ func cleanTerminalCharsFromString(s string) string {
 	r = strings.ReplaceAll(r, TERMGREY, "")
 
 	return r
-}
-
-// ServiceEnable enable a service in the selected project so that query calls
-// to various lists will work.
-func ServiceEnable(project, service string) error {
-	if _, ok := enabledServices[service]; ok {
-		return nil
-	}
-
-	ctx := context.Background()
-	svc, err := serviceusage.NewService(ctx, opts)
-	if err != nil {
-		return err
-	}
-
-	s := fmt.Sprintf("projects/%s/services/%s", project, service)
-	current, err := svc.Services.Get(s).Do()
-	if err != nil {
-		return err
-	}
-
-	if current.State == "ENABLED" {
-		fmt.Printf("Service %s already enabled in project %s: ..\n", service, project)
-		enabledServices[service] = true
-		return nil
-	}
-
-	fmt.Printf("Enabling service %s in project %s.\n", service, project)
-	op, err := svc.Services.Enable(s, &serviceusage.EnableServiceRequest{}).Do()
-	if err != nil {
-		return fmt.Errorf("could not enable service: %s", err)
-	}
-
-	if !strings.Contains(string(op.Response), "ENABLED") {
-
-		fmt.Printf("Waiting for service to be enabled...")
-
-		for i := 0; i < 60; i++ {
-			current, err = svc.Services.Get(s).Do()
-			if err != nil {
-				return err
-			}
-			if current.State == "ENABLED" {
-				fmt.Printf("complete.\n")
-				enabledServices[service] = true
-				return nil
-			}
-			fmt.Printf(".")
-			time.Sleep(1 * time.Second)
-		}
-
-	}
-
-	enabledServices[service] = true
-	return nil
 }

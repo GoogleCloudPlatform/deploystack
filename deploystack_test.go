@@ -240,8 +240,7 @@ func TestManageZone(t *testing.T) {
 		"1": {
 			project: projectID,
 			region:  "us-central1",
-			want: `Enabling service to poll...
-Polling for zones...
+			want: `Polling for zones...
 [1;36mChoose a valid zone to use for this application. [0m
 [1;36m 1) us-central1-a [0m
  2) us-central1-b 
