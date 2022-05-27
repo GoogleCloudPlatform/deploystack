@@ -13,20 +13,21 @@ func TestServiceEnable(t *testing.T) {
 		want    bool
 		disable bool
 	}{
-		"vault":   {"vault.googleapis.com", projectID, nil, true, true},
-		"compute": {"compute.googleapis.com", projectID, nil, true, false},
+		"vault":       {"vault.googleapis.com", projectID, nil, true, true},
+		"compute":     {"compute.googleapis.com", projectID, nil, true, false},
+		"fakeservice": {"fakeservice.googleapis.com", projectID, ErrorServiceNotExistOrNotAllowed, false, false},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := ServiceEnable(tc.project, tc.service)
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
+			if err != tc.err {
+				t.Fatalf("expected: %v got: %v", tc.err, err)
 			}
 
 			got, err := ServiceIsEnabled(tc.project, tc.service)
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
+			if err != tc.err {
+				t.Fatalf("expected: %v got: %v", tc.err, err)
 			}
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
@@ -46,19 +47,20 @@ func TestServiceDisable(t *testing.T) {
 		err     error
 		want    bool
 	}{
-		"vault": {"vault.googleapis.com", projectID, nil, false},
+		"vault":       {"vault.googleapis.com", projectID, nil, false},
+		"fakeservice": {"fakeservice.googleapis.com", projectID, ErrorServiceNotExistOrNotAllowed, false},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := ServiceDisable(tc.project, tc.service)
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
+			if err != tc.err {
+				t.Fatalf("expected: %v got: %v", tc.err, err)
 			}
 
 			got, err := ServiceIsEnabled(tc.project, tc.service)
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
+			if err != tc.err {
+				t.Fatalf("expected: %v got: %v", tc.err, err)
 			}
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)

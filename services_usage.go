@@ -12,6 +12,9 @@ import (
 var (
 	enabledServices     = make(map[string]bool)
 	serviceUsageService *serviceusage.Service
+	// ErrorServiceNotExistOrNotAllowed occurs when the user running this code doesn't have
+	// permission to enable the service in the project or it's a nonexistent service name.
+	ErrorServiceNotExistOrNotAllowed = fmt.Errorf("Not found or permission denied for service")
 )
 
 func getServiceUsageService(project string) (*serviceusage.Service, error) {
@@ -84,12 +87,18 @@ func ServiceEnable(project, service string) error {
 	return nil
 }
 
+// ServiceIsEnabled checks to see if the existing service is already enabled
+// in the project we are trying to enable it in.
 func ServiceIsEnabled(project, service string) (bool, error) {
 	svc, err := getServiceUsageService(project)
 
 	s := fmt.Sprintf("projects/%s/services/%s", project, service)
 	current, err := svc.Services.Get(s).Do()
 	if err != nil {
+		if strings.Contains(err.Error(), "Not found or permission denied for service") {
+			return false, ErrorServiceNotExistOrNotAllowed
+		}
+
 		return false, err
 	}
 
@@ -100,6 +109,7 @@ func ServiceIsEnabled(project, service string) (bool, error) {
 	return false, nil
 }
 
+// ServiceDisable disables a service in the selected project
 func ServiceDisable(project, service string) error {
 	svc, err := getServiceUsageService(project)
 	if err != nil {
@@ -107,6 +117,9 @@ func ServiceDisable(project, service string) error {
 	}
 	s := fmt.Sprintf("projects/%s/services/%s", project, service)
 	if _, err := svc.Services.Disable(s, &serviceusage.DisableServiceRequest{}).Do(); err != nil {
+		if strings.Contains(err.Error(), "Not found or permission denied for service") {
+			return ErrorServiceNotExistOrNotAllowed
+		}
 		return fmt.Errorf("could not disable service: %s", err)
 	}
 
