@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"github.com/kylelemons/godebug/diff"
-	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/option"
 )
 
@@ -518,7 +517,7 @@ func captureOutput(f func()) string {
 	return string(out)
 }
 
-func listHelper(file string) ([]string, error) {
+func regionsListHelper(file string) ([]string, error) {
 	result := []string{}
 	dat, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -541,17 +540,17 @@ func listHelper(file string) ([]string, error) {
 }
 
 func TestGetRegions(t *testing.T) {
-	cRegions, err := listHelper("test_files/regions_compute.txt")
+	cRegions, err := regionsListHelper("test_files/gcloudout/regions_compute.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
 
-	fRegions, err := listHelper("test_files/regions_functions.txt")
+	fRegions, err := regionsListHelper("test_files/gcloudout/regions_functions.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
 
-	rRegions, err := listHelper("test_files/regions_run.txt")
+	rRegions, err := regionsListHelper("test_files/gcloudout/regions_run.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
@@ -577,133 +576,6 @@ func TestGetRegions(t *testing.T) {
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
-			}
-		})
-	}
-}
-
-func TestGetProjectNumbers(t *testing.T) {
-	tests := map[string]struct {
-		input string
-		want  string
-	}{
-		"1": {input: creds["project_id"], want: creds["project_number"]},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := ProjectNumber(tc.input)
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
-			}
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
-			}
-		})
-	}
-}
-
-func TestGetProjects(t *testing.T) {
-	tests := map[string]struct {
-		want []string
-	}{
-		"1": {want: []string{
-			creds["project_id"],
-		}},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := Projects()
-
-			gotfiltered := []string{}
-
-			for _, v := range got {
-				if !strings.Contains(v, "zprojectnamedelete") {
-					gotfiltered = append(gotfiltered, v)
-				}
-			}
-
-			sort.Strings(tc.want)
-			sort.Strings(gotfiltered)
-
-			if len(gotfiltered) != len(tc.want) {
-				fmt.Printf("Expected:\n%s", tc.want)
-				fmt.Printf("Got:\n%s", gotfiltered)
-				t.Fatalf("expected: %v, got: %v", len(tc.want), len(gotfiltered))
-			}
-
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
-			}
-			if !reflect.DeepEqual(tc.want, gotfiltered) {
-				t.Fatalf("expected: %v, got: %v", tc.want, gotfiltered)
-			}
-		})
-	}
-}
-
-func TestGetBillingAccounts(t *testing.T) {
-	tests := map[string]struct {
-		want []*cloudbilling.BillingAccount
-	}{
-		"NoErrorNoAccounts": {want: []*cloudbilling.BillingAccount{}},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := billingAccounts()
-
-			sort.Slice(got[:], func(i, j int) bool {
-				return got[i].DisplayName < got[j].DisplayName
-			})
-
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
-			}
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
-			}
-		})
-	}
-}
-
-func TestCreateProject(t *testing.T) {
-	tests := map[string]struct {
-		input string
-		err   error
-	}{
-		"Too long":  {input: "zprojectnamedeletethisprojectnamehastoomanycharacters", err: ErrorProjectCreateTooLong},
-		"Bad Chars": {input: "ALLUPERCASEDONESTWORK", err: ErrorProjectInvalidCharacters},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			name := tc.input + randSeq(5)
-			err := projectCreate(name)
-			projectDelete(name)
-			if err != tc.err {
-				t.Fatalf("expected: %v, got: %v project: %s", tc.err, err, name)
-			}
-		})
-	}
-}
-
-func TestLinkProjectToBillingAccount(t *testing.T) {
-	tests := map[string]struct {
-		project string
-		account string
-		err     error
-	}{
-		"BadProject":  {project: "stackinaboxstackinabox", account: "0145C0-557C58-C970F3", err: ErrorBillingNoPermission},
-		"BaddAccount": {project: projectID, account: "AAAAAA-BBBBBB-CCCCCC", err: ErrorBillingInvalidAccount},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			err := BillingAccountProjectAttach(tc.project, tc.account)
-			if err != tc.err {
-				t.Fatalf("expected: %v, got: %v", tc.err, err)
 			}
 		})
 	}

@@ -1,9 +1,10 @@
-DIR="../../test_files"
+DIR="../../test_files/gcloudout"
 
 gcloud compute regions list --format="value(name)" > $DIR/regions_compute.txt
 gcloud compute zones list --format="value(name)"> $DIR/zones.txt
 gcloud run regions list --format="value(name)" > $DIR/regions_run.txt
 gcloud functions regions list --format="value(name)" > $DIR/regions_functions.txt
 gcloud compute machine-types list --format="value(name, memoryMb, guestCpus)" --zones us-central1-a > $DIR/types_uscentral1a.txt
+gcloud compute images list --format=json > $DIR/images.json
 
 echo "Region files have been updated."

@@ -24,6 +24,28 @@ var (
 	ErrorDomainUserDeny = fmt.Errorf("user said no to buying the domain")
 )
 
+var domainsClient *domains.Client
+
+func getDomainsClient(project string) (*domains.Client, error) {
+	if domainsClient != nil {
+		return domainsClient, nil
+	}
+
+	if err := ServiceEnable(project, "domains.googleapis.com"); err != nil {
+		return nil, fmt.Errorf("error activating service for polling: %s", err)
+	}
+
+	ctx := context.Background()
+	svc, err := domains.NewClient(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	domainsClient = svc
+
+	return svc, nil
+}
+
 var msgDomainRegisterContactExplanation = fmt.Sprintf(`Domain registration requires some contact data. This process only asks for the 
 absolutely mandatory ones. The domain will be registered with user privacy 
 enabled, so that your contact info will not be public. This will create a file, 
@@ -278,9 +300,7 @@ func RegistrarContactManage(file string) (ContactData, error) {
 }
 
 func domainsSearch(project, domain string) ([]*domainspb.RegisterParameters, error) {
-	ctx := context.Background()
-
-	c, err := domains.NewClient(ctx)
+	c, err := getDomainsClient(project)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +310,7 @@ func domainsSearch(project, domain string) ([]*domainspb.RegisterParameters, err
 		Query:    domain,
 		Location: fmt.Sprintf("projects/%s/locations/global", project),
 	}
-	resp, err := c.SearchDomains(ctx, req)
+	resp, err := c.SearchDomains(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
@@ -313,9 +333,7 @@ func domainIsAvailable(project, domain string) (*domainspb.RegisterParameters, e
 }
 
 func domainsIsVerified(project, domain string) (bool, error) {
-	ctx := context.Background()
-
-	c, err := domains.NewClient(ctx)
+	c, err := getDomainsClient(project)
 	if err != nil {
 		return false, err
 	}
@@ -325,7 +343,7 @@ func domainsIsVerified(project, domain string) (bool, error) {
 		Filter: fmt.Sprintf("domainName=\"%s\"", domain),
 		Parent: fmt.Sprintf("projects/%s/locations/global", project),
 	}
-	it := c.ListRegistrations(ctx, req)
+	it := c.ListRegistrations(context.Background(), req)
 	for {
 		resp, err := it.Next()
 		if err == iterator.Done {
@@ -344,11 +362,9 @@ func domainsIsVerified(project, domain string) (bool, error) {
 }
 
 func domainRegister(project string, domaininfo *domainspb.RegisterParameters, contact ContactData) error {
-	ctx := context.Background()
-
 	parent := fmt.Sprintf("projects/%s/locations/global", project)
 
-	c, err := domains.NewClient(ctx)
+	c, err := getDomainsClient(project)
 	if err != nil {
 		return err
 	}
@@ -381,7 +397,7 @@ func domainRegister(project string, domaininfo *domainspb.RegisterParameters, co
 		YearlyPrice: domaininfo.YearlyPrice,
 	}
 
-	if _, err := c.RegisterDomain(ctx, req); err != nil {
+	if _, err := c.RegisterDomain(context.Background(), req); err != nil {
 		return err
 	}
 

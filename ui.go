@@ -53,12 +53,12 @@ func MachineTypeManage(project, zone string) (string, error) {
 		return "", fmt.Errorf("error polling for machine types : %s", err)
 	}
 
-	typefamilies := GetListOfMachineTypeFamily(types)
+	typefamilies := getListOfMachineTypeFamily(types)
 
 	fmt.Printf("Choose an Machine Type Family\n")
 	familyProject := listSelect(typefamilies, DefaultMachineType)
 
-	filteredtypes := GetListOfMachineTypeByFamily(types, familyProject.Value)
+	filteredtypes := getListOfMachineTypeByFamily(types, familyProject.Value)
 
 	fmt.Printf("%sChoose a machine type to use for this application. %s\n", TERMCYANB, TERMCLEAR)
 	result := listSelect(filteredtypes, filteredtypes[0].Value)
@@ -117,7 +117,7 @@ func GCEInstanceManage(project, basename string) (GCEInstanceConfig, error) {
 	var err error
 	configs := make(map[string]string)
 
-	defaultImage, err := GetLatestImage(project, DefaultImageProject, DefaultImageFamily)
+	defaultImage, err := getLatestImage(project, DefaultImageProject, DefaultImageFamily)
 	if err != nil {
 		return configs, err
 	}
