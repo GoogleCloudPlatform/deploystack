@@ -87,25 +87,26 @@ tfvars file that will drive the terraform script.
 }
 ```
 
-| Name            | Type    | Description                                                                          |
-| --------------- | ------- | ------------------------------------------------------------------------------------ |
-| title           | string  | You know what a title is                                                             |
-| duration        | number  | An estimate as to how long this installation takes                                   |
-| collect_project | boolean | Whether or not to walk the user through picking or creating a project.               |
-| collect_region  | boolean | Whether or not to walk the user through picking a regions                            |
-| register_domain | boolean | Whether or not to walk the user through registering a domain                         |
-| region_type     | string  | Which product to select a region for                                                 |
-|                 |         | Options: compute, run, functions                                                     |
-| region_default  | string  | The highlighted and default choice for region.                                       |
-| collect_zone    | string  | Whether or not to walk the user through picking a zone                               |
-| hard_settings   |         | Hard Settings are for key value pairs to hardset and not get from the user.          |
-|                 |         | `"basename":"appprefix"`                                                             |
-| custom_settings |         | Custom Settings are collections of settings that we would like to prompt a user for. |
-| name            | string  | The name of the variable                                                             |
-| description     | string  | The description of the variable to prompt the user with                              |
-| default         | string  | A default value for the variable.                                                    |
-| options         | array   | An array of options to turn this into a custom select interface                      |
-| prepend_project | bool    | Whether or not to prepend the project id to the default value. Useful for resources like buckets that have to have globally unique names.                       |
+| Name                   | Type    | Description                                                                          |
+| ---------------        | ------- | ------------------------------------------------------------------------------------ |
+| title                  | string  | You know what a title is                                                             |
+| duration               | number  | An estimate as to how long this installation takes                                   |
+| collect_project        | boolean | Whether or not to walk the user through picking or creating a project.               |
+| collect_region         | boolean | Whether or not to walk the user through picking a regions                            |
+| register_domain        | boolean | Whether or not to walk the user through registering a domain                         |
+| configure_gce_instance | boolean | Whether or not to walk the user through configuring a compute engine instance        |
+| region_type            | string  | Which product to select a region for                                                 |
+|                        |         | Options: compute, run, functions                                                     |
+| region_default         | string  | The highlighted and default choice for region.                                       |
+| collect_zone           | string  | Whether or not to walk the user through picking a zone                               |
+| hard_settings          |         | Hard Settings are for key value pairs to hardset and not get from the user.          |
+|                        |         | `"basename":"appprefix"`                                                             |
+| custom_settings        |         | Custom Settings are collections of settings that we would like to prompt a user for. |
+| name                   | string  | The name of the variable                                                             |
+| description            | string  | The description of the variable to prompt the user with                              |
+| default                | string  | A default value for the variable.                                                    |
+| options                | array   | An array of options to turn this into a custom select interface                      |
+| prepend_project        | bool    | Whether or not to prepend the project id to the default value. Useful for resources like buckets that have to have globally unique names.                       |
 
 ### UI Controls
 

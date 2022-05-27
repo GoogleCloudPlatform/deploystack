@@ -6,7 +6,7 @@ cmd/terraform.tfvars
 **/credentials.json
 **/.DS_Store
 tools/installfile/output.txt
-test_files/regions_*
+test_files/*.txt
 tools/testprojects/email-notifier/cmd/config.json
 tools/testprojects/email-notifier/config.json
 cmd/contact.yaml
