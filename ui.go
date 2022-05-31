@@ -1,7 +1,9 @@
 package deploystack
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 )
@@ -26,7 +28,7 @@ func ImageManage(project string) (string, error) {
 	families := getListOfImageFamilies(images)
 
 	colorPrintln("Choose a disk family to use for this application.", TERMCYANB)
-	family := listSelect(families, families[0].Value)
+	family := listSelect(families, DefaultImageFamily)
 
 	imagesByFam := getListOfImageTypesByFamily(images, ImageTypeProject.Value, family.Value)
 
@@ -214,4 +216,160 @@ func GCEInstanceManage(project, basename string) (GCEInstanceConfig, error) {
 	}
 
 	return configs, nil
+}
+
+// BillingAccountManage either grabs the users only BillingAccount or
+// presents a list of BillingAccounts to select from.
+func BillingAccountManage() (string, error) {
+	accounts, err := billingAccounts()
+	if err != nil {
+		return "", fmt.Errorf("could not get list of billing accounts: %s", err)
+	}
+
+	labeled := []string{}
+
+	for _, v := range accounts {
+		labeled = append(labeled, fmt.Sprintf("%s (%s)", v.DisplayName, strings.ReplaceAll(v.Name, "billingAccounts/", "")))
+	}
+
+	if len(accounts) == 1 {
+		fmt.Printf("\nOnly found one billing account. Using : %s%s%s.\n", TERMCYAN, accounts[0].DisplayName, TERMCLEAR)
+		return extractAccount(labeled[0]), nil
+	}
+
+	fmt.Printf("\n%sPlease select one of your billing accounts to use with this project%s.\n", TERMCYAN, TERMCLEAR)
+	result := listSelect(toLabeledValueSlice(labeled), labeled[0])
+
+	return extractAccount(result.Value), nil
+}
+
+func extractAccount(s string) string {
+	sl := strings.Split(s, "(")
+	return strings.ReplaceAll(sl[1], ")", "")
+}
+
+// ProjectManage promps a user to select a project.
+func ProjectManage() (string, error) {
+	createString := "CREATE NEW PROJECT"
+	project, err := ProjectID()
+	if err != nil {
+		return "", err
+	}
+
+	projects, err := projects()
+	if err != nil {
+		return "", err
+	}
+
+	projdis := []string{}
+
+	for _, v := range projects {
+		if strings.Contains(v, "Billing Disabled") {
+			v = fmt.Sprintf("%s%s%s", TERMGREY, v, TERMCLEAR)
+		}
+		projdis = append(projdis, v)
+	}
+
+	projdis = append([]string{createString}, projdis...)
+
+	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", TERMCYANB, TERMCLEAR)
+	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
+	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
+
+	project = listSelect(toLabeledValueSlice(projdis), project).Value
+
+	if project == createString {
+		project, err = projectPrompt()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return project, nil
+}
+
+// projectPrompt manages the interaction of creating a project, including prompts.
+func projectPrompt() (string, error) {
+	result := ""
+	sec1 := NewSection("Creating the project")
+
+	sec1.Open()
+	fmt.Printf("%sPlease enter a new project name to create: %s\n", TERMCYANB, TERMCLEAR)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("> ")
+		text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+
+		if len(text) == 0 {
+			fmt.Printf("%sPlease enter a new project name to create: %s\n", TERMCYANB, TERMCLEAR)
+			continue
+		}
+
+		if err := projectCreate(text); err != nil {
+			fmt.Printf("%sProject name could not be created, please choose another,%s\n", TERMREDREV, TERMCLEAR)
+			continue
+		}
+
+		fmt.Printf("Project Created\n")
+		result = text
+		break
+
+	}
+	sec1.Close()
+
+	sec2 := NewSection("Activating Billing for the project")
+	sec2.Open()
+	account, err := BillingAccountManage()
+	if err != nil {
+		return "", fmt.Errorf("could not determine proper billing account: %s ", err)
+	}
+
+	if err := BillingAccountProjectAttach(result, account); err != nil {
+		return "", fmt.Errorf("could not link billing account: %s ", err)
+	}
+	sec2.Close()
+	return result, nil
+}
+
+// regions will return a list of regions depending on product type
+func regions(project, product string) ([]string, error) {
+	switch product {
+	case "compute":
+		return regionsCompute(project)
+	case "functions":
+		return regionsFunctions(project)
+	case "run":
+		return regionsRun(project)
+	}
+
+	return []string{}, fmt.Errorf("invalid product requested: %s", product)
+}
+
+// RegionManage promps a user to select a region.
+func RegionManage(project, product, def string) (string, error) {
+	fmt.Printf("Polling for regions...\n")
+	regions, err := regions(project, product)
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("%sChoose a valid region to use for this application. %s\n", TERMCYANB, TERMCLEAR)
+	region := listSelect(toLabeledValueSlice(regions), def)
+
+	return region.Value, nil
+}
+
+// ZoneManage promps a user to select a zone.
+func ZoneManage(project, region string) (string, error) {
+	fmt.Printf("Polling for zones...\n")
+	zones, err := zones(project, region)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", TERMCYANB, TERMCLEAR)
+	zone := listSelect(toLabeledValueSlice(zones), zones[0])
+	return zone.Value, nil
 }
