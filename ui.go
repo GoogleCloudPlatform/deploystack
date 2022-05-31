@@ -133,11 +133,12 @@ func GCEInstanceManage(project, basename string) (GCEInstanceConfig, error) {
 		"instance-machine-type": "n1-standard-1",
 	}
 
+	ClearScreen()
 	fmt.Println(Divider)
 	colorPrintln("Configure a Compute Engine Instance", TERMCYANB)
 	fmt.Printf("Let's walk through configuring a Compute Engine Instance (Virtual Machine). \n")
 	fmt.Printf("you can either accept a default configuration with settings that work for \n")
-	fmt.Printf("most trying out most use cases, or hand configure key settings. \n")
+	fmt.Printf("trying out most use cases, or hand configure key settings. \n")
 	fmt.Println(Divider)
 
 	defaultConfig.Print("Default Configuration")
@@ -199,6 +200,7 @@ func GCEInstanceManage(project, basename string) (GCEInstanceConfig, error) {
 	}
 
 	for _, v := range items {
+		configs["instance-tags"] = "[]"
 		if v.Name == "webserver" && v.Value == "yes" {
 			configs["instance-tags"] = "[http-server,https-server]"
 			continue
