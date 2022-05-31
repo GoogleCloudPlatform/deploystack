@@ -576,7 +576,10 @@ func (s Stack) Terraform() string {
 
 			sb.WriteString(delimtext)
 			sb.WriteString("]")
-			result.WriteString(fmt.Sprintf("%s=%s\n", label, sb.String()))
+			set := sb.String()
+			set = strings.ReplaceAll(set, "\"\"", "")
+
+			result.WriteString(fmt.Sprintf("%s=%s\n", label, set))
 			continue
 		}
 

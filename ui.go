@@ -200,9 +200,12 @@ func GCEInstanceManage(project, basename string) (GCEInstanceConfig, error) {
 	}
 
 	for _, v := range items {
-		configs["instance-tags"] = "[]"
-		if v.Name == "webserver" && v.Value == "yes" {
-			configs["instance-tags"] = "[http-server,https-server]"
+
+		if v.Name == "webserver" {
+			configs["instance-tags"] = "[]"
+			if v.Value == "yes" {
+				configs["instance-tags"] = "[http-server,https-server]"
+			}
 			continue
 		}
 
