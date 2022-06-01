@@ -684,6 +684,17 @@ func ProjectID() (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
+// ProjectIDSet sets the currently set default project
+func ProjectIDSet(project string) error {
+	cmd := exec.Command("gcloud", "config", "set", "project", project)
+	_, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("cannot set project id: %s ", err)
+	}
+
+	return nil
+}
+
 type LabeledValue struct {
 	Value string
 	Label string

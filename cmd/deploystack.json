@@ -1,6 +1,5 @@
 {	
 	"title":"YESORNOSITE",
 	"duration":5,
-	"collect_project":true,
-	"register_domain":true
+	"collect_project":true
 }

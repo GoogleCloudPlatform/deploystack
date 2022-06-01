@@ -285,6 +285,10 @@ func ProjectManage() (string, error) {
 		}
 	}
 
+	if err := ProjectIDSet(project); err != nil {
+		return project, fmt.Errorf("error: unable to set project (%s) in environment: %s", project, err)
+	}
+
 	return project, nil
 }
 
