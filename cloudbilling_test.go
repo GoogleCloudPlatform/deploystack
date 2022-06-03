@@ -1,6 +1,9 @@
 package deploystack
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"testing"
@@ -9,10 +12,21 @@ import (
 )
 
 func TestGetBillingAccounts(t *testing.T) {
+	dat, err := os.ReadFile("test_files/gcloudout/billing_accounts.json")
+	if err != nil {
+		t.Fatalf("got error during preloading: %s", err)
+	}
+
+	bas := []*cloudbilling.BillingAccount{}
+	err = json.Unmarshal(dat, &bas)
+	if err != nil {
+		t.Fatalf("got error during preloading: %s", err)
+	}
+
 	tests := map[string]struct {
 		want []*cloudbilling.BillingAccount
 	}{
-		"NoErrorNoAccounts": {want: []*cloudbilling.BillingAccount{}},
+		"NoErrorNoAccounts": {want: bas},
 	}
 
 	for name, tc := range tests {
@@ -27,6 +41,7 @@ func TestGetBillingAccounts(t *testing.T) {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
 			if !reflect.DeepEqual(tc.want, got) {
+				fmt.Printf("%+v\n", got[0])
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}
 		})

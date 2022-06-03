@@ -1,5 +1,5 @@
 cat projects.txt | while read PROJECT || [[ -n $PROJECT ]];
 do
    echo $PROJECT
-   ./$1 $PROJECT
+   ./$1 $PROJECT &
 done

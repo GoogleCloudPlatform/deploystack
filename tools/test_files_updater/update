@@ -6,5 +6,6 @@ gcloud run regions list --format="value(name)" > $DIR/regions_run.txt
 gcloud functions regions list --format="value(name)" > $DIR/regions_functions.txt
 gcloud compute machine-types list --format="value(name, memoryMb, guestCpus)" --zones us-central1-a > $DIR/types_uscentral1a.txt
 gcloud compute images list --format=json > $DIR/images.json
+gcloud beta billing accounts list --format=json > $DIR/billing_acccounts.json
 
 echo "Region files have been updated."
