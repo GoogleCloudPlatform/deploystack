@@ -1,12 +1,15 @@
 package deploystack
 
 import (
+	"os"
 	"reflect"
 	"sort"
 	"testing"
 )
 
 func TestGetFunctionRegions(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	fRegions, err := regionsListHelper("test_files/gcloudout/regions_functions.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)

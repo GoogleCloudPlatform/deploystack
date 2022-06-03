@@ -53,7 +53,7 @@ func TestSelectFromListRender(t *testing.T) {
 		def   string
 		want  string
 	}{
-		"1": {
+		"Odd below 10": {
 			input: toLabeledValueSlice([]string{"one", "two", "three"}),
 			def:   "two",
 			want: ` 1) one   
@@ -62,7 +62,7 @@ func TestSelectFromListRender(t *testing.T) {
 Choose number from list, or just [enter] for [1;36mtwo[0m
 > `,
 		},
-		"2": {
+		"Even below 10": {
 			input: toLabeledValueSlice([]string{"one", "two", "three", "four", "five", "six"}),
 			def:   "six",
 			want: ` 1) one   
@@ -74,7 +74,7 @@ Choose number from list, or just [enter] for [1;36mtwo[0m
 Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
-		"3": {
+		"EvenNumber above 10": {
 			input: toLabeledValueSlice([]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"}),
 			def:   "six",
 			want: ` 1) one     7) seven  
@@ -86,7 +86,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
-		"4": {
+		"OddNumber above 10": {
 			input: toLabeledValueSlice([]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"}),
 			def:   "six",
 			want: ` 1) one     7) seven  
@@ -98,7 +98,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
-		"5": {
+		"ProjectList": {
 			input: toLabeledValueSlice([]string{
 				"CREATE NEW PROJECT",
 				"aiab-test-project",
@@ -333,6 +333,8 @@ func TestGetRegions(t *testing.T) {
 }
 
 func TestRegionManage(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	tests := map[string]struct {
 		input   string
 		project string
@@ -377,6 +379,8 @@ func TestRegionManage(t *testing.T) {
 }
 
 func TestMachineTypeManage(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	tests := map[string]struct {
 		input   string
 		project string
@@ -419,6 +423,8 @@ func TestMachineTypeManage(t *testing.T) {
 }
 
 func TestImageManage(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	defaultImage, err := getLatestImage(projectID, DefaultImageProject, DefaultImageFamily)
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)
@@ -465,6 +471,8 @@ func TestImageManage(t *testing.T) {
 }
 
 func TestGCEInstanceManage(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	defaultImage, err := getLatestImage(projectID, DefaultImageProject, DefaultImageFamily)
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)

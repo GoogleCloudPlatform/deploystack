@@ -259,6 +259,16 @@ func captureOutput(f func()) string {
 	return string(out)
 }
 
+func blockOutput() (string, *os.File) {
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	return string(out), rescueStdout
+}
+
 func randSeq(n int) string {
 	rand.Seed(time.Now().Unix())
 
@@ -304,6 +314,8 @@ func TestMassgePhoneNumber(t *testing.T) {
 }
 
 func TestCustomCollect(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	tests := map[string]struct {
 		input  string
 		custom Custom

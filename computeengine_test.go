@@ -16,6 +16,8 @@ import (
 )
 
 func TestGetComputeRegions(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	cRegions, err := regionsListHelper("test_files/gcloudout/regions_compute.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)

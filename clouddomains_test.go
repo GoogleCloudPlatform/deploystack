@@ -99,6 +99,8 @@ func TestDomainRegistrarContactReadYAML(t *testing.T) {
 }
 
 func TestDomainIsAvailable(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	tests := map[string]struct {
 		domain    string
 		wantAvail string

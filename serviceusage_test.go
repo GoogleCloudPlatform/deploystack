@@ -1,11 +1,14 @@
 package deploystack
 
 import (
+	"os"
 	"reflect"
 	"testing"
 )
 
 func TestServiceEnable(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	tests := map[string]struct {
 		service string
 		project string
