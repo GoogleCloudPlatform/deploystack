@@ -8,4 +8,7 @@ gcloud compute machine-types list --format="value(name, memoryMb, guestCpus)" --
 gcloud compute images list --format=json > $DIR/images.json
 gcloud beta billing accounts list --format=json > $DIR/billing_accounts.json
 
+echo "Billing JSON"
+cat $DIR/billing_accounts.json
+
 echo "Region files have been updated."
