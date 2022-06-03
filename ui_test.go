@@ -522,3 +522,7 @@ func TestGCEInstanceManage(t *testing.T) {
 		})
 	}
 }
+
+func mockIO(input string) (string, error) {
+	return "", nil
+}
