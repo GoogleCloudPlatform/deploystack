@@ -291,6 +291,8 @@ func regionsListHelper(file string) ([]string, error) {
 }
 
 func TestGetRegions(t *testing.T) {
+	_, rescueStdout := blockOutput()
+	defer func() { os.Stdout = rescueStdout }()
 	cRegions, err := regionsListHelper("test_files/gcloudout/regions_compute.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -310,17 +312,22 @@ func TestGetRegions(t *testing.T) {
 		product string
 		project string
 		want    []string
+		err     error
 	}{
-		"computeRegions":   {product: "compute", project: projectID, want: cRegions},
-		"functionsRegions": {product: "functions", project: projectID, want: fRegions},
-		"runRegions":       {product: "run", project: projectID, want: rRegions},
+		"computeRegions":   {product: "compute", project: projectID, want: cRegions, err: nil},
+		"functionsRegions": {product: "functions", project: projectID, want: fRegions, err: nil},
+		"runRegions":       {product: "run", project: projectID, want: rRegions, err: nil},
+		"GarbageInout":     {product: "An outdated iPad", project: projectID, want: []string{}, err: fmt.Errorf("invalid product requested: %s", "An outdated iPad")},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got, err := regions(tc.project, tc.product)
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
+
+			if err != tc.err {
+				if err.Error() != tc.err.Error() {
+					t.Fatalf("expected: no error, got: %v", err)
+				}
 			}
 
 			sort.Strings(got)
@@ -524,6 +531,24 @@ func TestGCEInstanceManage(t *testing.T) {
 				t.Errorf("collection failed: %v", err)
 			}
 
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestExtractAccount(t *testing.T) {
+	tests := map[string]struct {
+		input string
+		want  string
+	}{
+		"Basic": {input: "Something (Account)", want: "Account"},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := extractAccount(tc.input)
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}

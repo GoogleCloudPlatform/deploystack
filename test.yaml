@@ -22,7 +22,7 @@ steps:
      dir: "tools/test_files_updater/"
    - name: 'golang'
      entrypoint: 'go'
-     args: [ 'test' ]
+     args: [ 'test', '.', '-v', '-cover' ]
 timeout: 2200s
 availableSecrets:
   secretManager:
