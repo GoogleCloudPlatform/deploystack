@@ -32,18 +32,17 @@ func printFile() error {
 
 	w := bufio.NewWriter(f)
 
-	fmt.Fprintf(w, "%s%s%s\n", deploystack.TERMCYANB, deploystack.Divider, deploystack.TERMCLEAR)
-	fmt.Fprintf(w, "%s%s%s\n", deploystack.TERMCYANB, padString("Deploystack INSTALL", lineLength), deploystack.TERMCLEAR)
-	fmt.Fprintf(w, "%s%s%s\n", deploystack.TERMCYANB, deploystack.Divider, deploystack.TERMCLEAR)
-	fmt.Fprintf(w, "\n")
-	fmt.Fprintf(w, "%s\n", "To continue, run this command at the command line below.")
-	fmt.Fprintf(w, "%s\n", "This process should walk you through setting up and deploying")
-	fmt.Fprintf(w, "%s\n", "this deploystack application.")
-	fmt.Fprintf(w, "\n")
+	fmt.Fprintln(w, deploystack.TERMCLEARSCREEN)
 	fmt.Fprintf(w, "%s%s%s\n", deploystack.TERMCYANREV, deploystack.Divider, deploystack.TERMCLEAR)
-	fmt.Fprintf(w, "%s%s%s\n", deploystack.TERMCYANREV, padString("./deploystack install", lineLength), deploystack.TERMCLEAR)
+	fmt.Fprintf(w, "%s%s%s\n", deploystack.TERMCYANREV, padString("Deploystack INSTALL", lineLength), deploystack.TERMCLEAR)
 	fmt.Fprintf(w, "%s%s%s\n", deploystack.TERMCYANREV, deploystack.Divider, deploystack.TERMCLEAR)
-
+	fmt.Fprintln(w, "")
+	fmt.Fprintf(w, "%s\n", "The install process should walk you through setting up and deploying")
+	fmt.Fprintf(w, "%s\n", "this DeployStack project.")
+	fmt.Fprintf(w, "%s\n", "To start, run the following command:")
+	fmt.Fprintln(w, "")
+	fmt.Fprintf(w, "%s%s%s\n", deploystack.TERMCYANB, padString("./deploystack install", lineLength), deploystack.TERMCLEAR)
+	fmt.Fprintln(w, "")
 	w.Flush()
 
 	return nil
