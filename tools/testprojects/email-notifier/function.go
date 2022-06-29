@@ -139,6 +139,8 @@ func massageLog(log string) string {
 	log = strings.ReplaceAll(log, "[4;36m", "<span style=\"color: cyan; text-decoration: underline\">")
 	log = strings.ReplaceAll(log, "[0;31m", "<span style=\"color: red\">")
 	log = strings.ReplaceAll(log, "[32m", "<span style=\"color: green\">")
+	log = strings.ReplaceAll(log, "[31m", "<span style=\"color: red\">")
+	log = strings.ReplaceAll(log, "[4m", "<span style=\"color: cyan\">")
 
 	return log
 }
