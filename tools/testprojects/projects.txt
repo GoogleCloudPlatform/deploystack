@@ -4,3 +4,5 @@ todo
 scaler
 yesornosite
 deploystack
+singlevm
+opsagent
