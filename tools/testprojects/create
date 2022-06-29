@@ -7,7 +7,7 @@ TRIGGERNAME=Test-Procedure
 REPO_NAME=deploystack_$1
 REPO_OWNER=GoogleCloudPlatform
 
-BA=$(gcloud beta billing accounts list --format="value(ACCOUNT_ID)" --filter="open=true" | xargs) 
+BA=$(gcloud beta billing accounts list --format="value(ACCOUNT_ID)" --filter="displayName~Cloud Advocacy" | xargs)
 
 
 
@@ -22,11 +22,6 @@ section_open "Create Project, Enable Billing, Enable Services "
     gcloud services enable cloudresourcemanager.googleapis.com --project=$PROJECT
     PROJECT_NUMBER=$(gcloud projects describe $PROJECT --format 'value(projectNumber)')
 section_close
-
-section_open "Create remote-builder Container in project"
-    gcloud builds submit --config=terraform-tester/cloudbuild.yaml terraform-tester/. --project=$PROJECT
-section_close
-
 
 section_open "Grant Build Service account correct permissions"
     CB_SA_EMAIL=$PROJECT_NUMBER@cloudbuild.gserviceaccount.com
