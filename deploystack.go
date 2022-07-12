@@ -364,6 +364,10 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Project && len(project) == 0 {
 		project, err = ProjectManage()
 		if err != nil {
+			if strings.Contains(err.Error(), "invalid token JSON from metadata") {
+				handleProcessError(fmt.Errorf("timed out waiting for API activation, you must authorize API use to continue "))
+			}
+
 			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
 		}
 		s.AddSetting("project_id", project)
