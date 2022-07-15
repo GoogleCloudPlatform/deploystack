@@ -5,8 +5,21 @@ BRANCH=main
 REGION=us-central1
 TRIGGERNAME=Test-Procedure
 
-REPO_NAME=deploystack_$DSNAME
-REPO_OWNER=GoogleCloudPlatform
+REPO_NAME=$2
+REPO_OWNER=$3
+
+if [[ $1 == "" ]] ; then
+    echo "Must input a suffix for the test projects"
+    exit 1
+fi
+
+if [[ $REPO_NAME == "" ]] ; then
+    REPO_NAME=deploystack-$1
+fi
+
+if [[ $REPO_OWNER == "" ]] ; then
+    REPO_OWNER=GoogleCloudPlatform
+fi 
 
 section_open "Create Trigger that runs tests on giuthub code push"
     gcloud beta builds triggers create github --name $TRIGGERNAME-push \
