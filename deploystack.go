@@ -364,10 +364,6 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Project && len(project) == 0 {
 		project, err = ProjectManage()
 		if err != nil {
-			if strings.Contains(err.Error(), "invalid token JSON from metadata") {
-				handleProcessError(fmt.Errorf("timed out waiting for API activation, you must authorize API use to continue "))
-			}
-
 			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
 		}
 		s.AddSetting("project_id", project)
@@ -460,9 +456,16 @@ func (c Config) Process(s *Stack, output string) error {
 }
 
 func handleProcessError(err error) {
-	fmt.Printf("\n\n%sThere was an issue collecting the information it takes to run this application.                             %s\n", TERMREDREV, TERMCLEAR)
-	fmt.Printf("%sPlease try again. if it persists, please report at https://github.com/GoogleCloudPlatform/deploystack/issues %s\n\n", TERMREDB, TERMCLEAR)
+	fmt.Printf("\n\n%sThere was an issue collecting the information it takes to run this application.                             %s\n\n", TERMREDREV, TERMCLEAR)
+	fmt.Printf("%sYou can try again by typing %sdeploystack install%s at the command prompt  %s\n\n", TERMREDB, TERMREDREV, TERMCLEAR+TERMREDB, TERMCLEAR)
+	fmt.Printf("%sIf the issue persists, please report at https://github.com/GoogleCloudPlatform/deploystack/issues %s\n\n", TERMREDB, TERMCLEAR)
+
 	fmt.Printf("Extra diagnostic information:\n")
+
+	if strings.Contains(err.Error(), "invalid token JSON from metadata") {
+		fmt.Printf("timed out waiting for API activation, you must authorize API use to continue \n")
+	}
+
 	fmt.Println(err)
 	os.Exit(1)
 }
