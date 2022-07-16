@@ -76,6 +76,8 @@ func TestCreateProject(t *testing.T) {
 	}{
 		"Too long":  {input: "zprojectnamedeletethisprojectnamehastoomanycharacters", err: ErrorProjectCreateTooLong},
 		"Bad Chars": {input: "ALLUPERCASEDONESTWORK", err: ErrorProjectInvalidCharacters},
+		"Spaces":    {input: "spaces in name", err: ErrorProjectInvalidCharacters},
+		// "Duplicate": {input: projectID, err: ErrorProjectAlreadyExists},
 	}
 
 	for name, tc := range tests {
