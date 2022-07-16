@@ -104,6 +104,9 @@ func projectCreate(project string) error {
 		if strings.Contains(err.Error(), "project_id contains invalid characters") {
 			return ErrorProjectInvalidCharacters
 		}
+		if strings.Contains(err.Error(), "requested entity already exists") {
+			return ErrorProjectAlreadyExists
+		}
 
 		return err
 	}

@@ -85,6 +85,9 @@ var (
 	// ErrorProjectInvalidCharacters is an error when you try and pass bad
 	// characters into a CreateProjectCall
 	ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
+	// ErrorProjectAlreadyExists is an error when you try and create a project
+	// That already exists
+	ErrorProjectAlreadyExists = fmt.Errorf("project_id already exists")
 	// Divider is a text element that draws a horizontal line
 	Divider   = ""
 	opts      = option.WithCredentialsFile("")
