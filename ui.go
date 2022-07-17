@@ -298,6 +298,10 @@ func projectPrompt() (string, error) {
 	sec1 := NewSection("Creating the project")
 
 	sec1.Open()
+	fmt.Printf("Project IDs are immutable and can be set only during project \n")
+	fmt.Printf("creation. They must start with a lowercase letter and can have \n")
+	fmt.Printf("lowercase ASCII letters, digits or hyphens.  \n")
+	fmt.Printf("Project IDs must be between 6 and 30 characters. \n")
 	fmt.Printf("%sPlease enter a new project name to create: %s\n", TERMCYANB, TERMCLEAR)
 
 	reader := bufio.NewReader(os.Stdin)
