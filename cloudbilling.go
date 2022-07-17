@@ -3,8 +3,10 @@ package deploystack
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strings"
 	"sync"
+	"time"
 
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -98,6 +100,10 @@ func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBill
 	for _, v := range p {
 		go func(p *cloudresourcemanager.Project) {
 			defer wg.Done()
+			// Getting random quota errors when somebody had too many projects.
+			// sleeping randoming for a second fixed it.
+			// I don't think these requests can be fixed by batching.
+			sleepRandom()
 			if p.LifecycleState == "ACTIVE" && p.Name != "" {
 				proj := fmt.Sprintf("projects/%s", p.ProjectId)
 				tmp, err := svc.Projects.GetBillingInfo(proj).Do()
@@ -107,7 +113,7 @@ func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBill
 						return
 					}
 
-					fmt.Printf("error: %s\n", err)
+					fmt.Printf("error getting billing information: %s\n", err)
 					return
 				}
 
@@ -119,4 +125,14 @@ func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBill
 	wg.Wait()
 
 	return res, nil
+}
+
+func randomInRange(min, max int) int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(max-min+1) + min
+}
+
+func sleepRandom() {
+	d := time.Second * time.Duration(randomInRange(0, 1))
+	time.Sleep(d)
 }
