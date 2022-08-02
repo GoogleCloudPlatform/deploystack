@@ -169,7 +169,12 @@ func TestProcessCustoms(t *testing.T) {
 		"custom_options": {
 			file: "test_files/customs_options/deploystack.json",
 			desc: "test_files/customs_options/deploystack.txt",
-			want: `********************************************************************************
+			want: `********************************************************************************[1;36mDeploystack [0m
+Deploystack will walk you through setting some options for the  
+stack this solutions installs. 
+Most questions have a default that you can choose by hitting the Enter key  
+********************************************************************************[1;36mPress the Enter Key to continue [0m
+********************************************************************************
 [1;36mTESTCONFIG[0m
 A test string for usage with this stuff.
 It's going to take around [0;36m5 minutes[0m
@@ -188,7 +193,12 @@ Nodes: [1;36m3[0m
 		"custom": {
 			file: "test_files/customs/deploystack.json",
 			desc: "test_files/customs/deploystack.txt",
-			want: `********************************************************************************
+			want: `********************************************************************************[1;36mDeploystack [0m
+Deploystack will walk you through setting some options for the  
+stack this solutions installs. 
+Most questions have a default that you can choose by hitting the Enter key  
+********************************************************************************[1;36mPress the Enter Key to continue [0m
+********************************************************************************
 [1;36mTESTCONFIG[0m
 A test string for usage with this stuff.
 It's going to take around [0;36m5 minutes[0m
