@@ -352,6 +352,7 @@ func (c Config) PrintHeader() {
 // Process runs through all of the options in a config and collects all of the
 // necessary data from users.
 func (c Config) Process(s *Stack, output string) error {
+	Start()
 	c.PrintHeader()
 	var project, region, zone, projectnumber, billingaccount string
 	var err error
