@@ -383,3 +383,17 @@ func ZoneManage(project, region string) (string, error) {
 	zone := listSelect(toLabeledValueSlice(zones), zones[0])
 	return zone.Value, nil
 }
+
+// Start presents a little documentation screen which also prevents the user
+// from timing out the request to activate Cloud Shell
+func Start() {
+	fmt.Printf(Divider)
+	colorPrintln("Deploystack", TERMCYANB)
+	fmt.Printf("Deploystack will walk you through setting some options for the  \n")
+	fmt.Printf("stack this solutions installs. \n")
+	fmt.Printf("Most questions have a default that you can choose by hitting the Enter key  \n")
+	fmt.Printf(Divider)
+	colorPrintln("Press the Enter Key to continue", TERMCYANB)
+	var input string
+	fmt.Scanln(&input)
+}
