@@ -15,3 +15,5 @@ terraform.tfvars
 go-code-cover
 cover.out
 testing.yaml
+tools/doccreator/out/results.html
+tools/doccreator/repo/*

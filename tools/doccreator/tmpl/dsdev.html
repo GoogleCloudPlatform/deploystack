@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy Stack - {{.DeployStack.Title | ToLower |  Title }}</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="https://deploystack.dev/static/css/prism.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="https://deploystack.dev/static/css/main.css?fresh">
+    <link rel="stylesheet" type="text/css" media="screen" href="css/main.css">
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <script src="https://deploystack.dev/static/js/prism.js"></script>
+    <script src="https://deploystack.dev/static/js/main.js"></script>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#tryout">Get Started</a></li>
+            <li><a href="#app-more-details">Learn More</a></li>
+            <li><a href="#app-scripts">Scripts</a></li>
+            <li><a href="https://deploystack.dev">More apps</a></li>
+        </ul>
+    </nav>
+    <section class="introduction">
+        <div class="content">
+            <h1><a href="https://deploystack.dev">Deploy Stack</a> - {{.DeployStack.Title | ToLower |  Title }}</h1>
+
+
+            <p>Deploy Stack is a series of applications that are prebuilt and 
+                architected to demonstrate common application architectures and 
+                share projects that can repurposed to support your needs. Each
+                one just requires one command to run and when the process is 
+                done, a fully functional version of the app is available and 
+                running, ready to use or modify. 
+            </p>
+
+
+        </div>
+    </section>
+
+    <section id="overview" class="app-overiview">
+        <div class="content">
+            <div class="description">
+                <h2>{{.DeployStack.Title | ToLower |  Title }}</h2>
+                {{.DeployStack.Description}}
+            </div>
+            <div class="getting-started">
+                <h2>Get Started</h2>
+                <p>Click on the link below to a copy of the source code in Cloud Shell. Once there, a single command will
+                    spin
+                    up a workng copy of the application in your project. </p>
+                    <a href="https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo={{.GitRepo}}&shellonly=true&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image" target="_new">
+                        <img alt="Open in Cloud Shell" src="https://gstatic.com/cloudssh/images/open-btn.svg">
+                </a>
+                <p>Also feel free to review the source code directly in github. </p>
+                <a class="github-btn" href="{{.GitRepo}}" target="_blank">View
+                    source
+                    code</a>
+            </div>
+            <!-- TODO: FIX this url -->
+            <img src="https://deploystack.dev/static/img/arch-ops-agent.svg" class="architecture" />
+        </div>
+    </section>
+
+
+
+    <section id="app-more-details" class="app-more-details">
+        <div class="content">
+            <h2>Learn More</h2>
+            <p>Use the links below to get more information on the piece we used in this
+                Application. Choose how you learn best: video, product documentation, or
+                interactive walkthrough. </p>
+
+            <dl>
+                <dt>
+                    <h4>Compute Engine</h4>
+                    <img src="https://deploystack.dev/static/img/compute_engine.svg" class="logo">
+                </dt>
+                <dd>
+                    <p>Compute Engine is Google Cloud's Virtual technology. With it you can spin up many different configurations of VM
+                        to fit the shape of whatever computing needs you have. 
+                    </p>
+                    <div class="cta">
+                        <a class="youtube channel" href="https://www.youtube.com/watch?v=1XH0gLlGDdk"><span
+                                class="label">Video</span><span class="material-icons">smart_display</span></a>
+                        <a class="docs channel" href="https://cloud.google.com/compute/docs/quickstart-linux "><span
+                                class="label">Documentation</span><span class="material-icons">description</span></a>
+                    </div>
+                </dd>
+                <dt>
+                    <h4>Cloud Monitoring</h4>
+                    <img src="https://deploystack.dev/static/img/cloud_monitoring.svg" class="logo">
+                </dt>
+                <dd>
+                    <p>Cloud Monitoring exposes visibility into the performance, availability, and health of your applications and infrastructure.
+                    </p>
+                    <div class="cta">
+                        <a class="youtube channel" href="https://www.youtube.com/watch?v=wY8cmFY4ua8&t=2s"><span
+                                class="label">Video</span><span class="material-icons">smart_display</span></a>
+                        <a class="docs channel" href="https://cloud.google.com/monitoring/docs/"><span
+                                class="label">Documentation</span><span class="material-icons">description</span></a>
+                    </div>
+                </dd>
+                <dt>
+                    <h4>Logging</h4>
+                    <img src="https://deploystack.dev/static/img/cloud_logging.svg" class="logo">
+                </dt>
+                <dd>
+                    <p>Cloud Logging provides fully managed, real-time log management with storage, search, analysis and alerting at exabyte scale. 
+                    </p>
+                    <div class="cta">
+                        <a class="youtube channel" href="https://www.youtube.com/watch?v=gyDp-Cl_MdA"><span
+                                class="label">Video</span><span class="material-icons">smart_display</span></a>
+                        <a class="docs channel" href="https://cloud.google.com/logging/docs/"><span
+                                class="label">Documentation</span><span class="material-icons">description</span></a>
+                        <a class="walkthrough channel"
+                            href="https://console.cloud.google.com/?tutorial=compute_quickstart"><span
+                                class="label">Walkthrough</span><span class="material-icons">keyboard</span></a>
+                    </div>
+                </dd>
+            </dl>
+
+
+            
+        </div>
+    </section>
+    <section id="app-scripts" class="app-scripts">
+        <div class="content">
+            <h2>Scripts</h2>
+            <p>The install script uses an excutable written in <code class="language-hcl">go</code> and <code
+                class="language-hcl">terraform</code> CLI tools to take an empty project and
+            install the application in it. The output should be a working application and a url to the
+            Cloud Run service for the front end. </p>
+
+            <h3><code>./main.tf</code></h3>
+            <ul class="script-steps">
+
+{{range $val := .Entities}}
+                <li>
+                    <div class="step">
+                        <!-- {{$val.Kind}} - {{$val.Type}}.{{$val.Name}} -->
+                        <!-- TODO: FILL IN -->
+                        <h4>[FILL IN]</h4>
+                        <p>[FILL IN]</p>
+
+                        <pre><code class="language-hcl">{{$val.Text}}</code></pre>
+                    </div>
+                </li>{{end}}
+                </ul>
+
+        </div>
+    </section>
+
+</body>
+
+</html>
