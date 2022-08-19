@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"html"
 	"log"
+	"net/url"
 	"os"
 	"sort"
 	"strings"
@@ -10,17 +12,13 @@ import (
 
 	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 func main() {
-	mod, dia := tfconfig.LoadModule("./repo")
-	if dia.Err() != nil {
-		log.Fatalf("error in the diagnostics %+v\n", dia)
-	}
-
-	s := deploystack.NewStack()
-	if err := s.ReadConfig("./repo/deploystack.json", "./repo/messages/description.txt"); err != nil {
-		log.Fatalf("could not read config file: %s", err)
+	DSMeta, err := NewDSMeta("https://github.com/GoogleCloudPlatform/deploystack-nosql-client-server")
+	if err != nil {
+		log.Fatalf("error in the diagnostics %s", err)
 	}
 
 	f, err := os.Create("./out/results.html")
@@ -29,14 +27,11 @@ func main() {
 		return
 	}
 
-	DSMeta := DSMeta{}
-	DSMeta.Entities = NewEntities(mod)
-	DSMeta.DeployStack = s.Config
-	DSMeta.GitRepo = "https://github.com/GoogleCloudPlatform/deploystack-nosql-client-server"
-
 	funcMap := template.FuncMap{
-		"ToLower": strings.ToLower,
-		"Title":   strings.Title,
+		"ToLower":   strings.ToLower,
+		"Title":     strings.Title,
+		"Escape":    url.QueryEscape,
+		"TrimSpace": strings.TrimSpace,
 	}
 
 	t, err := template.New("dsdev.html").Funcs(funcMap).ParseFiles("./tmpl/dsdev.html")
@@ -50,10 +45,63 @@ func main() {
 	}
 }
 
+type product struct {
+	Title         string
+	Youtube       string
+	Walkthrough   string
+	Documentation string
+	Description   string
+	Logo          string
+}
+
 type DSMeta struct {
 	DeployStack deploystack.Config
 	Entities    entities
 	GitRepo     string
+	Products    map[string]product
+}
+
+func NewDSMeta(repo string) (DSMeta, error) {
+	var err error
+	d := DSMeta{}
+	d.GitRepo = repo
+	d.Products = make(map[string]product)
+
+	if _, err := os.Stat("./repo"); os.IsNotExist(err) {
+		_, err = git.PlainClone("./repo", false, &git.CloneOptions{
+			URL:      repo,
+			Progress: os.Stdout,
+		})
+	}
+
+	if err != nil {
+		return d, err
+	}
+
+	mod, dia := tfconfig.LoadModule("./repo")
+	if dia.Err() != nil {
+		return d, fmt.Errorf("error in the diagnostics %+v", dia)
+	}
+
+	s := deploystack.NewStack()
+	if err := s.ReadConfig("./repo/deploystack.json", "./repo/messages/description.txt"); err != nil {
+		return d, fmt.Errorf("could not read config file: %s", err)
+	}
+
+	d.Entities = NewEntities(mod)
+	d.DeployStack = s.Config
+
+	for _, v := range d.Entities {
+		if v.Kind == "resource" {
+			if val, ok := prods[v.Type]; ok {
+				if p, pok := pinfo[val]; pok {
+					d.Products[val] = p
+				}
+			}
+		}
+	}
+
+	return d, nil
 }
 
 type entity struct {
@@ -98,7 +146,7 @@ func NewEntities(mod *tfconfig.Module) entities {
 		e.File = v.Pos.Filename
 		e.Start = v.Pos.Line
 		e.Type = v.Type
-		e.Kind = "data"
+		e.Kind = "variable"
 		e.Text, _ = e.GetResourceText()
 		result = append(result, e)
 	}
@@ -108,6 +156,10 @@ func NewEntities(mod *tfconfig.Module) entities {
 	})
 
 	return result
+}
+
+func (e entity) IsResource() bool {
+	return e.Kind == "resource"
 }
 
 func (e entity) GetResourceText() (string, error) {

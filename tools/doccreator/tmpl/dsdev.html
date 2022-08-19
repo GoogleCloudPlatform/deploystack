@@ -7,8 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deploy Stack - {{.DeployStack.Title | ToLower |  Title }}</title>
     <link rel="stylesheet" type="text/css" media="screen" href="https://deploystack.dev/static/css/prism.css">
-    <link rel="stylesheet" type="text/css" media="screen" href="https://deploystack.dev/static/css/main.css?fresh">
-    <link rel="stylesheet" type="text/css" media="screen" href="css/main.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="https://deploystack.dev/static/css/main.css?freshdasdas">
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -29,8 +28,6 @@
     <section class="introduction">
         <div class="content">
             <h1><a href="https://deploystack.dev">Deploy Stack</a> - {{.DeployStack.Title | ToLower |  Title }}</h1>
-
-
             <p>Deploy Stack is a series of applications that are prebuilt and 
                 architected to demonstrate common application architectures and 
                 share projects that can repurposed to support your needs. Each
@@ -38,14 +35,14 @@
                 done, a fully functional version of the app is available and 
                 running, ready to use or modify. 
             </p>
-
-
         </div>
     </section>
+    
 
     <section id="overview" class="app-overiview">
         <div class="content">
             <div class="description">
+                <!-- TODO: Clean up this content -->
                 <h2>{{.DeployStack.Title | ToLower |  Title }}</h2>
                 {{.DeployStack.Description}}
             </div>
@@ -54,7 +51,7 @@
                 <p>Click on the link below to a copy of the source code in Cloud Shell. Once there, a single command will
                     spin
                     up a workng copy of the application in your project. </p>
-                    <a href="https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo={{.GitRepo}}&shellonly=true&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image" target="_new">
+                    <a href="https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo={{.GitRepo | Escape }}&shellonly=true&cloudshell_image=gcr.io/ds-artifacts-cloudshell/deploystack_custom_image" target="_new">
                         <img alt="Open in Cloud Shell" src="https://gstatic.com/cloudssh/images/open-btn.svg">
                 </a>
                 <p>Also feel free to review the source code directly in github. </p>
@@ -67,8 +64,6 @@
         </div>
     </section>
 
-
-
     <section id="app-more-details" class="app-more-details">
         <div class="content">
             <h2>Learn More</h2>
@@ -77,55 +72,31 @@
                 interactive walkthrough. </p>
 
             <dl>
+{{range $val := .Products}}                
                 <dt>
-                    <h4>Compute Engine</h4>
-                    <img src="https://deploystack.dev/static/img/compute_engine.svg" class="logo">
+                    <h4>{{$val.Title}}</h4>
+                    <img src="{{$val.Logo}}" class="logo">
                 </dt>
                 <dd>
-                    <p>Compute Engine is Google Cloud's Virtual technology. With it you can spin up many different configurations of VM
-                        to fit the shape of whatever computing needs you have. 
-                    </p>
+                     <!-- TODO: Double check that this content is right. -->
+                    <p>{{$val.Description}}</p>
                     <div class="cta">
-                        <a class="youtube channel" href="https://www.youtube.com/watch?v=1XH0gLlGDdk"><span
-                                class="label">Video</span><span class="material-icons">smart_display</span></a>
-                        <a class="docs channel" href="https://cloud.google.com/compute/docs/quickstart-linux "><span
-                                class="label">Documentation</span><span class="material-icons">description</span></a>
+                        <!-- TODO: Double check that this content is right. -->
+                        <a class="youtube channel" href="{{$val.Youtube}}">
+                            <span class="label">Video</span><span class="material-icons">smart_display</span>
+                        </a>
+                         <!-- TODO: Double check that this content is right. -->
+                        <a class="docs channel" href="{{$val.Documentation}}">
+                            <span class="label">Documentation</span><span class="material-icons">description</span>
+                        </a>
+                         <!-- TODO: Double check that this content is right. -->
+                        <a class="walkthrough channel" href="{{$val.Walkthrough}}">
+                            <span class="label">Walkthrough</span><span class="material-icons">keyboard</span>
+                        </a>
                     </div>
                 </dd>
-                <dt>
-                    <h4>Cloud Monitoring</h4>
-                    <img src="https://deploystack.dev/static/img/cloud_monitoring.svg" class="logo">
-                </dt>
-                <dd>
-                    <p>Cloud Monitoring exposes visibility into the performance, availability, and health of your applications and infrastructure.
-                    </p>
-                    <div class="cta">
-                        <a class="youtube channel" href="https://www.youtube.com/watch?v=wY8cmFY4ua8&t=2s"><span
-                                class="label">Video</span><span class="material-icons">smart_display</span></a>
-                        <a class="docs channel" href="https://cloud.google.com/monitoring/docs/"><span
-                                class="label">Documentation</span><span class="material-icons">description</span></a>
-                    </div>
-                </dd>
-                <dt>
-                    <h4>Logging</h4>
-                    <img src="https://deploystack.dev/static/img/cloud_logging.svg" class="logo">
-                </dt>
-                <dd>
-                    <p>Cloud Logging provides fully managed, real-time log management with storage, search, analysis and alerting at exabyte scale. 
-                    </p>
-                    <div class="cta">
-                        <a class="youtube channel" href="https://www.youtube.com/watch?v=gyDp-Cl_MdA"><span
-                                class="label">Video</span><span class="material-icons">smart_display</span></a>
-                        <a class="docs channel" href="https://cloud.google.com/logging/docs/"><span
-                                class="label">Documentation</span><span class="material-icons">description</span></a>
-                        <a class="walkthrough channel"
-                            href="https://console.cloud.google.com/?tutorial=compute_quickstart"><span
-                                class="label">Walkthrough</span><span class="material-icons">keyboard</span></a>
-                    </div>
-                </dd>
+{{end}}                
             </dl>
-
-
             
         </div>
     </section>
@@ -139,20 +110,16 @@
 
             <h3><code>./main.tf</code></h3>
             <ul class="script-steps">
-
-{{range $val := .Entities}}
-                <li>
+                {{range $val := .Entities}}{{if .IsResource}}<li>
                     <div class="step">
-                        <!-- {{$val.Kind}} - {{$val.Type}}.{{$val.Name}} -->
                         <!-- TODO: FILL IN -->
                         <h4>[FILL IN]</h4>
                         <p>[FILL IN]</p>
 
-                        <pre><code class="language-hcl">{{$val.Text}}</code></pre>
+                        <pre><code class="language-hcl">{{$val.Text | TrimSpace}}</code></pre>
                     </div>
-                </li>{{end}}
-                </ul>
-
+                </li>{{end}}{{end}}
+            </ul>
         </div>
     </section>
 
