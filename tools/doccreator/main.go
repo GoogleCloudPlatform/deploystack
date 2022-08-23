@@ -1,11 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"html"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
@@ -15,15 +18,34 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 )
 
+var required = []string{
+	"./repo/deploystack.json",
+	"./repo/messages/description.txt",
+	"./repo/main.tf",
+}
+
 func main() {
-	DSMeta, err := NewDSMeta("https://github.com/GoogleCloudPlatform/deploystack-nosql-client-server")
-	if err != nil {
-		log.Fatalf("error in the diagnostics %s", err)
+	repoPtr := flag.String("repo", "", "the url of a publicly available github deploystack repo ")
+	flag.Parse()
+
+	if len(*repoPtr) == 0 {
+		log.Fatalf("a repo is required, please pass a repo using -repo flag ")
 	}
 
-	f, err := os.Create("./out/results.html")
+	DSMeta, err := NewDSMeta(*repoPtr)
 	if err != nil {
-		log.Fatalf("create file: %s", err)
+		log.Fatalf("error loading project %s", err)
+	}
+
+	outfolder := fmt.Sprintf("./out/%s", filepath.Base(*repoPtr))
+
+	if err := os.MkdirAll(outfolder, os.ModePerm); err != nil {
+		log.Fatalf("cannot create out folder: %s", err)
+	}
+
+	f, err := os.Create(fmt.Sprintf("%s/index.html", outfolder))
+	if err != nil {
+		log.Fatalf("cannot create out file: %s", err)
 		return
 	}
 
@@ -62,25 +84,39 @@ type DSMeta struct {
 }
 
 func NewDSMeta(repo string) (DSMeta, error) {
-	var err error
 	d := DSMeta{}
 	d.GitRepo = repo
 	d.Products = make(map[string]product)
 
 	if _, err := os.Stat("./repo"); os.IsNotExist(err) {
+		fname := filepath.Join(os.TempDir(), "stdout")
+		old := os.Stdout            // keep backup of the real stdout
+		temp, _ := os.Create(fname) // create temp file
+		defer temp.Close()
+		os.Stdout = temp
 		_, err = git.PlainClone("./repo", false, &git.CloneOptions{
 			URL:      repo,
-			Progress: os.Stdout,
+			Progress: temp,
 		})
+		if err != nil {
+			os.Stdout = old
+			out, _ := ioutil.ReadFile(fname)
+			fmt.Printf("git response: \n%s\n", string(out))
+			return d, fmt.Errorf("cannot get repo: %s", err)
+		}
+
+		os.Stdout = old
 	}
 
-	if err != nil {
-		return d, err
+	for _, v := range required {
+		if _, err := os.Stat(v); os.IsNotExist(err) {
+			return d, fmt.Errorf("required file does not exist: %s", v)
+		}
 	}
 
 	mod, dia := tfconfig.LoadModule("./repo")
 	if dia.Err() != nil {
-		return d, fmt.Errorf("error in the diagnostics %+v", dia)
+		return d, fmt.Errorf("terraform config problem %+v", dia)
 	}
 
 	s := deploystack.NewStack()

@@ -18,3 +18,5 @@ testing.yaml
 tools/doccreator/out/results.html
 tools/doccreator/repo/*
 tools/doccreator/repo/
+tools/doccreator/out/*
+tools/doccreator/out
