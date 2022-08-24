@@ -19,6 +19,17 @@ var required = []string{
 	"./repo/main.tf",
 }
 
+var skipLsit = list{
+	"google_secret_manager_secret_version",
+	"google_project_service",
+	"google_service_networking_connection",
+	"google_cloud_run_service_iam_policy",
+	"random_id",
+	"google_project_iam_member",
+	"null_resource",
+	"google_storage_bucket_iam_binding",
+}
+
 func main() {
 	folderPtr := flag.String("folder", "", "the file path of a local deploystack repo in progress")
 	flag.Parse()
@@ -31,6 +42,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("error loading project %s", err)
 	}
+
+	// for _, v := range DSMeta.Entities {
+	// 	fmt.Printf("Command %s: %s %s\n", v.Attr["name"], v.Attr["label"], v.GenerateGcloudCommand())
+	// }
 
 	outfolder := fmt.Sprintf("./out/")
 
@@ -80,15 +95,27 @@ func NewDSMeta(folder string) (DSMeta, error) {
 	return d, nil
 }
 
+type list []string
+
+func (l list) Matches(s string) bool {
+	tmp := strings.ToLower(s)
+	for _, v := range l {
+		if strings.Contains(tmp, strings.ToLower(v)) {
+			return true
+		}
+	}
+	return false
+}
+
 type entity struct {
-	Name   string
-	File   string
-	Start  int
-	Text   string
-	Kind   string
-	Type   string
-	Attr   map[string]string
-	Gcloud string
+	Name    string
+	File    string
+	Start   int
+	Text    string
+	Kind    string
+	Type    string
+	Attr    map[string]string
+	Product product
 }
 
 type entities []entity
@@ -98,8 +125,12 @@ func NewEntities(mod *tfconfig.Module) entities {
 
 	for _, v := range mod.ManagedResources {
 
-		gcloud, ok := prods[v.Type]
+		product, ok := prods[v.Type]
 		if !ok {
+			if !skipLsit.Matches(v.Type) {
+				fmt.Printf("cannot find proper test for %s\n", v.Type)
+			}
+
 			continue
 		}
 
@@ -110,7 +141,7 @@ func NewEntities(mod *tfconfig.Module) entities {
 		e.Type = v.Type
 		e.Kind = "resource"
 		e.Text, _ = e.GetResourceText()
-		e.Gcloud = gcloud
+		e.Product = product
 		e.generateMap()
 		result = append(result, e)
 	}
@@ -134,12 +165,23 @@ func NewEntities(mod *tfconfig.Module) entities {
 }
 
 func (e *entity) generateMap() {
-	terms := []string{"name", "zone", "region", "secret_id"}
+	terms := list{"zone", "region"}
+
+	label := e.Product.LabelField
+	if e.Product.LabelField == "" {
+		label = "name"
+	}
+	terms = append(terms, label)
+
 	sl := strings.Split(e.Text, "\n")
 	m := map[string]string{}
 
 	for _, t := range terms {
 		for _, v := range sl {
+
+			if strings.Contains(v, "#") {
+				continue
+			}
 
 			lsl := strings.Split(v, "=")
 
@@ -148,10 +190,13 @@ func (e *entity) generateMap() {
 				break
 			}
 		}
-		if _, ok := m[t]; ok {
-			break
-		}
 	}
+
+	if val, ok := m[label]; ok {
+		m["label"] = val
+	}
+
+	m["label"] = strings.Trim(m["label"], "\"")
 
 	e.Attr = m
 }
@@ -164,49 +209,54 @@ func (e entity) IsVariable() bool {
 	return e.Kind == "variable"
 }
 
-func (e entity) HasName() bool {
-	_, ok := e.Attr["name"]
+func (e entity) HasLabel() bool {
+	_, ok := e.Attr["label"]
 	return ok
+}
+
+func (e entity) HasTodo() bool {
+	return len(e.Product.Todo) > 0
 }
 
 func (e entity) NoDefault() bool {
 	return !strings.Contains(e.Text, "default")
 }
 
-func (e entity) GenerateGcloudCommand() string {
-	zone := e.Attr["zone"]
-	region := e.Attr["region"]
-
+func (e entity) GenerateTestCommand() string {
 	cmdsl := []string{}
-	cmdsl = append(cmdsl, "gcloud")
-	cmdsl = append(cmdsl, e.Gcloud)
-	cmdsl = append(cmdsl, "describe")
-	cmdsl = append(cmdsl, e.GenerateGcloudName())
+	cmdsl = append(cmdsl, e.Product.TestCommand)
+	cmdsl = append(cmdsl, e.FormatLabel())
 
-	if len(zone) > 0 {
+	if e.Product.Zone {
 		cmdsl = append(cmdsl, "--zone $ZONE")
 	}
-	if len(zone) == 0 && len(region) > 0 {
+	if e.Product.Region {
 		cmdsl = append(cmdsl, "--region $REGION")
 	}
 
-	if strings.Contains(e.Type, "google_cloud_run") {
-		cmdsl = append(cmdsl, "--region $REGION")
+	if len(e.Product.Suffix) > 0 {
+		cmdsl = append(cmdsl, e.Product.Suffix)
 	}
 
-	cmdsl = append(cmdsl, `--format="value(name)"`)
+	result := strings.Join(cmdsl, " ")
+	result = strings.ReplaceAll(result, "gs:// ", "gs://")
 
-	return strings.Join(cmdsl, " ")
+	return result
 }
 
-func (e entity) GenerateGcloudName() string {
-	name := e.Attr["name"]
+func (e entity) Expected() string {
+	if e.Product.Expected != "" {
+		return e.Product.Expected
+	}
+	return e.FormatLabel()
+}
+
+func (e entity) FormatLabel() string {
+	name := e.Attr["label"]
+
 	name = strings.ReplaceAll(name, "\"", "")
 	name = strings.ReplaceAll(name, "${var.basename}", "$BASENAME")
-
-	if _, ok := e.Attr["secret_id"]; ok {
-		name = e.Attr["secret_id"]
-	}
+	name = strings.ReplaceAll(name, "${var.project_id}", "$PROJECT")
 
 	return name
 }
