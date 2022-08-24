@@ -81,7 +81,12 @@ tfvars file that will drive the terraform script.
     {
       "name": "nodes",
       "description": "Please enter the number of nodes",
-      "default": "3"
+      "options": [
+				"roles/reviewer|Project Reviewer",
+				"roles/owner|Project Owner",
+				"roles/vison.reader|Cloud Vision Reader"
+		  ],
+	  "default" : "roles/owner|Project Owner"
     }
   ]
 }
@@ -105,7 +110,7 @@ tfvars file that will drive the terraform script.
 | name                   | string  | The name of the variable                                                             |
 | description            | string  | The description of the variable to prompt the user with                              |
 | default                | string  | A default value for the variable.                                                    |
-| options                | array   | An array of options to turn this into a custom select interface                      |
+| options                | array   | An array of options to turn this into a custom select interface <br /> **Note** Optionally you can pass a \| to divide an option into a value and a label like so: <br /> `"weirdConfigSetting\|User Readable Label"`                     |
 | prepend_project        | bool    | Whether or not to prepend the project id to the default value. Useful for resources like buckets that have to have globally unique names.                       |
 
 ### UI Controls

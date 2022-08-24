@@ -732,7 +732,13 @@ func toLabeledValueSlice(sl []string) LabeledValues {
 	r := LabeledValues{}
 
 	for _, v := range sl {
-		r = append(r, LabeledValue{v, v})
+		val := LabeledValue{v, v}
+		if strings.Contains(v, "|") {
+			sl := strings.Split(v, "|")
+			val = LabeledValue{sl[0], sl[1]}
+		}
+
+		r = append(r, val)
 	}
 	return r
 }
