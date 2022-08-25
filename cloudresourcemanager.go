@@ -47,8 +47,8 @@ func projectNumber(id string) (string, error) {
 }
 
 // projects gets a list of the projects a user has access to
-func projects() ([]string, error) {
-	resp := []string{}
+func projects() ([]projectWithBilling, error) {
+	resp := []projectWithBilling{}
 
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
@@ -59,6 +59,7 @@ func projects() ([]string, error) {
 	if err != nil {
 		return resp, err
 	}
+
 	pwb, err := getBillingForProjects(results.Projects)
 	if err != nil {
 		return resp, err
@@ -68,22 +69,23 @@ func projects() ([]string, error) {
 		return strings.ToLower(pwb[i].Name) < strings.ToLower(pwb[j].Name)
 	})
 
-	for _, v := range pwb {
-		if v.BillingEnabled {
-			resp = append(resp, v.Name)
-			continue
-		}
-
-		resp = append(resp, fmt.Sprintf("%s (Billing Disabled)", v.Name))
-
-	}
-
-	return resp, nil
+	return pwb, nil
 }
 
 type projectWithBilling struct {
 	Name           string
+	ID             string
 	BillingEnabled bool
+}
+
+func (p projectWithBilling) ToLabledValue() LabeledValue {
+	r := LabeledValue{Label: p.Name, Value: p.ID}
+
+	if p.BillingEnabled {
+		r.Label = fmt.Sprintf("%s%s (Billing Enabled)%s", TERMGREY, p.Name, TERMCLEAR)
+	}
+
+	return r
 }
 
 // projectCreate does the work of actually creating a new project in your

@@ -117,7 +117,7 @@ func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBill
 					return
 				}
 
-				pwb := projectWithBilling{p.Name, tmp.BillingEnabled}
+				pwb := projectWithBilling{Name: p.Name, ID: p.ProjectId, BillingEnabled: tmp.BillingEnabled}
 				res = append(res, pwb)
 			}
 		}(v)

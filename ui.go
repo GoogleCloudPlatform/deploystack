@@ -249,47 +249,49 @@ func extractAccount(s string) string {
 }
 
 // ProjectManage promps a user to select a project.
-func ProjectManage() (string, error) {
+func ProjectManage() (string, string, error) {
 	createString := "CREATE NEW PROJECT"
 	project, err := ProjectID()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	projects, err := projects()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	projdis := []string{}
+	lvs := LabeledValues{}
 
 	for _, v := range projects {
-		if strings.Contains(v, "Billing Disabled") {
-			v = fmt.Sprintf("%s%s%s", TERMGREY, v, TERMCLEAR)
-		}
-		projdis = append(projdis, v)
-	}
+		lv := LabeledValue{Label: v.Name, Value: v.ID}
 
-	projdis = append([]string{createString}, projdis...)
+		if !v.BillingEnabled {
+			lv.Label = fmt.Sprintf("%s%s (Billing Disabled)%s", TERMGREY, v.Name, TERMCLEAR)
+		}
+
+		lvs = append(lvs, lv)
+	}
 
 	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", TERMCYANB, TERMCLEAR)
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
 	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
 
-	project = listSelect(toLabeledValueSlice(projdis), project).Value
+	lv := listSelect(lvs, project)
+	project = lv.Value
 
 	if project == createString {
 		project, err = projectPrompt()
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 	}
 
 	if err := ProjectIDSet(project); err != nil {
-		return project, fmt.Errorf("error: unable to set project (%s) in environment: %s", project, err)
+		return lv.Value, lv.Label, fmt.Errorf("error: unable to set project (%s) in environment: %s", project, err)
 	}
 
-	return project, nil
+	return lv.Value, lv.Label, nil
 }
 
 // projectPrompt manages the interaction of creating a project, including prompts.
