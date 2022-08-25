@@ -44,8 +44,8 @@ func TestGetProjects(t *testing.T) {
 			gotfiltered := []string{}
 
 			for _, v := range got {
-				if !strings.Contains(v, "zprojectnamedelete") {
-					gotfiltered = append(gotfiltered, v)
+				if !strings.Contains(v.Name, "zprojectnamedelete") {
+					gotfiltered = append(gotfiltered, v.Name)
 				}
 			}
 
@@ -55,7 +55,7 @@ func TestGetProjects(t *testing.T) {
 			if len(gotfiltered) != len(tc.want) {
 
 				t.Logf("Expected:%s\n", tc.want)
-				t.Logf("Got:\n%s", gotfiltered)
+				t.Logf("Got     :%s", gotfiltered)
 				t.Fatalf("expected: %v, got: %v", len(tc.want), len(gotfiltered))
 			}
 

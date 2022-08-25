@@ -354,7 +354,7 @@ func (c Config) PrintHeader() {
 func (c Config) Process(s *Stack, output string) error {
 	Start()
 	c.PrintHeader()
-	var project, region, zone, projectnumber, billingaccount string
+	var project, region, zone, projectnumber, billingaccount, projectName string
 	var err error
 
 	for i, v := range c.HardSet {
@@ -362,15 +362,17 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	project = s.GetSetting("project_id")
+	projectName = s.GetSetting("project_name")
 	region = s.GetSetting("region")
 	zone = s.GetSetting("zone")
 
 	if c.Project && len(project) == 0 {
-		project, err = ProjectManage()
+		project, projectName, err = ProjectManage()
 		if err != nil {
 			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
 		}
 		s.AddSetting("project_id", project)
+		s.AddSetting("project_name", projectName)
 	}
 
 	if c.ConfigureGCEInstance {
@@ -627,6 +629,10 @@ func (s Stack) PrintSettings() {
 
 	fmt.Printf("\n%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
+	if s, ok := s.Settings["project_name"]; ok && len(s) > 0 {
+		printSetting("project_name", s, longest)
+	}
+
 	if s, ok := s.Settings["project_id"]; ok && len(s) > 0 {
 		printSetting("project_id", s, longest)
 	}
@@ -637,7 +643,7 @@ func (s Stack) PrintSettings() {
 
 	ordered := []string{}
 	for i, v := range s.Settings {
-		if i == "project_id" || i == "project_number" {
+		if i == "project_id" || i == "project_number" || i == "project_name" {
 			continue
 		}
 		if len(v) < 1 {
