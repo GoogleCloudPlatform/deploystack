@@ -270,7 +270,7 @@ func (e entity) GetResourceText() (string, error) {
 
 	end := len(sl) - 1
 
-	end = findClosingBracket(e, sl) + 1
+	end = findClosingBracket(e.Start, sl) + 1
 
 	for i := start - 1; i < end; i++ {
 		if i < 0 {
@@ -284,9 +284,9 @@ func (e entity) GetResourceText() (string, error) {
 	return result, nil
 }
 
-func findClosingBracket(e entity, sl []string) int {
+func findClosingBracket(start int, sl []string) int {
 	count := 0
-	for i := e.Start - 1; i < len(sl); i++ {
+	for i := start - 1; i < len(sl); i++ {
 		if strings.Contains(sl[i], "{") {
 			count++
 		}

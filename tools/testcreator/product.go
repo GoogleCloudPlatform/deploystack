@@ -13,8 +13,6 @@ type product struct {
 	Todo          string
 }
 
-// terms := list{"zone", "region", "secret_id", ", "name"}
-
 var prods = map[string]product{
 	"google_compute_firewall":                {TestType: "gcloud", TestCommand: "gcloud compute firewalls describe", Zone: true, Suffix: `--format="value(name)"`},
 	"google_compute_instance":                {TestType: "gcloud", TestCommand: "gcloud compute instances describe", Zone: true, Suffix: `--format="value(name)"`},
