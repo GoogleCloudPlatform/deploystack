@@ -256,6 +256,25 @@ set=["item1","item2"]
 	}
 }
 
+func TestStackTFvarsWithProjectNAme(t *testing.T) {
+	s := NewStack()
+	s.AddSetting("project", "testproject")
+	s.AddSetting("boolean", "true")
+	s.AddSetting("project_name", "dontshow")
+	s.AddSetting("set", "[item1,item2]")
+	got := s.Terraform()
+
+	want := `boolean="true"
+project="testproject"
+set=["item1","item2"]
+`
+
+	if got != want {
+		fmt.Println(diff.Diff(want, got))
+		t.Fatalf("expected: %v, got: %v", want, got)
+	}
+}
+
 func captureOutput(f func()) string {
 	rescueStdout := os.Stdout
 	r, w, _ := os.Pipe()
