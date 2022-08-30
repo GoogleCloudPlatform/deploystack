@@ -570,6 +570,10 @@ func (s Stack) Terraform() string {
 		label := strings.ToLower(strings.ReplaceAll(v, " ", "_"))
 		val := s.Settings[v]
 
+		if label == "project_name" {
+			continue
+		}
+
 		if len(val) < 1 {
 			continue
 		}
