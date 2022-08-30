@@ -39,6 +39,11 @@ type PubSubMessage struct {
 
 func RecordTest(ctx context.Context, msg PubSubMessage) error {
 	project := os.Getenv("PROJECT")
+
+	if project == "" {
+		return fmt.Errorf("project not set")
+	}
+
 	return collectAndRegister(project)
 }
 
@@ -88,16 +93,16 @@ func collectAndRegister(project string) error {
 	// Do the actual things we need todo.
 	row, err := querySheet(*sheetsSVC, sheetID, project)
 	if err != nil {
-		return fmt.Errorf("failed get build resulsts: %v", err)
+		return fmt.Errorf("sheets: failed read from sheet: %v", err)
 	}
 
 	r, err := getBuild(ctx, project, *buildSVC)
 	if err != nil {
-		return fmt.Errorf("failed get build resulsts: %v", err)
+		return fmt.Errorf("cloudbuild: cannot get info from build: %v", err)
 	}
 
 	if err = writeStatiiToSheet(r, *sheetsSVC, sheetID, row); err != nil {
-		return fmt.Errorf("failed get build resulsts: %v", err)
+		return fmt.Errorf("sheet: can't write to sheet %v", err)
 	}
 
 	return nil
@@ -106,10 +111,16 @@ func collectAndRegister(project string) error {
 func getBuild(ctx context.Context, project string, svc cloudbuild.Client) (TestRun, error) {
 	build, err := getLastTestResult(ctx, project, svc)
 	if err != nil {
-		return TestRun{}, fmt.Errorf("failed get tests: %v", err)
+		return TestRun{}, fmt.Errorf("failed to get tests: %v", err)
 	}
 
-	tr := TestRun{project, build.Id, build.Status.String(), build.FinishTime.AsTime()}
+	tr := TestRun{
+		ProjectID: project,
+		BuildID:   build.Id,
+		Status:    build.Status.String(),
+		Last:      build.FinishTime.AsTime(),
+		Repo:      build.GetSubstitutions()["REPO_NAME"],
+	}
 	return tr, nil
 }
 
@@ -134,10 +145,12 @@ type TestRun struct {
 	BuildID   string
 	Status    string
 	Last      time.Time
+	Repo      string
 }
 
 func getLastTestResult(ctx context.Context, project string, svc cloudbuild.Client) (*cloudbuildpb.Build, error) {
 	req := &cloudbuildpb.ListBuildsRequest{ProjectId: project}
+	fmt.Printf("REQ %+v\n", req)
 	result := &cloudbuildpb.Build{}
 	it := svc.ListBuilds(ctx, req)
 	for {
@@ -190,12 +203,11 @@ func writeStatiiToSheet(t TestRun, svc sheets.Service, ID string, row int) error
 	writeRange := fmt.Sprintf("A%d", row+1)
 	var vr sheets.ValueRange
 
-	myval := []interface{}{t.ProjectID, t.Last, t.BuildID, t.Status}
+	myval := []interface{}{t.ProjectID, t.Last, t.BuildID, t.Status, t.Repo}
 	vr.Values = append(vr.Values, myval)
 
-	_, err := svc.Spreadsheets.Values.Update(ID, writeRange, &vr).ValueInputOption("RAW").Do()
-	if err != nil {
-		return fmt.Errorf("failed get build resulsts: %v", err)
+	if _, err := svc.Spreadsheets.Values.Update(ID, writeRange, &vr).ValueInputOption("RAW").Do(); err != nil {
+		return fmt.Errorf("sheets: failed to get old records from spreadsheets %s", err)
 	}
 
 	br := sheets.BatchUpdateSpreadsheetRequest{
@@ -217,8 +229,7 @@ func writeStatiiToSheet(t TestRun, svc sheets.Service, ID string, row int) error
 		}},
 	}
 
-	_, err = svc.Spreadsheets.BatchUpdate(ID, &br).Do()
-	if err != nil {
+	if _, err := svc.Spreadsheets.BatchUpdate(ID, &br).Do(); err != nil {
 		return fmt.Errorf("failed get sort spreadsheet: %v", err)
 	}
 

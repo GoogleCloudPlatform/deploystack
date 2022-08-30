@@ -1,5 +1,4 @@
 PROJECT=ds-tester-$1
 TRIGGERNAME=Test-Procedure
-REGION=us-central1
 
-gcloud alpha builds triggers run $TRIGGERNAME --project $PROJECT
+gcloud beta builds triggers run  $TRIGGERNAME --project $PROJECT
