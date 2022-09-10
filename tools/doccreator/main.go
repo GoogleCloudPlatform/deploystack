@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"html"
 	"io/ioutil"
 	"log"
 	"net/url"
@@ -26,15 +25,24 @@ var required = []string{
 
 func main() {
 	repoPtr := flag.String("repo", "", "the url of a publicly available github deploystack repo ")
+	devsitePtr := flag.Bool("devsite", true, "whether or not not make this for the internal doc site")
 	flag.Parse()
 
 	if len(*repoPtr) == 0 {
 		log.Fatalf("a repo is required, please pass a repo using -repo flag ")
 	}
 
+	outfile := "index.html"
+	tmpl := "./tmpl/dsdev.html"
+
 	DSMeta, err := NewDSMeta(*repoPtr)
 	if err != nil {
 		log.Fatalf("error loading project %s", err)
+	}
+
+	if *devsitePtr {
+		outfile = fmt.Sprintf("%s.md", DSMeta.GetShortName())
+		tmpl = "./tmpl/devsite.md"
 	}
 
 	outfolder := fmt.Sprintf("./out/%s", filepath.Base(*repoPtr))
@@ -43,7 +51,7 @@ func main() {
 		log.Fatalf("cannot create out folder: %s", err)
 	}
 
-	f, err := os.Create(fmt.Sprintf("%s/index.html", outfolder))
+	f, err := os.Create(fmt.Sprintf("%s/%s", outfolder, outfile))
 	if err != nil {
 		log.Fatalf("cannot create out file: %s", err)
 		return
@@ -56,7 +64,7 @@ func main() {
 		"TrimSpace": strings.TrimSpace,
 	}
 
-	t, err := template.New("dsdev.html").Funcs(funcMap).ParseFiles("./tmpl/dsdev.html")
+	t, err := template.New(filepath.Base(tmpl)).Funcs(funcMap).ParseFiles(tmpl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,6 +82,14 @@ type product struct {
 	Documentation string
 	Description   string
 	Logo          string
+}
+
+func (p product) GetShortNameUnderScore() string {
+	r := strings.ToLower(p.Title)
+
+	r = strings.ReplaceAll(r, " ", "_")
+
+	return r
 }
 
 type DSMeta struct {
@@ -138,6 +154,21 @@ func NewDSMeta(repo string) (DSMeta, error) {
 	}
 
 	return d, nil
+}
+
+func (d DSMeta) GetShortName() string {
+	r := filepath.Base(d.GitRepo)
+
+	r = strings.ReplaceAll(r, "deploystack-", "")
+
+	return r
+}
+
+func (d DSMeta) GetShortNameUnderScore() string {
+	r := d.GetShortName()
+	r = strings.ReplaceAll(r, "-", "_")
+
+	return r
 }
 
 type entity struct {
@@ -216,7 +247,7 @@ func (e entity) GetResourceText() (string, error) {
 
 	result := strings.Join(resultSl, "\n")
 
-	result = html.EscapeString(result)
+	// result = html.EscapeString(result)
 
 	return result, nil
 }
