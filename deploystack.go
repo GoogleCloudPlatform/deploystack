@@ -193,6 +193,7 @@ type Config struct {
 	HardSet              map[string]string `json:"hard_settings"`
 	CustomSettings       []Custom          `json:"custom_settings"`
 	ConfigureGCEInstance bool              `json:"configure_gce_instance"`
+	DocumentationLink    string            `json:"documentation_link"`
 }
 
 // Custom represents a custom setting that we would like to collect from a user
@@ -346,6 +347,12 @@ func (c Config) PrintHeader() {
 	}
 
 	fmt.Printf("It's going to take around %s%d %s%s\n", TERMCYAN, c.Duration, timestring, TERMCLEAR)
+
+	if c.DocumentationLink != "" {
+		fmt.Printf("\nIf you would like more information about this stack, please read the \n")
+		fmt.Printf("documentation at: \n%s%s%s \n", TERMCYANB, c.DocumentationLink, TERMCLEAR)
+	}
+
 	fmt.Printf("%s\n", Divider)
 }
 
