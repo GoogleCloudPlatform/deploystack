@@ -220,6 +220,53 @@ It's going to take around [0;36m2 minutes[0m
 	}
 }
 
+func TestDocumenationLink(t *testing.T) {
+	tests := map[string]struct {
+		title, desc, link, want string
+		duration                int
+	}{
+		"NoLink": {
+			title: "test", desc: "test", duration: 1,
+			want: `********************************************************************************
+[1;36mtest[0m
+test
+It's going to take around [0;36m1 minute[0m
+********************************************************************************
+`,
+		},
+		"Link": {
+			title: "test", desc: "test", duration: 1, link: "http://deploystack.dev",
+			want: `********************************************************************************
+[1;36mtest[0m
+test
+It's going to take around [0;36m1 minute[0m
+
+If you would like more information about this stack, please read the 
+documentation at: 
+[1;36mhttp://deploystack.dev[0m 
+********************************************************************************
+`,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			s := NewStack()
+			s.Config.Title = tc.title
+			s.Config.Description = tc.desc
+			s.Config.Duration = tc.duration
+			s.Config.DocumentationLink = tc.link
+
+			got := captureOutput(func() {
+				s.Config.PrintHeader()
+			})
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestSection(t *testing.T) {
 	input := NewSection("test")
 

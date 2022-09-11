@@ -1,6 +1,7 @@
 {	
 	"title":"YESORNOSITE",
 	"duration":5,
+	"documentation_link": "https://yesornosite.deploystack.dev/",
 	"collect_project": true,
 	"custom_settings": [
 		{
