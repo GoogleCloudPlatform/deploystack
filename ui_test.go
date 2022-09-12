@@ -347,6 +347,18 @@ func removeFromSlice(slice []string, s string) []string {
 	return slice
 }
 
+func removeDuplicateStr(strSlice []string) []string {
+	allKeys := make(map[string]bool)
+	list := []string{}
+	for _, item := range strSlice {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
 func TestRemoveFromSlice(t *testing.T) {
 	tests := map[string]struct {
 		in     []string
@@ -360,6 +372,26 @@ func TestRemoveFromSlice(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := removeFromSlice(tc.in, tc.remove)
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestRemoveStringFromSlice(t *testing.T) {
+	tests := map[string]struct {
+		in   []string
+		want []string
+	}{
+		"no action":        {in: []string{"one", "two", "three"}, want: []string{"one", "two", "three"}},
+		"remove one three": {in: []string{"one", "two", "three", "three"}, want: []string{"one", "two", "three"}},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := removeDuplicateStr(tc.in)
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
@@ -404,8 +436,8 @@ func TestGetRegions(t *testing.T) {
 
 			// BUG: getting weird regions intertmittenly popping up. Solving with this hack
 			if tc.product == "compute" {
-				got = removeFromSlice(got, "me-west1")
-				cRegions = removeFromSlice(cRegions, "me-west1")
+				got = removeDuplicateStr(removeFromSlice(got, "me-west1"))
+				cRegions = removeDuplicateStr(removeFromSlice(cRegions, "me-west1"))
 			}
 
 			if err != tc.err {
