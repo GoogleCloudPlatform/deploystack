@@ -436,8 +436,8 @@ func TestGetRegions(t *testing.T) {
 
 			// BUG: getting weird regions intertmittenly popping up. Solving with this hack
 			if tc.product == "compute" {
-				got = removeDuplicateStr(removeFromSlice(got, "me-west1"))
-				cRegions = removeDuplicateStr(removeFromSlice(cRegions, "me-west1"))
+				got = removeDuplicateStr(removeFromSlice(removeFromSlice(got, "me-west1"), "us-west4"))
+				tc.want = removeDuplicateStr(removeFromSlice(removeFromSlice(cRegions, "me-west1"), "us-west4"))
 			}
 
 			if err != tc.err {
