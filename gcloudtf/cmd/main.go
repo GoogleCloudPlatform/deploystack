@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/googlecloudplatform/deploystack/gcloudtf"
+	"github.com/GoogleCloudPlatform/deploystack/gcloudtf"
 )
 
 func main() {
