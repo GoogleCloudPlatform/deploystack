@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	b, err := gcloudtf.Extract("../testdata/load-balanced-vms")
+	b, err := gcloudtf.Extract("../testdata/extracttest")
 	if err != nil {
 		log.Fatalf("couldn't extract from TF file: %s", err)
 	}
