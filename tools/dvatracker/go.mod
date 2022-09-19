@@ -5,7 +5,6 @@ go 1.19
 
 require (
 	github.com/GoogleCloudPlatform/deploystack v0.0.0-20220912225937-3f6d148fc3b8
-	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-00010101000000-000000000000
 	gopkg.in/src-d/go-git.v4 v4.13.1
 )
 

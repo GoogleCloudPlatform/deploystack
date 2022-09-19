@@ -1,4 +1,4 @@
-module github.com/googlecloudplatform/deploystack/gcloudtf
+module github.com/GoogleCloudPlatform/deploystack/gcloudtf
 
 go 1.19
 
