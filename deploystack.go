@@ -584,13 +584,7 @@ func (s *Stack) findTFFolder(c Config) (string, error) {
 		return path, nil
 	}
 
-	path = ""
-
-	if _, err := os.Stat(path); err == nil {
-		return path, nil
-	}
-
-	return "", fmt.Errorf("requirement (%s) was not found either in the root, or in .deploystack folder nor was it set in deploystack.json", folder)
+	return "", nil
 }
 
 // FindAndReadRequired finds and reads in a Config from a json file.
