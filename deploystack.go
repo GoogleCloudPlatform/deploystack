@@ -554,7 +554,7 @@ func (s *Stack) findDSFolder(c Config, folder string) (string, error) {
 		}
 	case "scripts":
 		if c.PathScripts != "" {
-			return c.PathMessages, nil
+			return c.PathScripts, nil
 		}
 	}
 
