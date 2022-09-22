@@ -19,6 +19,7 @@ package deploystack
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -521,6 +522,50 @@ func (s *Stack) ProcessFlags(f Flags) {
 	}
 }
 
+// FindAndReadConfig finds and reads in a Config from a json file.
+func (s *Stack) FindAndReadConfig() error {
+	configPath := ".deploystack/deploystack.json"
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
+		configPath = "deploystack.json"
+	}
+
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("config file not present, looking for deploystack.json or .deploystack/deploystack.json")
+	}
+
+	content, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return fmt.Errorf("unable to find or read config file: %s", err)
+	}
+	config, err := NewConfig(content)
+	if err != nil {
+		return fmt.Errorf("unable to parse config file: %s", err)
+	}
+
+	messagePath := ".deploystack/messages/description.txt"
+	if config.PathMessages != "" {
+		messagePath = config.PathMessages
+	}
+
+	if _, err := os.Stat(messagePath); errors.Is(err, os.ErrNotExist) {
+		messagePath = "messages/description.txt"
+	}
+
+	if _, err := os.Stat(messagePath); err == nil {
+		description, err := ioutil.ReadFile(messagePath)
+		if err != nil {
+			return fmt.Errorf("unable to read description file: %s", err)
+		}
+
+		config.Description = string(description)
+	}
+
+	s.Config = config
+
+	return nil
+}
+
+// TODO: deprecate and remove
 // ReadConfig reads in a Config from a json file.
 func (s *Stack) ReadConfig(file, desc string) error {
 	content, err := ioutil.ReadFile(file)
