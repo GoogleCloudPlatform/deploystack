@@ -600,7 +600,7 @@ func (s *Stack) FindAndReadRequired() error {
 	}
 	config.PathTerraform = tfPath
 
-	scriptPath, _ := s.findDSFolder(config, "script")
+	scriptPath, _ := s.findDSFolder(config, "scripts")
 	if err != nil {
 		log.Printf("WARNING - unable to locate scripts folder, folder not required, : %s", err)
 	}
