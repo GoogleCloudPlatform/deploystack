@@ -194,6 +194,9 @@ type Config struct {
 	CustomSettings       []Custom          `json:"custom_settings"`
 	ConfigureGCEInstance bool              `json:"configure_gce_instance"`
 	DocumentationLink    string            `json:"documentation_link"`
+	PathTerraform        string            `json:"path_terraform"`
+	PathMessages         string            `json:"path_messages"`
+	PathScripts          string            `json:"path_scripts"`
 }
 
 // Custom represents a custom setting that we would like to collect from a user
