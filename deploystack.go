@@ -584,7 +584,7 @@ func (s *Stack) findTFFolder(c Config) (string, error) {
 		return path, nil
 	}
 
-	path = folder
+	path = ""
 
 	if _, err := os.Stat(path); err == nil {
 		return path, nil
