@@ -67,7 +67,7 @@ func GetDVAs(shortname string, b gcloudtf.Blocks) []DVA {
 			}
 			for i := range apis {
 				for _, version := range versionStrings {
-					d := DVA{shortname, strings.Replace(i, "[version]", version, 1)}
+					d := DVA{shortname, strings.Replace(strings.ToLower(i), "[version]", version, 1)}
 					result = append(result, d)
 				}
 			}

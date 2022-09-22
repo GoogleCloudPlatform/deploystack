@@ -24,3 +24,4 @@ tools/testcreator/repo/
 tools/testcreator/out/*
 tools/testcreator/out
 tools/dvatracker/repo/
+tools/dvatracker/out/ref.csv
