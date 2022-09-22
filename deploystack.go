@@ -570,7 +570,7 @@ func (s *Stack) findDSFolder(c Config, folder string) (string, error) {
 		return path, nil
 	}
 
-	return ".", fmt.Errorf("requirement (%s) was not found either in the root, or in .deploystack folder nor was it set in deploystack.json", folder)
+	return fmt.Sprintf("./%s", folder), fmt.Errorf("requirement (%s) was not found either in the root, or in .deploystack folder nor was it set in deploystack.json", folder)
 }
 
 func (s *Stack) findTFFolder(c Config) (string, error) {
