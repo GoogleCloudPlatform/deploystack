@@ -522,37 +522,105 @@ func (s *Stack) ProcessFlags(f Flags) {
 	}
 }
 
-// FindAndReadConfig finds and reads in a Config from a json file.
-func (s *Stack) FindAndReadConfig() error {
+func (s *Stack) findAndReadConfig() (Config, error) {
+	config := Config{}
+
 	configPath := ".deploystack/deploystack.json"
 	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
 		configPath = "deploystack.json"
 	}
 
 	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("config file not present, looking for deploystack.json or .deploystack/deploystack.json")
+		return config, fmt.Errorf("config file not present, looking for deploystack.json or .deploystack/deploystack.json")
 	}
 
 	content, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		return fmt.Errorf("unable to find or read config file: %s", err)
+		return config, fmt.Errorf("unable to find or read config file: %s", err)
 	}
-	config, err := NewConfig(content)
+	config, err = NewConfig(content)
+	if err != nil {
+		return config, fmt.Errorf("unable to parse config file: %s", err)
+	}
+
+	return config, nil
+}
+
+func (s *Stack) findDSFolder(c Config, folder string) (string, error) {
+	switch folder {
+	case "messages":
+		if c.PathMessages != "" {
+			return c.PathMessages, nil
+		}
+	case "scripts":
+		if c.PathScripts != "" {
+			return c.PathMessages, nil
+		}
+	}
+
+	path := fmt.Sprintf(".deploystack/%s", folder)
+
+	if _, err := os.Stat(path); err == nil {
+		return path, nil
+	}
+
+	path = folder
+
+	if _, err := os.Stat(path); err == nil {
+		return path, nil
+	}
+
+	return "", fmt.Errorf("requirement (%s) was not found either in the root, or in .deploystack folder nor was it set in deploystack.json", folder)
+}
+
+func (s *Stack) findTFFolder(c Config) (string, error) {
+	if c.PathTerraform != "" {
+		return c.PathTerraform, nil
+	}
+
+	path := "terraform"
+
+	if _, err := os.Stat(path); err == nil {
+		return path, nil
+	}
+
+	path = folder
+
+	if _, err := os.Stat(path); err == nil {
+		return path, nil
+	}
+
+	return "", fmt.Errorf("requirement (%s) was not found either in the root, or in .deploystack folder nor was it set in deploystack.json", folder)
+}
+
+// FindAndReadRequired finds and reads in a Config from a json file.
+func (s *Stack) FindAndReadRequired() error {
+	config, err := s.findAndReadConfig()
 	if err != nil {
 		return fmt.Errorf("unable to parse config file: %s", err)
 	}
 
-	messagePath := ".deploystack/messages/description.txt"
-	if config.PathMessages != "" {
-		messagePath = config.PathMessages
+	tfPath, err := s.findTFFolder(config)
+	if err != nil {
+		return fmt.Errorf("unable to locate terraform folder: %s", err)
 	}
+	config.PathTerraform = tfPath
 
-	if _, err := os.Stat(messagePath); errors.Is(err, os.ErrNotExist) {
-		messagePath = "messages/description.txt"
+	scriptPath, _ := s.findDSFolder(config, "script")
+	if err != nil {
+		log.Printf("WARNING - unable to locate scripts folder, folder not required, : %s", err)
 	}
+	config.PathScripts = scriptPath
 
-	if _, err := os.Stat(messagePath); err == nil {
-		description, err := ioutil.ReadFile(messagePath)
+	messagePath, err := s.findDSFolder(config, "messages")
+	if err != nil {
+		return fmt.Errorf("unable to locate messages folder: %s", err)
+	}
+	config.PathMessages = messagePath
+
+	descText := fmt.Sprintf("%s/description.txt", messagePath)
+	if _, err := os.Stat(descText); err == nil {
+		description, err := ioutil.ReadFile(descText)
 		if err != nil {
 			return fmt.Errorf("unable to read description file: %s", err)
 		}
