@@ -426,15 +426,15 @@ func TestFindAndReadRequired(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(tc.terraform, s.Config.PathTerraform) {
-				t.Errorf("expected: %v, got: %v", tc.terraform, s.Config.PathTerraform)
+				t.Fatalf("expected: %s, got: %s", tc.terraform, s.Config.PathTerraform)
 			}
 
 			if !reflect.DeepEqual(tc.scripts, s.Config.PathScripts) {
-				t.Errorf("expected: %v, got: %v", tc.scripts, s.Config.PathScripts)
+				t.Fatalf("expected: %s, got: %s", tc.scripts, s.Config.PathScripts)
 			}
 
 			if !reflect.DeepEqual(tc.messages, s.Config.PathMessages) {
-				t.Errorf("expected: %v, got: %v", tc.messages, s.Config.PathMessages)
+				t.Fatalf("expected: %s, got: %s", tc.messages, s.Config.PathMessages)
 			}
 		})
 		if err := os.Chdir(wd); err != nil {
