@@ -1,0 +1,17 @@
+{	"title":"Three Tier App (TODO)",
+	"duration":9,
+	"documentation_link": "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/three-tier-app",
+	"collect_project":true,
+	"collect_project_number":true,
+	"collect_region":true,
+    "collect_billing_account":false,
+	"region_type":"run",
+	"region_default":"us-central1",
+	"collect_zone":true,
+	"hard_settings":{
+		"basename":"three-tier-app"
+	},
+	"path_terraform": "tf",
+	"path_messages": "ds/messages",
+	"path_scripts": "ds/scripts"
+}

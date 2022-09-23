@@ -393,3 +393,52 @@ func TestCustomCollect(t *testing.T) {
 		})
 	}
 }
+
+func TestFindAndReadRequired(t *testing.T) {
+	testdata := "test_files/configs"
+
+	tests := map[string]struct {
+		pwd       string
+		terraform string
+		scripts   string
+		messages  string
+	}{
+		"Original":  {pwd: "original", terraform: ".", scripts: "scripts", messages: "messages"},
+		"Perferred": {pwd: "preferred", terraform: "terraform", scripts: ".deploystack/scripts", messages: ".deploystack/messages"},
+		"Configed":  {pwd: "configed", terraform: "tf", scripts: "ds/scripts", messages: "ds/messages"},
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if err := os.Chdir(fmt.Sprintf("%s/%s", testdata, tc.pwd)); err != nil {
+				t.Fatalf("failed to set the wd: %v", err)
+			}
+
+			s := NewStack()
+
+			if err := s.FindAndReadRequired(); err != nil {
+				t.Fatalf("could not read config file: %s", err)
+			}
+
+			if !reflect.DeepEqual(tc.terraform, s.Config.PathTerraform) {
+				t.Errorf("expected: %v, got: %v", tc.terraform, s.Config.PathTerraform)
+			}
+
+			if !reflect.DeepEqual(tc.scripts, s.Config.PathScripts) {
+				t.Errorf("expected: %v, got: %v", tc.scripts, s.Config.PathScripts)
+			}
+
+			if !reflect.DeepEqual(tc.messages, s.Config.PathMessages) {
+				t.Errorf("expected: %v, got: %v", tc.messages, s.Config.PathMessages)
+			}
+		})
+		if err := os.Chdir(wd); err != nil {
+			t.Errorf("failed to reset the wd: %v", err)
+		}
+	}
+}
