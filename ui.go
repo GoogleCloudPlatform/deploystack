@@ -11,7 +11,7 @@ import (
 // ImageManage promps a user to select a disk type.
 func ImageManage(project string) (string, error) {
 	fmt.Println(Divider)
-	fmt.Printf("There are a large number of machine images to choose from. For more infomration, \n")
+	fmt.Printf("There are a large number of machine images to choose from. For more information, \n")
 	fmt.Printf("please refer to the following link for more infomation about machine images.\n")
 	fmt.Printf("%shttps://cloud.google.com/compute/docs/images%s\n", TERMCYANB, TERMCLEAR)
 	fmt.Println(Divider)
@@ -44,7 +44,7 @@ func colorPrintln(msg, color string) {
 
 func MachineTypeManage(project, zone string) (string, error) {
 	fmt.Println(Divider)
-	fmt.Printf("There are a large number of machine types to choose from. For more infomration, \n")
+	fmt.Printf("There are a large number of machine types to choose from. For more information, \n")
 	fmt.Printf("please refer to the following link for more infomation about Machine types.\n")
 	fmt.Printf("%shttps://cloud.google.com/compute/docs/machine-types%s\n", TERMCYANB, TERMCLEAR)
 	fmt.Println(Divider)
@@ -275,7 +275,7 @@ func ProjectManage() (string, string, error) {
 
 	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", TERMCYANB, TERMCLEAR)
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
-	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
+	fmt.Printf("While those changes are reversiable, it would be better to put it in a fresh new project. \n")
 
 	lv := listSelect(lvs, project)
 	project = lv.Value
