@@ -33,6 +33,7 @@ import (
 
 	"github.com/nyaruka/phonenumbers"
 	"google.golang.org/api/option"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -180,36 +181,36 @@ func HandleFlags() Flags {
 // be in a json file. The idea is minimal programming has to be done to setup
 // a DeployStack and export out a tfvars file for terraform part of solution.
 type Config struct {
-	Title                string            `json:"title"`
-	Description          string            `json:"description"`
-	Duration             int               `json:"duration"`
-	Project              bool              `json:"collect_project"`
-	ProjectNumber        bool              `json:"collect_project_number"`
-	BillingAccount       bool              `json:"collect_billing_account"`
-	Domain               bool              `json:"register_domain"`
-	Region               bool              `json:"collect_region"`
-	RegionType           string            `json:"region_type"`
-	RegionDefault        string            `json:"region_default"`
-	Zone                 bool              `json:"collect_zone"`
-	HardSet              map[string]string `json:"hard_settings"`
-	CustomSettings       []Custom          `json:"custom_settings"`
-	ConfigureGCEInstance bool              `json:"configure_gce_instance"`
-	DocumentationLink    string            `json:"documentation_link"`
-	PathTerraform        string            `json:"path_terraform"`
-	PathMessages         string            `json:"path_messages"`
-	PathScripts          string            `json:"path_scripts"`
+	Title                string            `json:"title" yaml:"title"`
+	Description          string            `json:"description" yaml:"description"`
+	Duration             int               `json:"duration" yaml:"duration"`
+	Project              bool              `json:"collect_project" yaml:"collect_project"`
+	ProjectNumber        bool              `json:"collect_project_number" yaml:"collect_project_number"`
+	BillingAccount       bool              `json:"collect_billing_account" yaml:"collect_billing_account"`
+	Domain               bool              `json:"register_domain" yaml:"register_domain"`
+	Region               bool              `json:"collect_region" yaml:"collect_region"`
+	RegionType           string            `json:"region_type" yaml:"region_type"`
+	RegionDefault        string            `json:"region_default" yaml:"region_default"`
+	Zone                 bool              `json:"collect_zone" yaml:"collect_zone"`
+	HardSet              map[string]string `json:"hard_settings" yaml:"hard_settings"`
+	CustomSettings       []Custom          `json:"custom_settings" yaml:"custom_settings"`
+	ConfigureGCEInstance bool              `json:"configure_gce_instance" yaml:"configure_gce_instance"`
+	DocumentationLink    string            `json:"documentation_link" yaml:"documentation_link"`
+	PathTerraform        string            `json:"path_terraform" yaml:"path_terraform"`
+	PathMessages         string            `json:"path_messages" yaml:"path_messages"`
+	PathScripts          string            `json:"path_scripts" yaml:"path_scripts"`
 }
 
 // Custom represents a custom setting that we would like to collect from a user
 // We will collect these settings from the user before continuing.
 type Custom struct {
-	Name           string   `json:"name"`
-	Description    string   `json:"description"`
-	Default        string   `json:"default"`
-	Value          string   `json:"value"`
-	Options        []string `json:"options"`
-	PrependProject bool     `json:"prepend_project"`
-	Validation     string   `json:"validation,omitempty"`
+	Name           string   `json:"name"  yaml:"name"`
+	Description    string   `json:"description"  yaml:"description"`
+	Default        string   `json:"default"  yaml:"default"`
+	Value          string   `json:"value"  yaml:"value"`
+	Options        []string `json:"options"  yaml:"options"`
+	PrependProject bool     `json:"prepend_project"  yaml:"prepend_project"`
+	Validation     string   `json:"validation,omitempty"  yaml:"validation,omitempty"`
 	project        string
 }
 
@@ -487,11 +488,23 @@ func handleProcessError(err error) {
 	os.Exit(1)
 }
 
-// NewConfig returns a Config object from a file read.
-func NewConfig(content []byte) (Config, error) {
+// NewConfigJSON returns a Config object from a file read.
+func NewConfigJSON(content []byte) (Config, error) {
+	result := Config{}
+	fmt.Printf("json version called\n")
+	if err := json.Unmarshal(content, &result); err != nil {
+		return result, fmt.Errorf("unable to convert content to Config: %s", err)
+	}
+
+	return result, nil
+}
+
+// NewConfigYAML returns a Config object from a file read.
+func NewConfigYAML(content []byte) (Config, error) {
 	result := Config{}
 
-	if err := json.Unmarshal(content, &result); err != nil {
+	fmt.Printf("yaml version called\n")
+	if err := yaml.Unmarshal(content, &result); err != nil {
 		return result, fmt.Errorf("unable to convert content to Config: %s", err)
 	}
 
@@ -523,9 +536,15 @@ func (s *Stack) ProcessFlags(f Flags) {
 }
 
 func (s *Stack) findAndReadConfig() (Config, error) {
+	flavor := "json"
 	config := Config{}
 
 	configPath := ".deploystack/deploystack.json"
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
+		flavor = "yaml"
+		configPath = ".deploystack/deploystack.yaml"
+	}
+
 	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
 		configPath = "deploystack.json"
 	}
@@ -538,7 +557,16 @@ func (s *Stack) findAndReadConfig() (Config, error) {
 	if err != nil {
 		return config, fmt.Errorf("unable to find or read config file: %s", err)
 	}
-	config, err = NewConfig(content)
+
+	if flavor == "yaml" {
+		config, err = NewConfigYAML(content)
+		if err != nil {
+			return config, fmt.Errorf("unable to parse config file: %s", err)
+		}
+		return config, nil
+	}
+
+	config, err = NewConfigJSON(content)
 	if err != nil {
 		return config, fmt.Errorf("unable to parse config file: %s", err)
 	}
@@ -634,7 +662,7 @@ func (s *Stack) ReadConfig(file, desc string) error {
 	if err != nil {
 		return fmt.Errorf("unable to read config file: %s", err)
 	}
-	config, err := NewConfig(content)
+	config, err := NewConfigJSON(content)
 	if err != nil {
 		return fmt.Errorf("unable to parse config file: %s", err)
 	}

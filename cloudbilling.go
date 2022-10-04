@@ -109,7 +109,7 @@ func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBill
 				tmp, err := svc.Projects.GetBillingInfo(proj).Do()
 				if err != nil {
 					if strings.Contains(err.Error(), "The caller does not have permission") {
-						fmt.Printf("project: %+v\n", p)
+						// fmt.Printf("project: %+v\n", p)
 						return
 					}
 
