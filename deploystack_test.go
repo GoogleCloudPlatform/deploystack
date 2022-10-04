@@ -487,6 +487,18 @@ func TestConfig(t *testing.T) {
 				PathTerraform:     "terraform",
 				PathMessages:      ".deploystack/messages",
 				PathScripts:       ".deploystack/scripts",
+				CustomSettings: []Custom{
+					{
+						Name:        "nodes",
+						Description: "Please enter the number of nodes",
+						Default:     "roles/owner|Project Owner",
+						Options: []string{
+							"roles/reviewer|Project Reviewer",
+							"roles/owner|Project Owner",
+							"roles/vison.reader|Cloud Vision Reader",
+						},
+					},
+				},
 			},
 			descPath: ".deploystack/messages/description.txt",
 		},

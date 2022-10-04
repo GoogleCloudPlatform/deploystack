@@ -92,6 +92,36 @@ tfvars file that will drive the terraform script.
 }
 ```
 
+### `deploystack.yaml`
+
+You can also use a yaml file if you are using the .deploystack folder setup. 
+
+```yaml
+"title": "Three Tier App (TODO)"
+"duration": 9 
+"documentation_link": "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/three-tier-app"
+"collect_project": true
+"collect_project_number": true
+"collect_region": true
+"collect_billing_account": false
+"region_type": "run"
+"region_default": "us-central1"
+"collect_zone": true
+# You can even include comments in this yaml
+"hard_settings":
+  "basename": "three-tier-app"
+"custom_settings":
+  - 1:
+    "name" : "nodes"
+    "description": "Please enter the number of nodes"
+    "default" : "roles/owner|Project Owner"
+    "options" :
+      - "roles/reviewer|Project Reviewer"
+      - "roles/owner|Project Owner"
+      - "roles/vison.reader|Cloud Vision Reader"
+
+```
+
 | Name                   | Type    | Description                                                                          |
 | ---------------        | ------- | ------------------------------------------------------------------------------------ |
 | title                  | string  | You know what a title is                                                             |

@@ -11,3 +11,13 @@
 # You can even include comments in this yaml
 "hard_settings":
   "basename": "three-tier-app"
+"custom_settings":
+  - 1:
+    "name" : "nodes"
+    "description": "Please enter the number of nodes"
+    "default" : "roles/owner|Project Owner"
+    "options" :
+      - "roles/reviewer|Project Reviewer"
+      - "roles/owner|Project Owner"
+      - "roles/vison.reader|Cloud Vision Reader"
+
