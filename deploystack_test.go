@@ -442,3 +442,85 @@ func TestFindAndReadRequired(t *testing.T) {
 		}
 	}
 }
+
+func TestConfig(t *testing.T) {
+	testdata := "test_files/configs"
+	tests := map[string]struct {
+		pwd      string
+		want     Config
+		descPath string
+	}{
+		"Original": {
+			pwd: "original",
+			want: Config{
+				Title:             "Three Tier App (TODO)",
+				Duration:          9,
+				DocumentationLink: "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/three-tier-app",
+				Project:           true,
+				ProjectNumber:     true,
+				Region:            true,
+				BillingAccount:    false,
+				RegionType:        "run",
+				RegionDefault:     "us-central1",
+				Zone:              true,
+				HardSet:           map[string]string{"basename": "three-tier-app"},
+				PathTerraform:     ".",
+				PathMessages:      "messages",
+				PathScripts:       "scripts",
+			},
+			descPath: "messages/description.txt",
+		},
+		"YAML": {
+			pwd: "preferredyaml",
+			want: Config{
+				Title:             "Three Tier App (TODO)",
+				Duration:          9,
+				DocumentationLink: "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/three-tier-app",
+				Project:           true,
+				ProjectNumber:     true,
+				Region:            true,
+				BillingAccount:    false,
+				RegionType:        "run",
+				RegionDefault:     "us-central1",
+				Zone:              true,
+				HardSet:           map[string]string{"basename": "three-tier-app"},
+				PathTerraform:     "terraform",
+				PathMessages:      ".deploystack/messages",
+				PathScripts:       ".deploystack/scripts",
+			},
+			descPath: ".deploystack/messages/description.txt",
+		},
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if err := os.Chdir(fmt.Sprintf("%s/%s", testdata, tc.pwd)); err != nil {
+				t.Fatalf("failed to set the wd: %v", err)
+			}
+
+			s := NewStack()
+
+			if err := s.FindAndReadRequired(); err != nil {
+				t.Fatalf("could not read config file: %s", err)
+			}
+
+			dat, err := os.ReadFile(tc.descPath)
+			if err != nil {
+				t.Fatalf("could not read description file: %s", err)
+			}
+			tc.want.Description = string(dat)
+
+			if !reflect.DeepEqual(tc.want, s.Config) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, s.Config)
+			}
+		})
+		if err := os.Chdir(wd); err != nil {
+			t.Errorf("failed to reset the wd: %v", err)
+		}
+	}
+}
