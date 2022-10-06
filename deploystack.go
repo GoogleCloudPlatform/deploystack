@@ -491,7 +491,6 @@ func handleProcessError(err error) {
 // NewConfigJSON returns a Config object from a file read.
 func NewConfigJSON(content []byte) (Config, error) {
 	result := Config{}
-	fmt.Printf("json version called\n")
 	if err := json.Unmarshal(content, &result); err != nil {
 		return result, fmt.Errorf("unable to convert content to Config: %s", err)
 	}
@@ -503,7 +502,6 @@ func NewConfigJSON(content []byte) (Config, error) {
 func NewConfigYAML(content []byte) (Config, error) {
 	result := Config{}
 
-	fmt.Printf("yaml version called\n")
 	if err := yaml.Unmarshal(content, &result); err != nil {
 		return result, fmt.Errorf("unable to convert content to Config: %s", err)
 	}
