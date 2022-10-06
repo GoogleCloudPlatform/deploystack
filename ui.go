@@ -273,6 +273,8 @@ func ProjectManage() (string, string, error) {
 		lvs = append(lvs, lv)
 	}
 
+	lvs = append([]LabeledValue{{createString, createString}}, lvs...)
+
 	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", TERMCYANB, TERMCLEAR)
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
 	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
@@ -285,6 +287,7 @@ func ProjectManage() (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
+		lv = LabeledValue{project, project}
 	}
 
 	if err := ProjectIDSet(project); err != nil {
