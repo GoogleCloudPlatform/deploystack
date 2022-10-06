@@ -672,34 +672,34 @@ func TestExtractAccount(t *testing.T) {
 	}
 }
 
-func TestManageProject(t *testing.T) {
-	tests := map[string]struct {
-		want string
-	}{
-		"1": {
-			want: `
-[1;36mChoose a project to use for this application.[0m
+// func TestManageProject(t *testing.T) {
+// 	tests := map[string]struct {
+// 		want string
+// 	}{
+// 		"1": {
+// 			want: `
+// [1;36mChoose a project to use for this application.[0m
 
-[46mNOTE:[0;36m This app will make changes to the project. [0m
-While those changes are reverseable, it would be better to put it in a fresh new project. 
- 1) CREATE NEW PROJECT 
- 2) ds-tester-helper   
-Choose number from list.
-> `,
-		},
-	}
+// [46mNOTE:[0;36m This app will make changes to the project. [0m
+// While those changes are reverseable, it would be better to put it in a fresh new project.
+//  1) CREATE NEW PROJECT
+//  2) ds-tester-helper
+// Choose number from list.
+// > `,
+// 		},
+// 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := captureOutput(func() {
-				ProjectManage()
-			})
+// 	for name, tc := range tests {
+// 		t.Run(name, func(t *testing.T) {
+// 			got := captureOutput(func() {
+// 				ProjectManage()
+// 			})
 
-			fmt.Println(diff.Diff(got, tc.want))
-			if !reflect.DeepEqual(tc.want, got) {
-				fmt.Printf("ProjectID: %s\n", projectID)
-				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", tc.want, got)
-			}
-		})
-	}
-}
+// 			fmt.Println(diff.Diff(got, tc.want))
+// 			if !reflect.DeepEqual(tc.want, got) {
+// 				fmt.Printf("ProjectID: %s\n", projectID)
+// 				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", tc.want, got)
+// 			}
+// 		})
+// 	}
+// }
