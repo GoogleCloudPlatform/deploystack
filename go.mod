@@ -16,6 +16,7 @@ require (
 require (
 	cloud.google.com/go v0.102.0 // indirect
 	cloud.google.com/go/compute v1.7.0 // indirect
+	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221006220639-82acfb1b3bf4 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg v1.0.0 // indirect
