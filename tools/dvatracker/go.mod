@@ -8,6 +8,9 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.13.1
 )
 
+replace github.com/GoogleCloudPlatform/deploystack  => /Users/tpryan/google/go/src/github.com/tpryan/deploystack
+replace github.com/GoogleCloudPlatform/deploystack/gcloudtf  => /Users/tpryan/google/go/src/github.com/tpryan/deploystack/gcloudtf
+
 require (
 	cloud.google.com/go v0.102.0 // indirect
 	cloud.google.com/go/compute v1.7.0 // indirect
