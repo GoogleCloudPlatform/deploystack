@@ -1,0 +1,415 @@
+google_artifact_registry_repository:
+  label: google_artifact_registry_repository
+  product: Artifact Registry
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud artifacts repositories describe
+    suffix: --format="value(name)"
+    label_field: repository_id
+  api_calls: 
+  - google.devtools.artifactregistry.[version].ArtifactRegistry.CreateRepository
+google_bigquery_dataset:
+  label: google_bigquery_dataset
+  product: BigQuery
+  test_config: 
+    test_type: bq
+    test_command: bq ls | grep -c 
+    label_field: table_id
+    expected: 1
+    todo: Double check this set of options for test
+  api_calls: 
+  - google.cloud.bigquery.[version].DatasetService.InsertDataset
+google_bigquery_table:
+  label: google_bigquery_table
+  product: BigQuery
+  test_config: 
+    test_type: bq
+    test_command: bq ls | grep -c 
+    label_field: dataset_id
+    todo: Double check this set of options for test
+  api_calls: 
+  - google.cloud.bigquery.[version].TableService.InsertTable
+  - google.cloud.bigquery.[version].TableService.UpdateTable
+  - google.cloud.bigquery.[version].TableService.PatchTable
+google_cloud_run_service:
+  label: google_cloud_run_service
+  product: Cloud Run
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud run services describe
+    suffix: --format="value(name)"
+    region: true
+  api_calls: 
+  - google.cloud.run.[version].Services.CreateService
+google_cloud_run_service_iam_member:
+  label: google_cloud_run_service_iam_member
+  api_calls: 
+  - google.cloud.run.[version].Services.SetIamPolicy
+google_cloud_run_service_iam_policy:
+  label: google_cloud_run_service_iam_policy
+  product: Cloud Run
+  api_calls: 
+  - google.cloud.run.[version].Services.SetIamPolicy
+google_cloudfunctions_function:
+  label: google_cloudfunctions_function
+  product: Cloud Functions
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud functions describe
+    suffix: --format="value(name)"
+    region: true
+  api_calls: 
+  - google.cloud.functions.[version].CloudFunctionsService.CreateFunction
+google_composer_environment:
+  label: google_composer_environment
+  product: Cloud Composer
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud composer environments
+    suffix: --format="value(name)"
+  api_calls: 
+  - google.cloud.orchestration.airflow.service.[version].Environments.CreateEnvironment
+google_compute_backend_bucket:
+  label: google_compute_backend_bucket
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute backend-buckets  describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].BackendBucketsService.Insert
+google_compute_backend_service:
+  label: google_compute_backend_service
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute backend-service describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].BackendServicesService.Insert
+google_compute_firewall:
+  label: google_compute_firewall
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute firewalls describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].FirewallsService.Insert
+google_compute_forwarding_rule:
+  label: google_compute_forwarding_rule
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute forwarding-rules describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].GlobalForwardingRulesService.Insert
+google_compute_global_address:
+  label: google_compute_global_address
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute addresses describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].GlobalAddressesService.Insert
+google_compute_health_check:
+  label: google_compute_health_check
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute health-checks describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].HealthChecksService.Insert
+google_compute_image:
+  label: google_compute_image
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute images describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].ImagesService.Insert
+google_compute_instance:
+  label: google_compute_instance
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute instances describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].InstancesService.Insert
+  - compute.[version].InstancesService.SetMetadata
+google_compute_instance_group_manager:
+  label: google_compute_instance_group_manager
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute instance groups managed describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].InstanceGroupManagersService.Insert
+google_compute_instance_template:
+  label: google_compute_instance_template
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute instance-templates describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].InstanceTemplatesService.Insert
+google_compute_managed_ssl_certificate:
+  label: google_compute_managed_ssl_certificate
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute ssl-certificate describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].SslCertificatesService.Insert
+google_compute_network:
+  label: google_compute_network
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute networks describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].NetworksService.Insert
+google_compute_region_network_endpoint_group:
+  label: google_compute_region_network_endpoint_group
+  api_calls: 
+  - compute.[version].RegionNetworkEndpointGroupsService.Insert
+google_compute_snapshot:
+  label: google_compute_snapshot
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute snapshots describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].DisksService.CreateSnapshot
+google_compute_target_http_proxy:
+  label: google_compute_target_http_proxy
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute target-http-proxies describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].RegionTargetHttpProxiesService.Insert
+  - compute.[version].TargetHttpProxiesService.Insert
+google_compute_target_https_proxy:
+  label: google_compute_target_https_proxy
+  product: Compute Engine
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute target-https-proxies describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].RegionTargetHttpsProxiesService.Insert
+  - compute.[version].TargetHttpsProxiesService.Insert
+google_compute_url_map:
+  label: google_compute_url_map
+  product: Cloud Load Balancing
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute url-maps describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - compute.[version].UrlMapsService.Insert
+google_container_cluster:
+  label: google_container_cluster
+  api_calls: 
+  - google.container.[version].ClusterManager.CreateCluster
+google_container_registry:
+  label: google_container_registry
+  api_calls: 
+google_dns_managed_zone:
+  label: google_dns_managed_zone
+  product: Cloud DNS
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud gcloud dns record-sets describe
+    suffix: --format="value(name)"
+  api_calls: 
+  - cloud.dns.api.[version].ChangesService.Create
+google_dns_record_set:
+  label: google_dns_record_set
+  product: Cloud DNS
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud gcloud dns record-sets describe
+    suffix: --format="value(name)"
+  api_calls: 
+  - cloud.dns.api.[version].ManagedZonesService.Create
+google_project_iam_member:
+  label: google_project_iam_member
+  product: Cloud IAM
+  api_calls: 
+  - google.iam.admin.[version].IAM.UpdateRole
+google_project_service:
+  label: google_project_service
+  api_calls: 
+  - google.api.serviceusage.v1beta1.ServiceUsage.EnableService
+google_pubsub_topic:
+  label: google_pubsub_topic
+  product: Cloud Pub/Sub
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud pubsub topics describe
+    suffix: --format="value(name)"
+  api_calls: 
+  - google.pubsub.[version].Publisher.CreateTopic
+google_redis_instance:
+  label: google_redis_instance
+  product: Cloud Redis
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud redis instances describe
+    suffix: --format="value(name)"
+  api_calls: 
+  - google.cloud.redis.[version].CloudRedis.CreateInstance
+google_secret_manager_secret:
+  label: google_secret_manager_secret
+  product: Secret Manager
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud secrets describe
+    suffix: --format="value(name)"
+    label_field: secret_id
+  api_calls: 
+  - google.cloud.secretmanager.[version].SecretManagerService.CreateSecret
+google_secret_manager_secret_iam_binding:
+  label: google_secret_manager_secret_iam_binding
+  api_calls: 
+  - google.cloud.secretmanager.[version].SecretManagerService.SetIamPolicy
+google_secret_manager_secret_version:
+  label: google_secret_manager_secret_version
+  product: Secret Manager
+  api_calls: 
+  - google.cloud.secretmanager.[version].SecretManagerService.AddSecretVersion
+google_service_account:
+  label: google_service_account
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud iam service-accounts describe
+    suffix: --format="value(email)"
+    label_field: account_id
+    todo: This should be an email and not just an account, so add the @domain.com bit
+  api_calls: 
+  - google.iam.admin.[version].IAM.CreateServiceAccount
+google_service_account_iam_binding:
+  label: google_service_account_iam_binding
+  api_calls: 
+  - google.iam.admin.[version].IAM.SetIamPolicy
+google_service_networking_connection:
+  label: google_service_networking_connection
+  product: vpcpeerings
+  api_calls: 
+  - google.cloud.servicenetworking.[version].ServicePeeringManager.UpdateConnection
+google_sql_database:
+  label: google_sql_database
+  api_calls: 
+  - google.cloud.sql.[version].SqlDatabasesService.Insert
+google_sql_database_instance:
+  label: google_sql_database_instance
+  product: Cloud SQL
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud sql instances describe
+    suffix: --format="value(name)"
+  api_calls: 
+  - google.cloud.sql.[version].SqlDatabasesService.Insert
+google_sql_user:
+  label: google_sql_user
+  api_calls: 
+  - google.cloud.sql.[version].SqlUsersService.Insert
+google_storage_bucket:
+  label: google_storage_bucket
+  product: Cloud Storage
+  test_config: 
+    test_type: gsutil
+    test_command: gsutil ls | grep -c gs://
+    expected: 0
+  api_calls: 
+  - storage.buckets.insert
+google_storage_bucket_iam_binding:
+  label: google_storage_bucket_iam_binding
+  product: Cloud Storage
+  api_calls: 
+  - storage.iam.update
+google_storage_bucket_iam_member:
+  label: google_storage_bucket_iam_member
+  api_calls: 
+  - storage.iam.update
+google_storage_bucket_object:
+  label: google_storage_bucket_object
+  product: Cloud Storage
+  test_config: 
+    test_type: gsutil
+    test_command: gsutil ls | grep -c gs://
+    expected: 0
+    todo: Make sure you check the bucket details at an actual object
+  api_calls: 
+  - storage.objects.insert
+  - storage.objects.update
+google_vpc_access_connector:
+  label: google_vpc_access_connector
+  product: connector
+  test_config: 
+    test_type: gcloud
+    test_command: gcloud compute networks vpc-access connectors describe
+    suffix: --format="value(name)"
+    zone: true
+  api_calls: 
+  - google.cloud.vpcaccess.[version].VpcAccessService.CreateConnector
+
+# Resources we don't need to test
+null_resource:
+  label: null_resource
+random_id:
+  label: random_id
+random_password:
+  label: random_password
+random_string:
+  label: random_string
+time_sleep:
+  label: time_sleep
+
+
+# MODULES
+GoogleCloudPlatform/lb-http/google//modules/serverless_negs:
+  label: GoogleCloudPlatform/lb-http/google//modules/serverless_negs
+  api_calls: 
+  - compute.[version].UrlMapsService.Insert
+  - google.cloud.vpcaccess.[version].VpcAccessService.CreateConnector
+  - compute.[version].RegionTargetHttpProxiesService.Insert
+  - compute.[version].TargetHttpProxiesService.Insert
+  - compute.[version].RegionNetworkEndpointGroupsService.Insert 
+terraform-google-modules/cloud-operations/google//modules/agent-policy:
+  label: terraform-google-modules/cloud-operations/google//modules/agent-policy
+terraform-google-modules/gcloud/google:
+  label: terraform-google-modules/gcloud/google
+terraform-google-modules/project-factory/google//modules/project_services:
+  label: terraform-google-modules/project-factory/google//modules/project_services
+  api_calls: 
+  - google.api.serviceusage.[version].ServiceUsage.EnableService
