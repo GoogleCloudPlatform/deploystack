@@ -13,17 +13,17 @@ import (
 	"text/template"
 
 	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/gcloudtf"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 	"gopkg.in/src-d/go-git.v4"
 )
 
-var required = []string{
-	"./repo/deploystack.json",
-	"./repo/messages/description.txt",
-	"./repo/main.tf",
-}
-
 func main() {
+	config, err := gcloudtf.NewGCPResources("../../config/resources.yaml")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
 	repoPtr := flag.String("repo", "", "the url of a publicly available github deploystack repo ")
 	devsitePtr := flag.Bool("devsite", true, "whether or not not make this for the internal doc site")
 	flag.Parse()
@@ -35,7 +35,7 @@ func main() {
 	outfile := "index.html"
 	tmpl := "./tmpl/dsdev.html"
 
-	DSMeta, err := NewDSMeta(*repoPtr)
+	DSMeta, err := NewDSMeta(*repoPtr, config)
 	if err != nil {
 		log.Fatalf("error loading project %s", err)
 	}
@@ -50,6 +50,8 @@ func main() {
 	if err := os.MkdirAll(outfolder, os.ModePerm); err != nil {
 		log.Fatalf("cannot create out folder: %s", err)
 	}
+
+	fmt.Printf("%+v\n", outfolder)
 
 	f, err := os.Create(fmt.Sprintf("%s/%s", outfolder, outfile))
 	if err != nil {
@@ -99,7 +101,7 @@ type DSMeta struct {
 	Products    map[string]product
 }
 
-func NewDSMeta(repo string) (DSMeta, error) {
+func NewDSMeta(repo string, config gcloudtf.GCPResources) (DSMeta, error) {
 	d := DSMeta{}
 	d.GitRepo = repo
 	d.Products = make(map[string]product)
@@ -124,20 +126,35 @@ func NewDSMeta(repo string) (DSMeta, error) {
 		os.Stdout = old
 	}
 
-	for _, v := range required {
-		if _, err := os.Stat(v); os.IsNotExist(err) {
-			return d, fmt.Errorf("required file does not exist: %s", v)
-		}
+	// for _, v := range required {
+	// 	if _, err := os.Stat(v); os.IsNotExist(err) {
+	// 		return d, fmt.Errorf("required file does not exist: %s", v)
+	// 	}
+	// }
+
+	orgpwd, err := os.Getwd()
+	if err != nil {
+		return d, fmt.Errorf("could not get the wd: %s", err)
 	}
 
-	mod, dia := tfconfig.LoadModule("./repo")
+	path := fmt.Sprintf("%s/repo", orgpwd)
+
+	mod, dia := tfconfig.LoadModule(path)
 	if dia.Err() != nil {
 		return d, fmt.Errorf("terraform config problem %+v", dia)
 	}
 
+	if err := os.Chdir(path); err != nil {
+		return d, fmt.Errorf("could not change the wd: %s", err)
+	}
+
 	s := deploystack.NewStack()
-	if err := s.ReadConfig("./repo/deploystack.json", "./repo/messages/description.txt"); err != nil {
-		return d, fmt.Errorf("could not read config file: %s", err)
+	if err := s.FindAndReadRequired(); err != nil {
+		return d, fmt.Errorf("could not read config file (%s): %s", path, err)
+	}
+
+	if err := os.Chdir(orgpwd); err != nil {
+		return d, fmt.Errorf("could not change the wd back: %s", err)
 	}
 
 	d.Entities = NewEntities(mod)
@@ -145,8 +162,11 @@ func NewDSMeta(repo string) (DSMeta, error) {
 
 	for _, v := range d.Entities {
 		if v.Kind == "resource" {
-			if val, ok := prods[v.Type]; ok {
-				if p, pok := pinfo[val]; pok {
+			val := config.GetProduct(v.Type)
+
+			if val != "" {
+				p, ok := pinfo[val]
+				if ok {
 					d.Products[val] = p
 				}
 			}

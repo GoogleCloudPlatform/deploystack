@@ -1,22 +1,21 @@
-module github.com/GoogleCloudPlatform/deploystack
+module exec
 
-go 1.17
+go 1.19
+
+
+
 
 require (
-	cloud.google.com/go/domains v0.4.0
+	github.com/GoogleCloudPlatform/deploystack v0.0.0-20221006220639-82acfb1b3bf4
+	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221006220639-82acfb1b3bf4
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20211115214459-90acf1ca460f
-	github.com/kylelemons/godebug v1.1.0
-	github.com/nyaruka/phonenumbers v1.0.75
-	google.golang.org/api v0.94.0
-	google.golang.org/genproto v0.0.0-20220624142145-8cd45d7dbd1f
 	gopkg.in/src-d/go-git.v4 v4.13.1
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	cloud.google.com/go v0.102.0 // indirect
 	cloud.google.com/go/compute v1.7.0 // indirect
-	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221006220639-82acfb1b3bf4 // indirect
+	cloud.google.com/go/domains v0.4.0 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg v1.0.0 // indirect
@@ -31,10 +30,9 @@ require (
 	github.com/hashicorp/hcl/v2 v2.0.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/kr/pretty v0.2.1 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
+	github.com/nyaruka/phonenumbers v1.0.75 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
@@ -45,10 +43,12 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094 // indirect
 	golang.org/x/sys v0.0.0-20220818161305-2296e01440c6 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	google.golang.org/api v0.94.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20220624142145-8cd45d7dbd1f // indirect
 	google.golang.org/grpc v1.47.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

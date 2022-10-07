@@ -5,11 +5,13 @@ package gcloudtf
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
+	"gopkg.in/yaml.v2"
 )
 
 // Extract points to a path that includes Terraform files and extracts all of
@@ -217,4 +219,71 @@ func (l List) Matches(s string) bool {
 		}
 	}
 	return false
+}
+
+// GCPResources is a collection of GCPResource
+type GCPResources map[string]GCPResource
+
+// GetProduct returns the prouct name assoicated with the terraform resource
+func (g GCPResources) GetProduct(key string) string {
+	v, ok := g[key]
+	if !ok {
+		return ""
+	}
+
+	return v.Product
+}
+
+// GCPResource is a Terraform resource that matches up with a GCP product. This
+// is used to automate the generation of tests and documentation
+type GCPResource struct {
+	Label      string     `json:"label" yaml:"label"`
+	Product    string     `json:"product" yaml:"product"`
+	APICalls   []string   `json:"api_calls" yaml:"api_calls"`
+	TestConfig TestConfig `json:"test_config" yaml:"test_config"`
+}
+
+// TestConfig is the information needed to automate test creation.
+type TestConfig struct {
+	TestType    string `json:"test_type" yaml:"test_type"`
+	TestCommand string `json:"test_command" yaml:"test_command"`
+	Suffix      string `json:"suffix" yaml:"suffix"`
+	Region      bool   `json:"region" yaml:"region"`
+	Zone        bool   `json:"zone" yaml:"zone"`
+	LabelField  string `json:"label_field" yaml:"label_field"`
+	Expected    string `json:"expected" yaml:"expected"`
+	Todo        string `json:"todo" yaml:"todo"`
+}
+
+// NewGCPResources reads in a yaml file as a config
+func NewGCPResources(path string) (GCPResources, error) {
+	result := GCPResources{}
+
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return result, fmt.Errorf("unable to find or read config file: %s", err)
+	}
+
+	if err := yaml.Unmarshal(content, &result); err != nil {
+		return result, fmt.Errorf("unable to convert content to GCPResources: %s", err)
+	}
+
+	return result, nil
+}
+
+type Repos []string
+
+func NewRepos(path string) (Repos, error) {
+	result := Repos{}
+
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return result, fmt.Errorf("unable to find or read config file: %s", err)
+	}
+
+	if err := yaml.Unmarshal(content, &result); err != nil {
+		return result, fmt.Errorf("unable to convert content to a list of repos: %s", err)
+	}
+
+	return result, nil
 }

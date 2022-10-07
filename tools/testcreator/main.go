@@ -10,14 +10,9 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/GoogleCloudPlatform/deploystack/gcloudtf"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
-
-var required = []string{
-	"./repo/deploystack.json",
-	"./repo/messages/description.txt",
-	"./repo/main.tf",
-}
 
 var skipLsit = list{
 	"google_secret_manager_secret_version",
@@ -31,6 +26,11 @@ var skipLsit = list{
 }
 
 func main() {
+	config, err := gcloudtf.NewGCPResources("../../config/resources.yaml")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
 	folderPtr := flag.String("folder", "", "the file path of a local deploystack repo in progress")
 	flag.Parse()
 
@@ -38,14 +38,10 @@ func main() {
 		log.Fatalf("a folder is required, please pass a repo using -repo flag ")
 	}
 
-	DSMeta, err := NewDSMeta(*folderPtr)
+	DSMeta, err := NewDSMeta(*folderPtr, config)
 	if err != nil {
 		log.Fatalf("error loading project %s", err)
 	}
-
-	// for _, v := range DSMeta.Entities {
-	// 	fmt.Printf("Command %s: %s %s\n", v.Attr["name"], v.Attr["label"], v.GenerateGcloudCommand())
-	// }
 
 	outfolder := fmt.Sprintf("./out/")
 
@@ -82,7 +78,7 @@ type DSMeta struct {
 	Entities entities
 }
 
-func NewDSMeta(folder string) (DSMeta, error) {
+func NewDSMeta(folder string, config gcloudtf.GCPResources) (DSMeta, error) {
 	d := DSMeta{}
 
 	mod, dia := tfconfig.LoadModule(folder)
@@ -90,7 +86,7 @@ func NewDSMeta(folder string) (DSMeta, error) {
 		return d, fmt.Errorf("terraform config problem %+v", dia)
 	}
 
-	d.Entities = NewEntities(mod)
+	d.Entities = NewEntities(mod, config)
 
 	return d, nil
 }
@@ -115,17 +111,17 @@ type entity struct {
 	Kind    string
 	Type    string
 	Attr    map[string]string
-	Product product
+	Product gcloudtf.TestConfig
 }
 
 type entities []entity
 
-func NewEntities(mod *tfconfig.Module) entities {
+func NewEntities(mod *tfconfig.Module, config gcloudtf.GCPResources) entities {
 	result := entities{}
 
 	for _, v := range mod.ManagedResources {
 
-		product, ok := prods[v.Type]
+		product, ok := config[v.Type]
 		if !ok {
 			if !skipLsit.Matches(v.Type) {
 				fmt.Printf("cannot find proper test for %s\n", v.Type)
@@ -141,7 +137,7 @@ func NewEntities(mod *tfconfig.Module) entities {
 		e.Type = v.Type
 		e.Kind = "resource"
 		e.Text, _ = e.GetResourceText()
-		e.Product = product
+		e.Product = product.TestConfig
 		e.generateMap()
 		result = append(result, e)
 	}
@@ -214,6 +210,10 @@ func (e entity) HasLabel() bool {
 	return ok
 }
 
+func (e entity) HasTest() bool {
+	return e.Product.TestCommand != ""
+}
+
 func (e entity) HasTodo() bool {
 	return len(e.Product.Todo) > 0
 }
@@ -223,6 +223,10 @@ func (e entity) NoDefault() bool {
 }
 
 func (e entity) GenerateTestCommand() string {
+	if e.Product.TestCommand == "" {
+		return ""
+	}
+
 	cmdsl := []string{}
 	cmdsl = append(cmdsl, e.Product.TestCommand)
 	cmdsl = append(cmdsl, e.FormatLabel())

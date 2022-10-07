@@ -1,0 +1,11 @@
+  - https://github.com/GoogleCloudPlatform/deploystack-cost-sentry
+  - https://github.com/GoogleCloudPlatform/deploystack-etl-pipeline
+  - https://github.com/GoogleCloudPlatform/deploystack-load-balanced-vms
+  - https://github.com/GoogleCloudPlatform/deploystack-nosql-client-server
+  - https://github.com/GoogleCloudPlatform/deploystack-ops-agent
+  - https://github.com/GoogleCloudPlatform/deploystack-serverless-e2e-photo-sharing-app
+  - https://github.com/GoogleCloudPlatform/deploystack-single-vm
+  - https://github.com/GoogleCloudPlatform/deploystack-static-hosting-with-domain
+  - https://github.com/GoogleCloudPlatform/deploystack-storage-event-function-app
+  - https://github.com/GoogleCloudPlatform/deploystack-three-tier-app
+  - https://github.com/tpryan/microservices-demo/tree/deploystack-enable

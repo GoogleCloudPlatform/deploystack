@@ -73,9 +73,9 @@ terraform apply  \
 {{range $val := .Entities}}{{if and .IsVariable .NoDefault}}   -var {{$val.Name}}=${{$val.Name | ToUpper}} \
 {{end}}{{end}}   -auto-approve
 
-{{range $val := .Entities}}{{if and .HasLabel .IsResource}}
+{{range $val := .Entities}}{{if and .HasLabel .IsResource .HasTest}}
 section_open "Test {{$val.Type}} exists"
-{{if and .HasTodo}}    #TODO: {{$val.Product.Todo | TrimSpace}}{{end}}
+{{if and .HasTodo }}    #TODO: {{$val.Product.Todo | TrimSpace}}{{end}}
     evalTest '{{$val.GenerateTestCommand | TrimSpace}}' "{{$val.Expected | TrimSpace}}"
 section_close
 {{end}}{{end}}
@@ -85,7 +85,7 @@ terraform destroy  \
 {{range $val := .Entities}}{{if and .IsVariable}}   -var {{$val.Name}}=${{$val.Name | ToUpper}} \
 {{end}}{{end}}   -auto-approve
 
-{{range $val := .Entities}}{{if and .HasLabel .IsResource}}
+{{range $val := .Entities}}{{if and .HasLabel .IsResource .HasTest}}
 section_open "Test {{$val.Type}} does not exists"
     {{if and .HasTodo}}    #TODO: {{$val.Product.Todo}}{{end}}
     evalTest '{{$val.GenerateTestCommand | TrimSpace}}' "EXPECTERROR"
