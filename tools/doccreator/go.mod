@@ -3,9 +3,6 @@ module exec
 go 1.19
 
 
-replace github.com/GoogleCloudPlatform/deploystack => /Users/tpryan/google/go/src/github.com/tpryan/deploystack
-
-replace github.com/GoogleCloudPlatform/deploystack/gcloudtf => /Users/tpryan/google/go/src/github.com/tpryan/deploystack/gcloudtf
 
 
 require (
