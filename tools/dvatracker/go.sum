@@ -62,8 +62,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/GoogleCloudPlatform/deploystack v0.0.0-20220919012115-3ececa508b05 h1:R7gLUPfzCJQ36mAQetsPV4qF3dd5qtmjY275kpj1qH4=
 github.com/GoogleCloudPlatform/deploystack v0.0.0-20220919012115-3ececa508b05/go.mod h1:+AMqrNx8j9b+7aftYWHm7V9Gr/LPANhh0NXOnxCiNqg=
-github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20220919012115-3ececa508b05 h1:gEHXePHrgcOf/oOEFcY7vb6lIkuUsYFfFA0jsyoFqQ0=
-github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20220919012115-3ececa508b05/go.mod h1:RW6X9eUgIcPL8DQJyQ2K4SGIhN4A/cx4LTro2SjtVFQ=
+github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221007234003-7ef07665a569 h1:LWIDkN8CHWRXZfvPHKPCUH7ucxEHrYI5Ih5GEM1QO2U=
+github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221007234003-7ef07665a569/go.mod h1:RW6X9eUgIcPL8DQJyQ2K4SGIhN4A/cx4LTro2SjtVFQ=
 github.com/Microsoft/go-winio v0.5.0/go.mod h1:JPGBdM1cNvN/6ISo+n8V5iA4v8pBzdOpzfwIujj1a84=
 github.com/Microsoft/go-winio v0.5.2 h1:a9IhgEQBCUEk6QCdml9CiJGhAws+YwffDHEMp1VMrpA=
 github.com/Microsoft/go-winio v0.5.2/go.mod h1:WpS1mjBmmwHBEWmogvA2mj8546UReBk4v8QkMxJ6pZY=

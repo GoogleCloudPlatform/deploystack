@@ -1,3 +1,5 @@
+github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221007234003-7ef07665a569 h1:LWIDkN8CHWRXZfvPHKPCUH7ucxEHrYI5Ih5GEM1QO2U=
+github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221007234003-7ef07665a569/go.mod h1:RW6X9eUgIcPL8DQJyQ2K4SGIhN4A/cx4LTro2SjtVFQ=
 github.com/agext/levenshtein v1.2.1/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/agext/levenshtein v1.2.2 h1:0S/Yg6LYmFJ5stwQeRp6EeOcCbj7xiqQSdNelsXvaqE=
 github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=

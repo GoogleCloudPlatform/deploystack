@@ -3,10 +3,9 @@ module exec
 go 1.19
 
 require (
-	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221006220639-82acfb1b3bf4
+	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221007234003-7ef07665a569
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20211115214459-90acf1ca460f
 )
-
 
 require (
 	github.com/agext/levenshtein v1.2.2 // indirect
