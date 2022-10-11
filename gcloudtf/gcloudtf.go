@@ -33,11 +33,11 @@ func Extract(path string) (*Blocks, error) {
 // Block represents one of several kinds of Terraform constructs: resources,
 // variables, module
 type Block struct {
-	Name  string
-	Text  string
-	Kind  string
-	Type  string
-	Attr  map[string]string
+	Name  string            `json:"name" yaml:"name"`
+	Text  string            `json:"text" yaml:"text"`
+	Kind  string            `json:"kind" yaml:"kind"`
+	Type  string            `json:"type" yaml:"type"`
+	Attr  map[string]string `json:"attr" yaml:"attr"`
 	file  string
 	start int
 }
@@ -91,6 +91,16 @@ func NewModuleBlock(t *tfconfig.ModuleCall) (Block, error) {
 		return b, fmt.Errorf("could not extract text from Module: %s", err)
 	}
 	return b, nil
+}
+
+// IsResource returns true if block is a Terraform resource
+func (b Block) IsResource() bool {
+	return b.Kind == "managed"
+}
+
+// IsModule returns true if block is a Terraform module
+func (b Block) IsModule() bool {
+	return b.Kind == "module"
 }
 
 func (b *Block) generateMap(terms List) {
