@@ -145,6 +145,6 @@ var pinfo = map[string]product{
 		Description:   "Cloud Storage provides file storage and public serving of images over http(s).",
 		Youtube:       "https://www.youtube.com/watch?v=zvqJ-pcQChE",
 		Documentation: "https://cloud.google.com/storage/docs/quickstart-console",
-		Walkthrough:   "https://console.cloud.google.com/?walkthrough_id=storage__quickstart-basic-tasks",
+		Walkthrough:   "https://console.cloud.google.com/?tutorial=storage__quickstart-basic-tasks",
 	},
 }
