@@ -18,7 +18,7 @@ func TestShortName(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			m := Meta{}
-			m.GitRepo = tc.in
+			m.Github.Repo = tc.in
 
 			got := m.ShortName()
 			if !reflect.DeepEqual(tc.want, got) {
@@ -40,7 +40,7 @@ func TestShortNameUnderscore(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			m := Meta{}
-			m.GitRepo = tc.in
+			m.Github.Repo = tc.in
 
 			got := m.ShortNameUnderscore()
 			if !reflect.DeepEqual(tc.want, got) {
@@ -112,7 +112,7 @@ func TestNewMeta(t *testing.T) {
 		"defaultbranch": {
 			repo: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry",
 			path: ".",
-			want: Meta{GitRepo: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry", GitBranch: "main", LocalPath: "./repo/cost-sentry"},
+			want: Meta{Github: Github{Repo: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry", Branch: "main"}, LocalPath: "./repo/cost-sentry"},
 		},
 	}
 
@@ -123,12 +123,12 @@ func TestNewMeta(t *testing.T) {
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
-			if !reflect.DeepEqual(tc.want.GitRepo, got.GitRepo) {
-				t.Fatalf("expected: %v, got: %v", tc.want.GitRepo, got.GitRepo)
+			if !reflect.DeepEqual(tc.want.Github.Repo, got.Github.Repo) {
+				t.Fatalf("expected: %v, got: %v", tc.want.Github.Repo, got.Github.Repo)
 			}
 
-			if !reflect.DeepEqual(tc.want.GitBranch, got.GitBranch) {
-				t.Fatalf("expected: %v, got: %v", tc.want.GitBranch, got.GitBranch)
+			if !reflect.DeepEqual(tc.want.Github.Branch, got.Github.Branch) {
+				t.Fatalf("expected: %v, got: %v", tc.want.Github.Branch, got.Github.Branch)
 			}
 
 			if !reflect.DeepEqual(tc.want.LocalPath, got.LocalPath) {

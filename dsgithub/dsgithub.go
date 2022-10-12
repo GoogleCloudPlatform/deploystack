@@ -19,8 +19,7 @@ import (
 type Meta struct {
 	DeployStack deploystack.Config
 	Terraform   gcloudtf.Blocks `json:"terraform" yaml:"terraform"`
-	GitRepo     string          `json:"repo" yaml:"repo"`
-	GitBranch   string          `json:"branch" yaml:"branch"`
+	Github      Github          `json:"github" yaml:"github"`
 	LocalPath   string          `json:"localpath" yaml:"localpath"`
 }
 
@@ -98,8 +97,7 @@ func NewMeta(repo, path string) (Meta, error) {
 	if err != nil {
 		return Meta{}, fmt.Errorf("cannot parse deploystack into: %s", err)
 	}
-	d.GitRepo = g.Repo
-	d.GitBranch = g.Branch
+	d.Github = g
 	d.LocalPath = g.RepoPath(path)
 
 	return d, nil
@@ -139,7 +137,7 @@ func NewMetaFromLocal(path string) (Meta, error) {
 
 // ShortName retrieves the shortname of whatever we are calling this stack
 func (d Meta) ShortName() string {
-	r := filepath.Base(d.GitRepo)
+	r := filepath.Base(d.Github.Repo)
 	r = strings.ReplaceAll(r, "deploystack-", "")
 	return r
 }
