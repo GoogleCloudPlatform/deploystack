@@ -62,7 +62,7 @@ function evalTest() {
 get_project_id PROJECT
 get_project_number PROJECT_NUMBER $PROJECT
 # TODO: Script is pretty rudimentary, so make sure all of these variables are actually needed for test
-{{range $val := .Entities}}{{if and .IsVariable .NoDefault}}{{$val.Name | ToUpper}}=[SET VALUE HERE]
+{{range $val := .}}{{if and .Block.IsVariable .Block.NoDefault}}{{$val.Block.Name | ToUpper}}=[SET VALUE HERE]
 {{end}}{{end}} 
 
 gcloud config set project ${PROJECT}
@@ -70,24 +70,24 @@ gcloud config set project ${PROJECT}
 terraform init
 # TODO: Make sure all of these variables are correct and actually need to be passed in.:
 terraform apply  \
-{{range $val := .Entities}}{{if and .IsVariable .NoDefault}}   -var {{$val.Name}}=${{$val.Name | ToUpper}} \
+{{range $val := .}}{{if and .Block.IsVariable .Block.NoDefault}}   -var {{$val.Block.Name}}=${{$val.Block.Name | ToUpper}} \
 {{end}}{{end}}   -auto-approve
 
-{{range $val := .Entities}}{{if and .HasLabel .IsResource .HasTest}}
-section_open "Test {{$val.Type}} exists"
-{{if and .HasTodo }}    #TODO: {{$val.Product.Todo | TrimSpace}}{{end}}
-    evalTest '{{$val.GenerateTestCommand | TrimSpace}}' "{{$val.Expected | TrimSpace}}"
+{{range $val := .}}{{if and .TestConfig.HasTest}}
+section_open "Test {{$val.Block.Type}} exists"{{if and .TestConfig.HasTodo }}
+    #TODO: {{$val.TestConfig.Todo | TrimSpace}}{{end}}
+    evalTest '{{$val.GenerateTestCommand | TrimSpace}}' "{{$val.TestConfig.Expected | TrimSpace}}"
 section_close
 {{end}}{{end}}
 
 # TODO: Make sure all of these variables are correct and actually need to be passed in.:
 terraform destroy  \
-{{range $val := .Entities}}{{if and .IsVariable}}   -var {{$val.Name}}=${{$val.Name | ToUpper}} \
+{{range $val := .}}{{if and .Block.IsVariable}}   -var {{$val.Block.Name}}=${{$val.Block.Name | ToUpper}} \
 {{end}}{{end}}   -auto-approve
 
-{{range $val := .Entities}}{{if and .HasLabel .IsResource .HasTest}}
-section_open "Test {{$val.Type}} does not exists"
-    {{if and .HasTodo}}    #TODO: {{$val.Product.Todo}}{{end}}
+{{range $val := .}}{{if and .TestConfig.HasTest}}
+section_open "Test {{$val.Block.Type}} does not exists"{{if and .TestConfig.HasTodo }}
+    #TODO: {{$val.TestConfig.Todo | TrimSpace}}{{end}}
     evalTest '{{$val.GenerateTestCommand | TrimSpace}}' "EXPECTERROR"
 section_close
 {{end}}{{end}}
