@@ -56,8 +56,6 @@ func NewResourceBlock(t *tfconfig.Resource) (Block, error) {
 		return b, fmt.Errorf("could not extract text from Resource: %s", err)
 	}
 
-	b.generateMap(List{})
-
 	return b, nil
 }
 
@@ -103,30 +101,14 @@ func (b Block) IsModule() bool {
 	return b.Kind == "module"
 }
 
-func (b *Block) generateMap(terms List) {
-	sl := strings.Split(b.Text, "\n")
-	m := map[string]string{}
-	terms = append(terms, "name", "region", "zone")
+// IsVariable returns true if block is a Terraform variable
+func (b Block) IsVariable() bool {
+	return b.Kind == "variable"
+}
 
-	for _, t := range terms {
-		for _, v := range sl {
-
-			if strings.Contains(v, "#") {
-				continue
-			}
-
-			lsl := strings.Split(v, "=")
-
-			if strings.Contains(lsl[0], t) {
-				if len(lsl) > 1 {
-					m[t] = strings.TrimSpace(lsl[1])
-					break
-				}
-			}
-		}
-	}
-
-	b.Attr = m
+// NoDefault returns true if block does not contain a default value
+func (b Block) NoDefault() bool {
+	return !strings.Contains(b.Text, "default")
 }
 
 func getResourceText(file string, start int) (string, error) {
@@ -265,6 +247,16 @@ type TestConfig struct {
 	Todo        string `json:"todo" yaml:"todo"`
 }
 
+// HasTest returns true if test config actually has a test in it.
+func (t TestConfig) HasTest() bool {
+	return len(t.TestCommand) > 0
+}
+
+// HasTodo returns true if test config actually has a todo in it.
+func (t TestConfig) HasTodo() bool {
+	return len(t.Todo) > 0
+}
+
 // NewGCPResources reads in a yaml file as a config
 func NewGCPResources(path string) (GCPResources, error) {
 	result := GCPResources{}
@@ -281,8 +273,10 @@ func NewGCPResources(path string) (GCPResources, error) {
 	return result, nil
 }
 
+// Repos is a slice of strings containing github urls
 type Repos []string
 
+// NewRepos retrieves the list of repos from a ymal file.
 func NewRepos(path string) (Repos, error) {
 	result := Repos{}
 

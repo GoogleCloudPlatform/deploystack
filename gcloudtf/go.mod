@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20211115214459-90acf1ca460f
 	github.com/kylelemons/godebug v1.1.0
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
