@@ -7,9 +7,6 @@ require (
 	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221012005213-46dce7a6b112
 )
 
-replace github.com/GoogleCloudPlatform/deploystack/dsgithub v0.0.0-20221012005213-46dce7a6b112 => /Users/tpryan/google/go/src/github.com/tpryan/deploystack/dsgithub
-
-replace github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221012005213-46dce7a6b112 => /Users/tpryan/google/go/src/github.com/tpryan/deploystack/gcloudtf
 
 require (
 	cloud.google.com/go v0.102.0 // indirect
