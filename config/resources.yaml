@@ -270,7 +270,7 @@ google_project_iam_member:
 google_project_service:
   label: google_project_service
   api_calls: 
-  - google.api.serviceusage.v1beta1.ServiceUsage.EnableService
+  - google.api.serviceusage.[version].ServiceUsage.EnableService
 google_pubsub_topic:
   label: google_pubsub_topic
   product: Cloud Pub/Sub
