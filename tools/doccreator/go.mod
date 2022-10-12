@@ -3,16 +3,17 @@ module exec
 go 1.19
 
 require (
-	github.com/GoogleCloudPlatform/deploystack v0.0.0-20221006220639-82acfb1b3bf4
-	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221007234003-7ef07665a569
-	github.com/hashicorp/terraform-config-inspect v0.0.0-20211115214459-90acf1ca460f
-	gopkg.in/src-d/go-git.v4 v4.13.1
+	github.com/GoogleCloudPlatform/deploystack/dsgithub v0.0.0-20221011171031-20ec3fd1b14d
+	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221011171031-20ec3fd1b14d
+	gopkg.in/yaml.v2 v2.4.0
 )
+
 
 require (
 	cloud.google.com/go v0.102.0 // indirect
 	cloud.google.com/go/compute v1.7.0 // indirect
 	cloud.google.com/go/domains v0.4.0 // indirect
+	github.com/GoogleCloudPlatform/deploystack v0.0.0-20221011171031-20ec3fd1b14d // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg v1.0.0 // indirect
@@ -25,6 +26,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
 	github.com/hashicorp/hcl v0.0.0-20170504190234-a4b07c25de5f // indirect
 	github.com/hashicorp/hcl/v2 v2.0.0 // indirect
+	github.com/hashicorp/terraform-config-inspect v0.0.0-20211115214459-90acf1ca460f // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -46,6 +48,6 @@ require (
 	google.golang.org/grpc v1.47.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
+	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
