@@ -10,7 +10,7 @@ Book: /shell/docs/cloud-shell-tutorials/deploystack/_book.yaml
 <!-- TODO: Review, place in the right spot and remove from file -->
 <!-- 
  "{{$.DSMeta.ShortNameUnderscore}}": {
-      "url": "{{$.DSMeta.GitRepo | ToLower }}", 
+      "url": "{{$.DSMeta.Github.Repo | ToLower }}", 
       "label": "{{.DSMeta.DeployStack.Title | ToLower |  Title }}",
       "diagram" : "arch-{{$.DSMeta.ShortName}}.svg",
       "products" : [{{range $val := .Products}}"{{$val | ShortNameUnderscore}}",{{end}}]
