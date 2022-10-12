@@ -23,6 +23,14 @@ steps:
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ]
+   - name: 'golang'
+     entrypoint: 'go'
+     args: [ 'test', '.', '-v', '-cover' ] 
+     dir: "gcloudtf" 
+   - name: 'golang'
+     entrypoint: 'go'
+     args: [ 'test', '.', '-v', '-cover' ] 
+     dir: "dsgithub"   
 timeout: 2200s
 availableSecrets:
   secretManager:
