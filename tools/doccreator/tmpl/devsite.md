@@ -1,19 +1,19 @@
 Project: /shell/docs/cloud-shell-tutorials/deploystack/_project.yaml
 Book: /shell/docs/cloud-shell-tutorials/deploystack/_book.yaml
 {% include "/shell/docs/cloud-shell-tutorials/deploystack/_local_variables.html" %}
-{% set stack_key = "{{$.GetShortNameUnderScore}}" %}
+{% set stack_key = "{{$.DSMeta.ShortNameUnderscore}}" %}
 {% set stack_name %}{{"{{"}} repos[stack_key].label {{"}}"}}{% endset %}
 {% set stack_url %}{{"{{"}} repos[stack_key].url {{"}}"}}{% endset %}
 {% set stack_diagram %}{{"{{"}} repos[stack_key].diagram {{"}}"}}{% endset %}
 {% set stack_products = repos[stack_key].products  %}
 
-<!-- TODO: Review, place iun the right spot and remove from file -->
+<!-- TODO: Review, place in the right spot and remove from file -->
 <!-- 
- "{{$.GetShortNameUnderScore}}": {
-      "url": "{{$.GitRepo | ToLower }}", 
-      "label": "{{.DeployStack.Title | ToLower |  Title }}",
-      "diagram" : "arch-{{$.GetShortName}}.svg",
-      "products" : [{{range $val := .Products}}"{{$val.GetShortNameUnderScore}}",{{end}}]
+ "{{$.DSMeta.ShortNameUnderscore}}": {
+      "url": "{{$.DSMeta.GitRepo | ToLower }}", 
+      "label": "{{.DSMeta.DeployStack.Title | ToLower |  Title }}",
+      "diagram" : "arch-{{$.DSMeta.ShortName}}.svg",
+      "products" : [{{range $val := .Products}}"{{$val | ShortNameUnderscore}}",{{end}}]
   },
 
  -->
@@ -33,7 +33,7 @@ Book: /shell/docs/cloud-shell-tutorials/deploystack/_book.yaml
 ### `./main.tf`
 
 
-{{range $val := .Entities}}{{if .IsResource}}
+{{range $val := .DSMeta.Terraform}}{{if or .IsResource .IsModule}}
 <!-- TODO: FILL IN -->
 #### [FILL IN]
 [FILL IN]

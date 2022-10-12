@@ -238,6 +238,7 @@ google_compute_url_map:
   - compute.[version].UrlMapsService.Insert
 google_container_cluster:
   label: google_container_cluster
+  product: Google Kubernetes Engine
   api_calls: 
   - google.container.[version].ClusterManager.CreateCluster
 google_container_registry:
@@ -281,7 +282,7 @@ google_pubsub_topic:
   - google.pubsub.[version].Publisher.CreateTopic
 google_redis_instance:
   label: google_redis_instance
-  product: Cloud Redis
+  product: Cloud Memorystore
   test_config: 
     test_type: gcloud
     test_command: gcloud redis instances describe

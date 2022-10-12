@@ -1,19 +1,17 @@
-module exec
+module github.com/GoogleCloudPlatform/deploystack/dsgithub
 
 go 1.19
 
 require (
-	github.com/GoogleCloudPlatform/deploystack/dsgithub v0.0.0-20221011171031-20ec3fd1b14d
+	github.com/GoogleCloudPlatform/deploystack v0.0.0-20221011171031-20ec3fd1b14d
 	github.com/GoogleCloudPlatform/deploystack/gcloudtf v0.0.0-20221011171031-20ec3fd1b14d
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/src-d/go-git.v4 v4.13.1
 )
-
 
 require (
 	cloud.google.com/go v0.102.0 // indirect
 	cloud.google.com/go/compute v1.7.0 // indirect
 	cloud.google.com/go/domains v0.4.0 // indirect
-	github.com/GoogleCloudPlatform/deploystack v0.0.0-20221011171031-20ec3fd1b14d // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg v1.0.0 // indirect
@@ -48,6 +46,6 @@ require (
 	google.golang.org/grpc v1.47.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
-	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
