@@ -51,8 +51,8 @@ func main() {
 	}
 }
 
-func GetDVAs(shortname string, b gcloudtf.Blocks, config gcloudtf.GCPResources) []DVA {
-	result := []DVA{}
+func GetDVAs(shortname string, b gcloudtf.Blocks, config gcloudtf.GCPResources) DVAs {
+	result := DVAs{}
 	for _, block := range b {
 		if block.Kind == "managed" || block.Kind == "module" {
 			cfg, ok := config[block.Type]
@@ -66,7 +66,7 @@ func GetDVAs(shortname string, b gcloudtf.Blocks, config gcloudtf.GCPResources) 
 			for _, v := range cfg.APICalls {
 				for _, version := range versionStrings {
 					d := DVA{shortname, strings.Replace(v, "[version]", version, 1)}
-					result = append(result, d)
+					result.Add(d)
 				}
 			}
 
@@ -77,6 +77,22 @@ func GetDVAs(shortname string, b gcloudtf.Blocks, config gcloudtf.GCPResources) 
 }
 
 type DVAs []DVA
+
+func (ds *DVAs) Add(d DVA) {
+	if !ds.Exists(d) {
+		*ds = append(*ds, d)
+	}
+}
+
+func (ds DVAs) Exists(d DVA) bool {
+	for _, v := range ds {
+		if d.API == v.API && d.Stack == v.Stack {
+			return true
+		}
+	}
+
+	return false
+}
 
 func (d DVAs) ToCSV(file string) error {
 	f, err := os.Create(file)
