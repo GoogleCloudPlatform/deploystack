@@ -35,8 +35,7 @@ func getDomainsClient(project string) (*domains.Client, error) {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
-	ctx := context.Background()
-	svc, err := domains.NewClient(ctx, opts)
+	svc, err := domains.NewClient(globalctx, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +61,7 @@ var (
 	msgDomainAvailablityVerified = fmt.Sprintf("Domain is unavailable for purchase, but records show you are verified as the owner, so it can be used for this application.")
 	msgDomainPurchase            = fmt.Sprintf("%sBuying a domain is not reversable, saying 'y' will incur a charge.%s", TERMREDB, TERMCLEAR)
 	msgDomainRegisterSuccess     = fmt.Sprintf("%sDomain Registered%s. \n", TERMCYANB, TERMCLEAR)
+	msgDomainOwnedNotByUser      = fmt.Sprintf("%sDomain is owned already, by someone other than you. Please pick another domain%s. \n", TERMREDB, TERMCLEAR)
 )
 
 // ContactData represents the structure that we need for Registrar Contact
@@ -174,44 +174,53 @@ func DomainManage(s *Stack) (string, error) {
 	fmt.Println(Divider)
 	fmt.Println(msgDomainRegisterHeader)
 	fmt.Println(Divider)
-	fmt.Println(msgDomainContactHeader)
 
 	contactfile := "contact.yaml"
 	contact := ContactData{}
+	var domainInfo *domainspb.RegisterParameters
+	var err error
+
 	domain := ""
 	project := s.GetSetting("project_id")
 
 	item := Custom{Name: "domain", Description: "Enter a domain you wish to purchase and use for this application"}
 
-	if err := item.Collect(); err != nil {
-		return "", fmt.Errorf("trouble getting domain from keyboard: %s", err)
-	}
+	for domain == "" {
 
-	domain = item.Value
+		if err := item.Collect(); err != nil {
+			return "", fmt.Errorf("trouble getting domain from keyboard: %s", err)
+		}
 
-	fmt.Println(Divider)
-	fmt.Println(msgDomainAvailablityHeader)
+		domain = item.Value
 
-	domainInfo, err := domainIsAvailable(project, domain)
-	if err != nil {
-		return "", fmt.Errorf("error checking domain %s", err)
-	}
+		fmt.Println(Divider)
+		fmt.Println(msgDomainAvailablityHeader)
 
-	if domainInfo.Availability == domainspb.RegisterParameters_UNAVAILABLE {
-
-		isVerified, err := domainsIsVerified(project, domain)
+		domainInfo, err = domainIsAvailable(project, domain)
 		if err != nil {
-			return "", fmt.Errorf("error verifying domain %s", err)
-		}
-		// If not, fail and ask the user to repick
-		if !isVerified {
-			return "", ErrorDomainUntenable
+			return "", fmt.Errorf("error checking domain availability %s", err)
 		}
 
-		fmt.Println(msgDomainAvailablityVerified)
-		return domain, nil
+		if domainInfo.Availability == domainspb.RegisterParameters_UNAVAILABLE {
+
+			isVerified, err := domainsIsVerified(project, domain)
+			if err != nil {
+				return "", fmt.Errorf("error verifying domain %s", err)
+			}
+			// If not, fail and ask the user to repick
+			if !isVerified {
+				fmt.Printf("%s", msgDomainOwnedNotByUser)
+				domain = ""
+				continue
+			}
+
+			fmt.Println(msgDomainAvailablityVerified)
+			return domain, nil
+		}
+
 	}
 
+	fmt.Println(msgDomainContactHeader)
 	if _, err := os.Stat(contactfile); errors.Is(err, os.ErrNotExist) {
 		contact, err = RegistrarContactManage(contactfile)
 		if err != nil {
@@ -304,7 +313,6 @@ func domainsSearch(project, domain string) ([]*domainspb.RegisterParameters, err
 	if err != nil {
 		return nil, err
 	}
-	defer c.Close()
 
 	req := &domainspb.SearchDomainsRequest{
 		Query:    domain,
@@ -335,22 +343,21 @@ func domainIsAvailable(project, domain string) (*domainspb.RegisterParameters, e
 func domainsIsVerified(project, domain string) (bool, error) {
 	c, err := getDomainsClient(project)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("cannot get domains client: %s", err)
 	}
-	defer c.Close()
 
 	req := &domainspb.ListRegistrationsRequest{
 		Filter: fmt.Sprintf("domainName=\"%s\"", domain),
 		Parent: fmt.Sprintf("projects/%s/locations/global", project),
 	}
-	it := c.ListRegistrations(context.Background(), req)
+	it := c.ListRegistrations(globalctx, req)
 	for {
 		resp, err := it.Next()
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("listing domains failed: %s", err)
 		}
 
 		if resp.DomainName == domain {
@@ -368,7 +375,6 @@ func domainRegister(project string, domaininfo *domainspb.RegisterParameters, co
 	if err != nil {
 		return err
 	}
-	defer c.Close()
 
 	dnscontact, err := contact.DomainContact()
 	if err != nil {
@@ -376,6 +382,7 @@ func domainRegister(project string, domaininfo *domainspb.RegisterParameters, co
 	}
 
 	req := &domainspb.RegisterDomainRequest{
+		DomainNotices: domaininfo.DomainNotices,
 		Registration: &domainspb.Registration{
 			Name:       fmt.Sprintf("%s/registrations/%s", parent, domaininfo.DomainName),
 			DomainName: domaininfo.DomainName,
@@ -397,7 +404,7 @@ func domainRegister(project string, domaininfo *domainspb.RegisterParameters, co
 		YearlyPrice: domaininfo.YearlyPrice,
 	}
 
-	if _, err := c.RegisterDomain(context.Background(), req); err != nil {
+	if _, err := c.RegisterDomain(globalctx, req); err != nil {
 		return err
 	}
 
