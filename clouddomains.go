@@ -41,7 +41,6 @@ func getDomainsClient(project string) (*domains.Client, error) {
 	}
 
 	domainsClient = svc
-	svc.LROClient.SetGoogleClientInfo(defaultUserAgent)
 
 	return svc, nil
 }
