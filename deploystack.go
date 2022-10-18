@@ -18,6 +18,7 @@ package deploystack
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -94,6 +95,7 @@ var (
 	Divider   = ""
 	opts      = option.WithCredentialsFile("")
 	credspath = ""
+	globalctx = context.Background()
 )
 
 func init() {
@@ -438,7 +440,14 @@ func (c Config) Process(s *Stack, output string) error {
 	if c.Domain {
 		domain, err := DomainManage(s)
 		if err != nil {
-			handleProcessError(fmt.Errorf("error handling domain registration: %s", err))
+			if err != nil {
+
+				if err == ErrorDomainUserDeny {
+					handleEarlyShutdown(ErrorDomainUserDeny)
+				}
+
+				handleProcessError(fmt.Errorf("error handling domain registration: %s", err))
+			}
 		}
 		s.AddSetting("domain", domain)
 	}
@@ -485,6 +494,14 @@ func handleProcessError(err error) {
 	}
 
 	fmt.Println(err)
+	os.Exit(1)
+}
+
+func handleEarlyShutdown(err error) {
+	fmt.Printf("\n\n%sYou've chosen to stop moving forward through Deploystack.                             %s\n\n", TERMCYANB, TERMCLEAR)
+	fmt.Printf("If this was an error, you can try again by typing %sdeploystack install%s at the command prompt. \n\n", TERMCYANB, TERMCLEAR)
+
+	fmt.Printf("Reason: %s\n", err)
 	os.Exit(1)
 }
 
