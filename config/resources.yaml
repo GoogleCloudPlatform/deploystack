@@ -150,6 +150,7 @@ google_compute_instance:
   api_calls: 
   - compute.[version].InstancesService.Insert
   - compute.[version].InstancesService.SetMetadata
+  - compute.[version].DisksService.Insert
 google_compute_instance_group_manager:
   label: google_compute_instance_group_manager
   product: Compute Engine
@@ -267,6 +268,7 @@ google_project_iam_member:
   product: Cloud IAM
   api_calls: 
   - google.iam.admin.[version].IAM.UpdateRole
+  - google.cloudresourcemanager.[version].Projects.SetIamPolicy
 google_project_service:
   label: google_project_service
   api_calls: 
@@ -339,7 +341,7 @@ google_sql_database_instance:
     test_command: gcloud sql instances describe
     suffix: --format="value(name)"
   api_calls: 
-  - google.cloud.sql.[version].SqlDatabasesService.Insert
+  - google.cloud.sql.[version].SqlInstancesService.Insert
 google_sql_user:
   label: google_sql_user
   api_calls: 
