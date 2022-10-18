@@ -24,6 +24,7 @@ func getCloudResourceManagerService() (*cloudresourcemanager.Service, error) {
 	}
 
 	cloudResourceManagerService = svc
+	svc.UserAgent = defaultUserAgent
 
 	return svc, nil
 }

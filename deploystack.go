@@ -92,10 +92,11 @@ var (
 	// That already exists
 	ErrorProjectAlreadyExists = fmt.Errorf("project_id already exists")
 	// Divider is a text element that draws a horizontal line
-	Divider   = ""
-	opts      = option.WithCredentialsFile("")
-	credspath = ""
-	globalctx = context.Background()
+	Divider          = ""
+	opts             = option.WithCredentialsFile("")
+	credspath        = ""
+	globalctx        = context.Background()
+	defaultUserAgent = "deploystack"
 )
 
 func init() {

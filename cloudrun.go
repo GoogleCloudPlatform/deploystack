@@ -26,6 +26,7 @@ func getRunService(project string) (*run.APIService, error) {
 	}
 
 	runService = svc
+	svc.UserAgent = defaultUserAgent
 
 	return svc, nil
 }

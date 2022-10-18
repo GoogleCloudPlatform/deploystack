@@ -26,6 +26,7 @@ func getCloudbillingService() (*cloudbilling.APIService, error) {
 	}
 
 	cloudbillingService = svc
+	svc.UserAgent = defaultUserAgent
 
 	return svc, nil
 }
