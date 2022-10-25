@@ -60,7 +60,7 @@ func ListProjects() ([]ProjectWithBilling, error) {
 		return resp, err
 	}
 
-	pwb, err := getBillingForProjects(results.Projects)
+	pwb, err := ListBillingForProjects(results.Projects)
 	if err != nil {
 		return resp, err
 	}
@@ -129,6 +129,30 @@ func DeleteProject(project string) error {
 	_, err = svc.Projects.Delete(project).Do()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// GrantProjectIAMRole grants a given principal a given role in a given project
+func GrantProjectIAMRole(project, role, principal string) error {
+	getReq := cloudresourcemanager.GetIamPolicyRequest{}
+
+	policy, err := cloudResourceManagerService.Projects.GetIamPolicy(project, &getReq).Do()
+	if err != nil {
+		return fmt.Errorf("cannot get iam policy for project (%s): %s", project, err)
+	}
+
+	b := cloudresourcemanager.Binding{}
+	b.Role = role
+	b.Members = append(b.Members, principal)
+	policy.Bindings = append(policy.Bindings, &b)
+
+	setReq := cloudresourcemanager.SetIamPolicyRequest{}
+	setReq.Policy = policy
+
+	if _, err := cloudResourceManagerService.Projects.SetIamPolicy(project, &setReq).Do(); err != nil {
+		return fmt.Errorf("cannot set iam policy role (%s) for project (%s): %s", role, project, err)
 	}
 
 	return nil
