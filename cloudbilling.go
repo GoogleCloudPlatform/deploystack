@@ -87,8 +87,8 @@ func BillingAccountProjectAttach(project, account string) error {
 	return looperr
 }
 
-func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBilling, error) {
-	res := []projectWithBilling{}
+func getBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBilling, error) {
+	res := []ProjectWithBilling{}
 
 	svc, err := getCloudbillingService()
 	if err != nil {
@@ -117,7 +117,7 @@ func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBill
 					return
 				}
 
-				pwb := projectWithBilling{Name: p.Name, ID: p.ProjectId, BillingEnabled: tmp.BillingEnabled}
+				pwb := ProjectWithBilling{Name: p.Name, ID: p.ProjectId, BillingEnabled: tmp.BillingEnabled}
 				res = append(res, pwb)
 			}
 		}(v)

@@ -57,7 +57,7 @@ func getComputeService(project string) (*compute.Service, error) {
 		return computeService, nil
 	}
 
-	if err := ServiceEnable(project, "compute.googleapis.com"); err != nil {
+	if err := EnableService(project, "compute.googleapis.com"); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 

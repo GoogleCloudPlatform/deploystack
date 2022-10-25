@@ -17,7 +17,7 @@ func TestGetProjectNumbers(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := projectNumber(tc.input)
+			got, err := ProjectNumber(tc.input)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -39,7 +39,7 @@ func TestGetProjects(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := projects()
+			got, err := ListProjects()
 
 			gotfiltered := []string{}
 
@@ -83,8 +83,8 @@ func TestCreateProject(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			name := tc.input + randSeq(5)
-			err := projectCreate(name)
-			projectDelete(name)
+			err := CreateProject(name)
+			DeleteProject(name)
 			if err != tc.err {
 				t.Fatalf("expected: %v, got: %v project: %s", tc.err, err, name)
 			}

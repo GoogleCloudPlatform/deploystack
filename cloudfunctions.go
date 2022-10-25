@@ -15,7 +15,7 @@ func getCloudFunctionsService(project string) (*cloudfunctions.Service, error) {
 		return cloudfunctionsService, nil
 	}
 
-	if err := ServiceEnable(project, "cloudfunctions.googleapis.com"); err != nil {
+	if err := EnableService(project, "cloudfunctions.googleapis.com"); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
@@ -34,7 +34,7 @@ func getCloudFunctionsService(project string) (*cloudfunctions.Service, error) {
 func regionsFunctions(project string) ([]string, error) {
 	resp := []string{}
 
-	if err := ServiceEnable(project, "cloudfunctions.googleapis.com"); err != nil {
+	if err := EnableService(project, "cloudfunctions.googleapis.com"); err != nil {
 		return resp, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
