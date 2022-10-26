@@ -136,9 +136,13 @@ func DeleteProject(project string) error {
 
 // GrantProjectIAMRole grants a given principal a given role in a given project
 func GrantProjectIAMRole(project, role, principal string) error {
+	svc, err := getCloudResourceManagerService()
+	if err != nil {
+		return err
+	}
 	getReq := cloudresourcemanager.GetIamPolicyRequest{}
 
-	policy, err := cloudResourceManagerService.Projects.GetIamPolicy(project, &getReq).Do()
+	policy, err := svc.Projects.GetIamPolicy(project, &getReq).Do()
 	if err != nil {
 		return fmt.Errorf("cannot get iam policy for project (%s): %s", project, err)
 	}

@@ -355,7 +355,7 @@ func regions(project, product string) ([]string, error) {
 	case "compute":
 		return regionsCompute(project)
 	case "functions":
-		return regionsFunctions(project)
+		return ListFunctionRegions(project)
 	case "run":
 		return regionsRun(project)
 	}

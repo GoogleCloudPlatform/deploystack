@@ -30,8 +30,8 @@ func getCloudFunctionsService(project string) (*cloudfunctions.Service, error) {
 	return svc, nil
 }
 
-// regionsFunctions will return a list of regions for Cloud Functions
-func regionsFunctions(project string) ([]string, error) {
+// ListFunctionRegions will return a list of regions for Cloud Functions
+func ListFunctionRegions(project string) ([]string, error) {
 	resp := []string{}
 
 	if err := EnableService(project, "cloudfunctions.googleapis.com"); err != nil {
@@ -55,4 +55,35 @@ func regionsFunctions(project string) ([]string, error) {
 	sort.Strings(resp)
 
 	return resp, nil
+}
+
+func DeployFunction(project, region string, f cloudfunctions.CloudFunction) error {
+	svc, err := getCloudFunctionsService(project)
+	if err != nil {
+		return err
+	}
+
+	location := fmt.Sprintf("projects/%s/locations/%s", project, region)
+	if _, err := svc.Projects.Locations.Functions.Create(location, &f).Do(); err != nil {
+		return fmt.Errorf("could not create function: %s", err)
+	}
+
+	return nil
+}
+
+func GenerateFunctionSignedURL(project, region string) (string, error) {
+	location := fmt.Sprintf("projects/%s/locations/%s", project, region)
+	svc, err := getCloudFunctionsService(project)
+	if err != nil {
+		return "", err
+	}
+
+	req := &cloudfunctions.GenerateUploadUrlRequest{}
+
+	result, err := svc.Projects.Locations.Functions.GenerateUploadUrl(location, req).Do()
+	if err != nil {
+		return "", err
+	}
+
+	return result.UploadUrl, nil
 }

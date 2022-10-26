@@ -24,7 +24,7 @@ func TestGetFunctionRegions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := regionsFunctions(tc.project)
+			got, err := ListFunctionRegions(tc.project)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
