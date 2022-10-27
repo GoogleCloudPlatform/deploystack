@@ -83,7 +83,7 @@ func TestCreateProject(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			name := tc.input + randSeq(5)
-			err := CreateProject(name)
+			err := CreateProject(name, "", "")
 			DeleteProject(name)
 			if err != tc.err {
 				t.Fatalf("expected: %v, got: %v project: %s", tc.err, err, name)
