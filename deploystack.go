@@ -430,7 +430,7 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	if c.ProjectNumber {
-		projectnumber, err = projectNumber(project)
+		projectnumber, err = ProjectNumber(project)
 		if err != nil {
 			handleProcessError(fmt.Errorf("error managing project number settings: %s", err))
 		}

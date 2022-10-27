@@ -28,8 +28,8 @@ func getCloudResourceManagerService() (*cloudresourcemanager.Service, error) {
 	return svc, nil
 }
 
-// projectNumber will get the project_number for the input projectid
-func projectNumber(id string) (string, error) {
+// ProjectNumber will get the project_number for the input projectid
+func ProjectNumber(id string) (string, error) {
 	resp := ""
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
@@ -46,9 +46,9 @@ func projectNumber(id string) (string, error) {
 	return resp, nil
 }
 
-// projects gets a list of the projects a user has access to
-func projects() ([]projectWithBilling, error) {
-	resp := []projectWithBilling{}
+// ListProjects gets a list of the ListProjects a user has access to
+func ListProjects() ([]ProjectWithBilling, error) {
+	resp := []ProjectWithBilling{}
 
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
@@ -60,7 +60,7 @@ func projects() ([]projectWithBilling, error) {
 		return resp, err
 	}
 
-	pwb, err := getBillingForProjects(results.Projects)
+	pwb, err := ListBillingForProjects(results.Projects)
 	if err != nil {
 		return resp, err
 	}
@@ -72,13 +72,15 @@ func projects() ([]projectWithBilling, error) {
 	return pwb, nil
 }
 
-type projectWithBilling struct {
+// ProjectWithBilling is a project with it's billing status
+type ProjectWithBilling struct {
 	Name           string
 	ID             string
 	BillingEnabled bool
 }
 
-func (p projectWithBilling) ToLabledValue() LabeledValue {
+// ToLabledValue converts a ProjectWithBilling to a LabeledValue
+func (p ProjectWithBilling) ToLabledValue() LabeledValue {
 	r := LabeledValue{Label: p.Name, Value: p.ID}
 
 	if p.BillingEnabled {
@@ -88,9 +90,9 @@ func (p projectWithBilling) ToLabledValue() LabeledValue {
 	return r
 }
 
-// projectCreate does the work of actually creating a new project in your
+// CreateProject does the work of actually creating a new project in your
 // GCP account
-func projectCreate(project string) error {
+func CreateProject(project string) error {
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
 		return err
@@ -116,9 +118,9 @@ func projectCreate(project string) error {
 	return nil
 }
 
-// projectDelete does the work of actually deleting an existing project in
+// DeleteProject does the work of actually deleting an existing project in
 // your GCP account
-func projectDelete(project string) error {
+func DeleteProject(project string) error {
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
 		return err
@@ -127,6 +129,34 @@ func projectDelete(project string) error {
 	_, err = svc.Projects.Delete(project).Do()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// GrantProjectIAMRole grants a given principal a given role in a given project
+func GrantProjectIAMRole(project, role, principal string) error {
+	svc, err := getCloudResourceManagerService()
+	if err != nil {
+		return err
+	}
+	getReq := cloudresourcemanager.GetIamPolicyRequest{}
+
+	policy, err := svc.Projects.GetIamPolicy(project, &getReq).Do()
+	if err != nil {
+		return fmt.Errorf("cannot get iam policy for project (%s): %s", project, err)
+	}
+
+	b := cloudresourcemanager.Binding{}
+	b.Role = role
+	b.Members = append(b.Members, principal)
+	policy.Bindings = append(policy.Bindings, &b)
+
+	setReq := cloudresourcemanager.SetIamPolicyRequest{}
+	setReq.Policy = policy
+
+	if _, err := cloudResourceManagerService.Projects.SetIamPolicy(project, &setReq).Do(); err != nil {
+		return fmt.Errorf("cannot set iam policy role (%s) for project (%s): %s", role, project, err)
 	}
 
 	return nil

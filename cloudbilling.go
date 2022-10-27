@@ -30,8 +30,8 @@ func getCloudbillingService() (*cloudbilling.APIService, error) {
 	return svc, nil
 }
 
-// billingAccounts gets a list of the billing accounts a user has access to
-func billingAccounts() ([]*cloudbilling.BillingAccount, error) {
+// ListBillingAccounts gets a list of the billing accounts a user has access to
+func ListBillingAccounts() ([]*cloudbilling.BillingAccount, error) {
 	resp := []*cloudbilling.BillingAccount{}
 	svc, err := getCloudbillingService()
 	if err != nil {
@@ -46,8 +46,8 @@ func billingAccounts() ([]*cloudbilling.BillingAccount, error) {
 	return results.BillingAccounts, nil
 }
 
-// BillingAccountProjectAttach will enable billing in a given project
-func BillingAccountProjectAttach(project, account string) error {
+// AttachBillingAccount will enable billing in a given project
+func AttachBillingAccount(project, account string) error {
 	retries := 10
 	svc, err := getCloudbillingService()
 	if err != nil {
@@ -87,8 +87,9 @@ func BillingAccountProjectAttach(project, account string) error {
 	return looperr
 }
 
-func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBilling, error) {
-	res := []projectWithBilling{}
+// ListBillingForProjects gets a list of projects with their billing information
+func ListBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBilling, error) {
+	res := []ProjectWithBilling{}
 
 	svc, err := getCloudbillingService()
 	if err != nil {
@@ -117,7 +118,7 @@ func getBillingForProjects(p []*cloudresourcemanager.Project) ([]projectWithBill
 					return
 				}
 
-				pwb := projectWithBilling{Name: p.Name, ID: p.ProjectId, BillingEnabled: tmp.BillingEnabled}
+				pwb := ProjectWithBilling{Name: p.Name, ID: p.ProjectId, BillingEnabled: tmp.BillingEnabled}
 				res = append(res, pwb)
 			}
 		}(v)

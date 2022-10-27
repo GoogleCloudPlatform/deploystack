@@ -31,7 +31,7 @@ func TestGetBillingAccounts(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := billingAccounts()
+			got, err := ListBillingAccounts()
 
 			sort.Slice(got[:], func(i, j int) bool {
 				return got[i].DisplayName < got[j].DisplayName
@@ -60,7 +60,7 @@ func TestLinkProjectToBillingAccount(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := BillingAccountProjectAttach(tc.project, tc.account)
+			err := AttachBillingAccount(tc.project, tc.account)
 			if err != tc.err {
 				t.Fatalf("expected: %v, got: %v", tc.err, err)
 			}

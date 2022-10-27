@@ -15,7 +15,7 @@ func getRunService(project string) (*run.APIService, error) {
 		return runService, nil
 	}
 
-	if err := ServiceEnable(project, "run.googleapis.com"); err != nil {
+	if err := EnableService(project, "run.googleapis.com"); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 

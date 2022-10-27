@@ -221,7 +221,7 @@ func GCEInstanceManage(project, basename string) (GCEInstanceConfig, error) {
 // BillingAccountManage either grabs the users only BillingAccount or
 // presents a list of BillingAccounts to select from.
 func BillingAccountManage() (string, error) {
-	accounts, err := billingAccounts()
+	accounts, err := ListBillingAccounts()
 	if err != nil {
 		return "", fmt.Errorf("could not get list of billing accounts: %s", err)
 	}
@@ -256,7 +256,7 @@ func ProjectManage() (string, string, error) {
 		return "", "", err
 	}
 
-	projects, err := projects()
+	projects, err := ListProjects()
 	if err != nil {
 		return "", "", err
 	}
@@ -321,7 +321,7 @@ func projectPrompt() (string, error) {
 			continue
 		}
 
-		if err := projectCreate(text); err != nil {
+		if err := CreateProject(text); err != nil {
 			fmt.Printf("%sProject name could not be created %s\n", TERMREDREV, TERMCLEAR)
 			fmt.Printf("%sReason: %s %s\n", TERMREDB, err, TERMCLEAR)
 			fmt.Printf("%sPlease choose another. %s\n", TERMREDREV, TERMCLEAR)
@@ -342,7 +342,7 @@ func projectPrompt() (string, error) {
 		return "", fmt.Errorf("could not determine proper billing account: %s ", err)
 	}
 
-	if err := BillingAccountProjectAttach(result, account); err != nil {
+	if err := AttachBillingAccount(result, account); err != nil {
 		return "", fmt.Errorf("could not link billing account: %s ", err)
 	}
 	sec2.Close()
@@ -355,7 +355,7 @@ func regions(project, product string) ([]string, error) {
 	case "compute":
 		return regionsCompute(project)
 	case "functions":
-		return regionsFunctions(project)
+		return ListFunctionRegions(project)
 	case "run":
 		return regionsRun(project)
 	}
