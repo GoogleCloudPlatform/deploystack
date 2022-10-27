@@ -92,13 +92,23 @@ func (p ProjectWithBilling) ToLabledValue() LabeledValue {
 
 // CreateProject does the work of actually creating a new project in your
 // GCP account
-func CreateProject(project string) error {
+func CreateProject(project, parent, parentType string) error {
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
 		return err
 	}
 
-	proj := cloudresourcemanager.Project{Name: project, ProjectId: project}
+	par := &cloudresourcemanager.ResourceId{}
+	if parent != "" && parentType != "" {
+		par.Id = parent
+		par.Type = parentType
+	}
+
+	proj := cloudresourcemanager.Project{
+		Name:      project,
+		ProjectId: project,
+		Parent:    par,
+	}
 
 	_, err = svc.Projects.Create(&proj).Do()
 	if err != nil {

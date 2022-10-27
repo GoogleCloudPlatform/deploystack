@@ -321,7 +321,7 @@ func projectPrompt() (string, error) {
 			continue
 		}
 
-		if err := CreateProject(text); err != nil {
+		if err := CreateProject(text, "", ""); err != nil {
 			fmt.Printf("%sProject name could not be created %s\n", TERMREDREV, TERMCLEAR)
 			fmt.Printf("%sReason: %s %s\n", TERMREDB, err, TERMCLEAR)
 			fmt.Printf("%sPlease choose another. %s\n", TERMREDREV, TERMCLEAR)
