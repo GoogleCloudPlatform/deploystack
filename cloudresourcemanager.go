@@ -3,6 +3,7 @@ package deploystack
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -110,7 +111,7 @@ func CreateProject(project, parent, parentType string) error {
 		Parent:    par,
 	}
 
-	_, err = svc.Projects.Create(&proj).Do()
+	result, err := svc.Projects.Create(&proj).Do()
 	if err != nil {
 		if strings.Contains(err.Error(), "project_id must be at most 30 characters long") {
 			return ErrorProjectCreateTooLong
@@ -124,6 +125,8 @@ func CreateProject(project, parent, parentType string) error {
 
 		return err
 	}
+
+	log.Printf("%+v", *result)
 
 	return nil
 }
