@@ -91,6 +91,9 @@ var (
 	// ErrorProjectAlreadyExists is an error when you try and create a project
 	// That already exists
 	ErrorProjectAlreadyExists = fmt.Errorf("project_id already exists")
+	// ErrorProjectDidNotFinish is an error we cannot confirm that project completion actually occured
+	ErrorProjectDidNotFinish = fmt.Errorf("project creation did not complete in a timely manner")
+
 	// Divider is a text element that draws a horizontal line
 	Divider   = ""
 	opts      = option.WithCredentialsFile("")

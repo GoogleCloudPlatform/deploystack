@@ -3,10 +3,10 @@ package deploystack
 import (
 	"context"
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"google.golang.org/api/cloudresourcemanager/v1"
 )
@@ -126,9 +126,21 @@ func CreateProject(project, parent, parentType string) error {
 		return err
 	}
 
-	log.Printf("%+v", *result)
+	for i := 0; i < 20; i++ {
+		op, err := svc.Operations.Get(result.Name).Do()
+		if err != nil {
+			return fmt.Errorf("could not poll for project completion: %s", err)
+		}
+		if op.Done {
+			if op.Error != nil {
+				return fmt.Errorf("project creation was unsuccessful, reason: %s ", op.Error.Message)
+			}
+			return nil
+		}
+		time.Sleep(2 * time.Second)
+	}
 
-	return nil
+	return ErrorProjectCreateTooLong
 }
 
 // DeleteProject does the work of actually deleting an existing project in
