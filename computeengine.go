@@ -29,8 +29,8 @@ var DiskProjects = LabeledValues{
 	LabeledValue{Label: "Windows Server", Value: "windows-cloud"},
 }
 
-// regionsCompute will return a list of regions for Compute Engine
-func regionsCompute(project string) ([]string, error) {
+// RegionsComputeList will return a list of regions for Compute Engine
+func RegionsComputeList(project string) ([]string, error) {
 	resp := []string{}
 
 	svc, err := getComputeService(project)

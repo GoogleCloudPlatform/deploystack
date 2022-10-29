@@ -432,7 +432,7 @@ func TestGetRegions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := regions(tc.project, tc.product)
+			got, err := RegionsList(tc.project, tc.product)
 
 			// BUG: getting weird regions intertmittenly popping up. Solving with this hack
 			if tc.product == "compute" {

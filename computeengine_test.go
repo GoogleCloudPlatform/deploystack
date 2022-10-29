@@ -32,7 +32,7 @@ func TestGetComputeRegions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := regionsCompute(tc.project)
+			got, err := RegionsComputeList(tc.project)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}

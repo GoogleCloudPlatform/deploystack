@@ -349,13 +349,13 @@ func projectPrompt() (string, error) {
 	return result, nil
 }
 
-// regions will return a list of regions depending on product type
-func regions(project, product string) ([]string, error) {
+// RegionsList will return a list of RegionsList depending on product type
+func RegionsList(project, product string) ([]string, error) {
 	switch product {
 	case "compute":
-		return regionsCompute(project)
+		return RegionsComputeList(project)
 	case "functions":
-		return ListFunctionRegions(project)
+		return RegionsFunctionsList(project)
 	case "run":
 		return regionsRun(project)
 	}
@@ -366,7 +366,7 @@ func regions(project, product string) ([]string, error) {
 // RegionManage promps a user to select a region.
 func RegionManage(project, product, def string) (string, error) {
 	fmt.Printf("Polling for regions...\n")
-	regions, err := regions(project, product)
+	regions, err := RegionsList(project, product)
 	if err != nil {
 		return "", err
 	}

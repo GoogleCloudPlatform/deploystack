@@ -30,8 +30,8 @@ func getCloudFunctionsService(project string) (*cloudfunctions.Service, error) {
 	return svc, nil
 }
 
-// ListFunctionRegions will return a list of regions for Cloud Functions
-func ListFunctionRegions(project string) ([]string, error) {
+// RegionsFunctionsList will return a list of regions for Cloud Functions
+func RegionsFunctionsList(project string) ([]string, error) {
 	resp := []string{}
 
 	if err := EnableService(project, "cloudfunctions.googleapis.com"); err != nil {
