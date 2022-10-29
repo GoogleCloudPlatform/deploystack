@@ -3,7 +3,6 @@ package dsgithub
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -123,7 +122,7 @@ func NewMetaFromLocal(path string) (Meta, error) {
 
 	b, err := gcloudtf.Extract(s.Config.PathTerraform)
 	if err != nil {
-		log.Fatalf("couldn't extract from TF file: %s", err)
+		return d, fmt.Errorf("couldn't extract from TF file: %s", err)
 	}
 
 	d.Terraform = *b
