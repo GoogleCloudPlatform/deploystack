@@ -19,12 +19,12 @@ import (
 func Extract(path string) (*Blocks, error) {
 	mod, dia := tfconfig.LoadModule(path)
 	if dia.Err() != nil {
-		return nil, fmt.Errorf("terraform config problem %+v", dia)
+		return nil, fmt.Errorf("terraform config problem %s", dia.Err())
 	}
 
 	b, err := NewBlocks(mod)
 	if dia.Err() != nil {
-		return nil, fmt.Errorf("could not properly parse blocks %+v", err)
+		return nil, fmt.Errorf("could not properly parse blocks %s", err)
 	}
 
 	return b, nil
