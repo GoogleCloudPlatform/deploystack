@@ -26,6 +26,7 @@ func getSecretManagerService() (*secretmanager.Service, error) {
 	return svc, nil
 }
 
+// CreateSecret creates a secret and populates the lastest version with a payload.
 func CreateSecret(project, name, payload string) error {
 	svc, err := getSecretManagerService()
 	if err != nil {
@@ -57,6 +58,21 @@ func CreateSecret(project, name, payload string) error {
 
 	if _, err := svc.Projects.Secrets.AddVersion(result.Name, version).Do(); err != nil {
 		return fmt.Errorf("failed to create secret versiopn: %s", err)
+	}
+
+	return nil
+}
+
+// DeleteSecret deletes a secret
+func DeleteSecret(project, name string) error {
+	svc, err := getSecretManagerService()
+	if err != nil {
+		return err
+	}
+
+	secret := fmt.Sprintf("projects/%s/secrets/%s", project, name)
+	if _, err := svc.Projects.Secrets.Delete(secret).Do(); err != nil {
+		return fmt.Errorf("could not delete secret (%s) in project (%s)", name, project)
 	}
 
 	return nil
