@@ -360,7 +360,7 @@ func RegionsList(project, product string) ([]string, error) {
 		return regionsRun(project)
 	}
 
-	return []string{}, fmt.Errorf("invalid product requested: %s", product)
+	return []string{}, fmt.Errorf("invalid product (%s) requested: %s ", product, err)
 }
 
 // RegionManage promps a user to select a region.
