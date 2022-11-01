@@ -40,3 +40,17 @@ func CreateCloudBuildTrigger(project string, trigger cloudbuild.BuildTrigger) (*
 
 	return result, nil
 }
+
+// DeleteCloudBuildTrigger deletes a build trigger in a given project
+func DeleteCloudBuildTrigger(project string, triggerid string) error {
+	svc, err := getCloudBuildService()
+	if err != nil {
+		return err
+	}
+
+	if _, err := svc.Projects.Triggers.Delete(project, triggerid).Do(); err != nil {
+		return fmt.Errorf("cannot delete trigger: %s", err)
+	}
+
+	return nil
+}
