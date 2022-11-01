@@ -427,7 +427,7 @@ func TestGetRegions(t *testing.T) {
 		"computeRegions":   {product: "compute", project: projectID, want: cRegions, err: nil},
 		"functionsRegions": {product: "functions", project: projectID, want: fRegions, err: nil},
 		"runRegions":       {product: "run", project: projectID, want: rRegions, err: nil},
-		"GarbageInout":     {product: "An outdated iPad", project: projectID, want: []string{}, err: fmt.Errorf("invalid product requested: %s", "An outdated iPad")},
+		"GarbageInout":     {product: "An outdated iPad", project: projectID, want: []string{}, err: fmt.Errorf("invalid product (%s) requested", "An outdated iPad")},
 	}
 
 	for name, tc := range tests {
@@ -442,7 +442,7 @@ func TestGetRegions(t *testing.T) {
 
 			if err != tc.err {
 				if err.Error() != tc.err.Error() {
-					t.Fatalf("expected: no error, got: %v", err)
+					t.Fatalf("expected: error (%v), got: %v", tc.err, err)
 				}
 			}
 
