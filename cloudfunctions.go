@@ -57,6 +57,7 @@ func ListFunctionRegions(project string) ([]string, error) {
 	return resp, nil
 }
 
+// DeployFunction deploys a Cloud Function.
 func DeployFunction(project, region string, f cloudfunctions.CloudFunction) error {
 	svc, err := getCloudFunctionsService(project)
 	if err != nil {
@@ -69,6 +70,36 @@ func DeployFunction(project, region string, f cloudfunctions.CloudFunction) erro
 	}
 
 	return nil
+}
+
+// DeleteFunction deletes a Cloud Function.
+func DeleteFunction(project, region, name string) error {
+	svc, err := getCloudFunctionsService(project)
+	if err != nil {
+		return err
+	}
+	fname := fmt.Sprintf("projects/%s/locations/%s/functions/%s", project, region, name)
+	if _, err := svc.Projects.Locations.Functions.Delete(fname).Do(); err != nil {
+		return fmt.Errorf("could not create function: %s", err)
+	}
+
+	return nil
+}
+
+// GetFunction gets the details of a Cloud Function.
+func GetFunction(project, region, name string) (*cloudfunctions.CloudFunction, error) {
+	svc, err := getCloudFunctionsService(project)
+	if err != nil {
+		return nil, err
+	}
+
+	fname := fmt.Sprintf("projects/%s/locations/%s/functions/%s", project, region, name)
+	result, err := svc.Projects.Locations.Functions.Get(fname).Do()
+	if err != nil {
+		return nil, fmt.Errorf("could not get function: %s", err)
+	}
+
+	return result, nil
 }
 
 func GenerateFunctionSignedURL(project, region string) (string, error) {
