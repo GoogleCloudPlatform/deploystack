@@ -233,6 +233,7 @@ type GCPResource struct {
 	Product    string     `json:"product" yaml:"product"`
 	APICalls   []string   `json:"api_calls" yaml:"api_calls"`
 	TestConfig TestConfig `json:"test_config" yaml:"test_config"`
+	AliasOf    string     `json:"aliasof" yaml:"aliasof"`
 }
 
 // TestConfig is the information needed to automate test creation.
