@@ -95,10 +95,11 @@ var (
 	ErrorProjectDidNotFinish = fmt.Errorf("project creation did not complete in a timely manner")
 
 	// Divider is a text element that draws a horizontal line
-	Divider   = ""
-	opts      = option.WithCredentialsFile("")
-	credspath = ""
-	globalctx = context.Background()
+	Divider          = ""
+	opts             = option.WithCredentialsFile("")
+	credspath        = ""
+	globalctx        = context.Background()
+	defaultUserAgent = "deploystack"
 )
 
 func init() {

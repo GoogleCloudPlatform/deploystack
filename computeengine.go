@@ -68,6 +68,7 @@ func getComputeService(project string) (*compute.Service, error) {
 	}
 
 	computeService = svc
+	svc.UserAgent = defaultUserAgent
 
 	return svc, nil
 }

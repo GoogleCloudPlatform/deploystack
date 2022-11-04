@@ -26,6 +26,7 @@ func getCloudFunctionsService(project string) (*cloudfunctions.Service, error) {
 	}
 
 	cloudfunctionsService = svc
+	svc.UserAgent = defaultUserAgent
 
 	return svc, nil
 }
