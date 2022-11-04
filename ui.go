@@ -3,8 +3,10 @@ package deploystack
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -401,4 +403,158 @@ func Start() {
 	colorPrintln("Press the Enter Key to continue", TERMCYANB)
 	var input string
 	fmt.Scanln(&input)
+}
+
+func longestLength(sl []LabeledValue) int {
+	longest := 0
+
+	for _, v := range sl {
+		if len(v.Label) > longest {
+			longest = len(cleanTerminalCharsFromString(v.Label))
+		}
+	}
+
+	return longest
+}
+
+func cleanTerminalCharsFromString(s string) string {
+	r := s
+	r = strings.ReplaceAll(r, TERMCYAN, "")
+	r = strings.ReplaceAll(r, TERMCYANB, "")
+	r = strings.ReplaceAll(r, TERMCYANREV, "")
+	r = strings.ReplaceAll(r, TERMRED, "")
+	r = strings.ReplaceAll(r, TERMREDB, "")
+	r = strings.ReplaceAll(r, TERMREDREV, "")
+	r = strings.ReplaceAll(r, TERMCLEAR, "")
+	r = strings.ReplaceAll(r, TERMCLEARSCREEN, "")
+	r = strings.ReplaceAll(r, TERMGREY, "")
+
+	return r
+}
+
+func printSetting(name, value string, longest int) {
+	sp := buildSpacer(name, longest)
+	formatted := strings.Title(strings.ReplaceAll(name, "_", " "))
+	fmt.Printf("%s:%s %s%s%s\n", formatted, sp, TERMCYANB, value, TERMCLEAR)
+}
+
+func printWithDefault(idx, width int, value, label, def string) bool {
+	sp := buildSpacer(cleanTerminalCharsFromString(label), width)
+
+	if value == def {
+		fmt.Printf("%s%2d) %s %s%s", TERMCYANB, idx, label, sp, TERMCLEAR)
+		return true
+	}
+	fmt.Printf("%2d) %s %s", idx, label, sp)
+	return false
+}
+
+func buildSpacer(s string, l int) string {
+	sb := strings.Builder{}
+
+	for i := 0; i < l-len(s); i++ {
+		sb.WriteString(" ")
+	}
+
+	return sb.String()
+}
+
+// listSelect presents a slice of strings as a list from which
+// the user can select. It also highlights and preesnts behvaior for the
+// default
+func listSelect(sl LabeledValues, def string) LabeledValue {
+	itemCount := len(sl)
+	halfcount := int(math.Ceil(float64(itemCount / 2)))
+	width := longestLength(sl)
+	defaultExists := false
+
+	if itemCount < 11 {
+		for i, v := range sl {
+			if ok := printWithDefault(i+1, width, v.Value, v.Label, def); ok {
+				defaultExists = true
+			}
+			fmt.Printf("\n")
+		}
+	} else {
+
+		if float64(halfcount) < float64(itemCount)/2 {
+			halfcount++
+		}
+
+		for i := 0; i < halfcount; i++ {
+			v := sl[i]
+			if ok := printWithDefault(i+1, width, v.Value, v.Label, def); ok {
+				defaultExists = true
+			}
+
+			idx := i + halfcount + 1
+
+			if idx > itemCount {
+				fmt.Printf("\n")
+				break
+			}
+
+			v2 := sl[idx-1]
+			if ok := printWithDefault(idx, width, v2.Value, v2.Label, def); ok {
+				defaultExists = true
+			}
+
+			fmt.Printf("\n")
+		}
+	}
+
+	answer := sl.find(def)
+	reader := bufio.NewReader(os.Stdin)
+	if defaultExists {
+		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, answer.Label, TERMCLEAR)
+	} else {
+		fmt.Printf("Choose number from list.\n")
+	}
+
+	for {
+		fmt.Print("> ")
+		text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+
+		if len(text) == 0 {
+			break
+		}
+
+		opt, err := strconv.Atoi(text)
+		if err != nil || opt > itemCount {
+			fmt.Printf("Please enter a numeric between 1 and %d\n", itemCount)
+			fmt.Printf("You entered %s\n", text)
+			continue
+		}
+
+		answer = sl[opt-1]
+		break
+
+	}
+
+	return answer
+}
+
+// Section allows for division of tasks in a DeployStack
+type Section struct {
+	Title string
+}
+
+// NewSection creates an initialized section
+func NewSection(title string) Section {
+	return Section{Title: title}
+}
+
+// Open prints out the header for a Section.
+func (s Section) Open() {
+	fmt.Printf("%s\n", Divider)
+	fmt.Printf("%s%s%s\n", TERMCYAN, s.Title, TERMCLEAR)
+	fmt.Printf("%s\n", Divider)
+}
+
+// Close prints out the footer for a Section.
+func (s Section) Close() {
+	fmt.Printf("%s\n", Divider)
+	fmt.Printf("%s%s - %sdone%s\n", TERMCYAN, s.Title, TERMCYANB, TERMCLEAR)
+	fmt.Printf("%s\n", Divider)
 }
