@@ -397,6 +397,8 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 	s.AddSetting("stack_name", s.Config.Name)
 
+	defaultUserAgent = fmt.Sprintf("deploystack/%s", s.Config.Name)
+
 	if c.Project && len(project) == 0 {
 		project, projectName, err = ProjectManage()
 		if err != nil {
