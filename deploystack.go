@@ -934,11 +934,13 @@ func ProjectIDSet(project string) error {
 	return nil
 }
 
+// LabeledValue is a struct that contains a label/value pair
 type LabeledValue struct {
 	Value string
 	Label string
 }
 
+// LabeledValues is collection of LabledValues
 type LabeledValues []LabeledValue
 
 func (l LabeledValues) find(value string) LabeledValue {
