@@ -186,7 +186,8 @@ It's going to take around [0;36m5 minutes[0m
 Choose number from list, or just [enter] for [1;36m3[0m
 > 
 [46mProject Details [0m 
-Nodes: [1;36m3[0m
+Stack Name: [1;36mdeploystack[0m
+Nodes:      [1;36m3[0m
 `,
 			err: nil,
 		},
@@ -207,7 +208,8 @@ It's going to take around [0;36m5 minutes[0m
 Enter value, or just [enter] for [1;36m3[0m
 > 
 [46mProject Details [0m 
-Nodes: [1;36m3[0m
+Stack Name: [1;36mdeploystack[0m
+Nodes:      [1;36m3[0m
 `,
 			err: nil,
 		},
