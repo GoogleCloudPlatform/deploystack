@@ -26,14 +26,17 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/nyaruka/phonenumbers"
 	"google.golang.org/api/option"
+	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/yaml.v2"
 )
 
@@ -188,6 +191,7 @@ func HandleFlags() Flags {
 // a DeployStack and export out a tfvars file for terraform part of solution.
 type Config struct {
 	Title                string            `json:"title" yaml:"title"`
+	Name                 string            `json:"name" yaml:"name"`
 	Description          string            `json:"description" yaml:"description"`
 	Duration             int               `json:"duration" yaml:"duration"`
 	Project              bool              `json:"collect_project" yaml:"collect_project"`
@@ -372,7 +376,7 @@ func (c Config) PrintHeader() {
 func (c Config) Process(s *Stack, output string) error {
 	Start()
 	c.PrintHeader()
-	var project, region, zone, projectnumber, billingaccount, projectName string
+	var project, region, zone, projectnumber, billingaccount, projectName, name string
 	var err error
 
 	for i, v := range c.HardSet {
@@ -383,6 +387,15 @@ func (c Config) Process(s *Stack, output string) error {
 	projectName = s.GetSetting("project_name")
 	region = s.GetSetting("region")
 	zone = s.GetSetting("zone")
+	name = s.Config.Name
+
+	if name == "" {
+		err = s.Config.ComputeName()
+		if err != nil {
+			handleProcessError(fmt.Errorf("could not determine stack name: %s", err))
+		}
+	}
+	s.AddSetting("stack_name", s.Config.Name)
 
 	if c.Project && len(project) == 0 {
 		project, projectName, err = ProjectManage()
@@ -483,6 +496,40 @@ func (c Config) Process(s *Stack, output string) error {
 
 	s.PrintSettings()
 	s.TerraformFile(output)
+	return nil
+}
+
+// ComputeName uses the git repo in the working directory to compute the
+// shortname for the application.
+func (c *Config) ComputeName() error {
+	repo, err := git.PlainOpen(".")
+	if err != nil {
+		return fmt.Errorf("could not open local git directory: %s", err)
+	}
+
+	remotes, err := repo.Remotes()
+	if err != nil {
+		return err
+	}
+
+	remote := ""
+	for _, v := range remotes {
+		for _, url := range v.Config().URLs {
+			if strings.Contains(strings.ToLower(url), "googlecloudplatform") {
+				remote = strings.ToLower(url)
+			}
+		}
+	}
+	u, err := url.Parse(remote)
+	if err != nil {
+		return fmt.Errorf("could not parse git url: %s", err)
+	}
+
+	shortname := filepath.Base(u.Path)
+	shortname = strings.ReplaceAll(shortname, ".git", "")
+	shortname = strings.ReplaceAll(shortname, "deploystack-", "")
+	c.Name = shortname
+
 	return nil
 }
 
@@ -797,6 +844,10 @@ func (s Stack) PrintSettings() {
 
 	fmt.Printf("\n%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
+	if s, ok := s.Settings["stack_name"]; ok && len(s) > 0 {
+		printSetting("stack_name", s, longest)
+	}
+
 	if s, ok := s.Settings["project_name"]; ok && len(s) > 0 {
 		printSetting("project_name", s, longest)
 	}
@@ -811,7 +862,10 @@ func (s Stack) PrintSettings() {
 
 	ordered := []string{}
 	for i, v := range s.Settings {
-		if i == "project_id" || i == "project_number" || i == "project_name" {
+		if i == "project_id" ||
+			i == "project_number" ||
+			i == "project_name" ||
+			i == "stack_name" {
 			continue
 		}
 		if len(v) < 1 {
