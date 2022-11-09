@@ -618,7 +618,8 @@ func (s *Stack) findAndReadConfig() (Config, error) {
 	}
 
 	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		return config, fmt.Errorf("config file not present, looking for deploystack.json or .deploystack/deploystack.json")
+		wd, _ := os.Getwd()
+		return config, fmt.Errorf("config file not present, looking for deploystack.json or .deploystack/deploystack.json in (%s)", wd)
 	}
 
 	content, err := ioutil.ReadFile(configPath)
@@ -704,7 +705,8 @@ func (s *Stack) FindAndReadRequired() error {
 
 	messagePath, err := s.findDSFolder(config, "messages")
 	if err != nil {
-		return fmt.Errorf("unable to locate messages folder: %s", err)
+		wd, _ := os.Getwd()
+		return fmt.Errorf("unable to locate messages folder in (%s): %s", wd, err)
 	}
 	config.PathMessages = messagePath
 
