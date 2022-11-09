@@ -16,13 +16,13 @@ package deploystack
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
@@ -54,22 +54,20 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestFindAndReadConfig(t *testing.T) {
+func TestReadConfig(t *testing.T) {
+	errUnableToRead := errors.New("unable to read config file: ")
 	tests := map[string]struct {
 		path string
-		path string
 		want Stack
-		err  string
+		err  error
 	}{
 		"error": {
-			file: "z.json",
-			desc: "z.txt",
+			path: "sadasd",
 			want: Stack{},
-			err:  fmt.Errorf("unable to read config file: open z.json: no such file or directory"),
+			err:  errUnableToRead,
 		},
 		"no_custom": {
-			file: "test_files/no_customs/deploystack.json",
-			desc: "test_files/no_customs/deploystack.txt",
+			path: "test_files/no_customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -81,11 +79,10 @@ func TestFindAndReadConfig(t *testing.T) {
 					RegionDefault: "us-central1",
 				},
 			},
-			err: "",
+			err: nil,
 		},
 		"custom": {
-			file: "test_files/customs/deploystack.json",
-			desc: "test_files/customs/deploystack.txt",
+			path: "test_files/customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -100,11 +97,10 @@ func TestFindAndReadConfig(t *testing.T) {
 					},
 				},
 			},
-			err: "",
+			err: nil,
 		},
 		"custom_options": {
-			file: "test_files/customs_options/deploystack.json",
-			desc: "test_files/customs_options/deploystack.txt",
+			path: "test_files/customs_options",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -125,60 +121,54 @@ func TestFindAndReadConfig(t *testing.T) {
 					},
 				},
 			},
-			err: "",
+			err: nil,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			oldPWD, err := os.Getwd()
-			if err != nil {
-				t.Fatalf("error retriving wd for test: %s", err)
-			}
-
-			err = os.Chdir(tc.path)
-			if err != nil && !strings.Contains(err.Error(), "no such file or directory") {
-				t.Fatalf("error setting wd for test: %s", err)
-			}
 			s := NewStack()
-			err := s.ReadConfig(tc.file, tc.desc)
+			oldWD, _ := os.Getwd()
+			os.Chdir(tc.path)
 
-			if err != tc.err {
+			err := s.FindAndReadRequired()
+
+			if errors.Is(err, tc.err) {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
 				}
 			}
 
-			compareValues(tc.want.Config.Title, s.Config.Title, t)
-			compareValues(tc.want.Config.Description, s.Config.Description, t)
-			compareValues(tc.want.Config.Duration, s.Config.Duration, t)
-			compareValues(tc.want.Config.Project, s.Config.Project, t)
-			compareValues(tc.want.Config.Region, s.Config.Region, t)
-			compareValues(tc.want.Config.RegionType, s.Config.RegionType, t)
-			compareValues(tc.want.Config.RegionDefault, s.Config.RegionDefault, t)
+			os.Chdir(oldWD)
+
+			compareValues("Title", tc.want.Config.Title, s.Config.Title, t)
+			compareValues("Description", tc.want.Config.Description, s.Config.Description, t)
+			compareValues("Duration", tc.want.Config.Duration, s.Config.Duration, t)
+			compareValues("Project", tc.want.Config.Project, s.Config.Project, t)
+			compareValues("Region", tc.want.Config.Region, s.Config.Region, t)
+			compareValues("RegionType", tc.want.Config.RegionType, s.Config.RegionType, t)
+			compareValues("RegionDefault", tc.want.Config.RegionDefault, s.Config.RegionDefault, t)
 			for i, v := range s.Config.CustomSettings {
-				compareValues(tc.want.Config.CustomSettings[i], v, t)
+				compareValues(v.Name, tc.want.Config.CustomSettings[i], v, t)
 			}
 		})
 	}
 }
 
-func compareValues(want interface{}, got interface{}, t *testing.T) {
+func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
-		t.Fatalf("expected: \n|%v|\ngot: \n|%v|", want, got)
+		t.Fatalf("%s: expected: \n|%v|\ngot: \n|%v|", label, want, got)
 	}
 }
 
 func TestProcessCustoms(t *testing.T) {
 	tests := map[string]struct {
-		file string
-		desc string
+		path string
 		want string
 		err  error
 	}{
 		"custom_options": {
-			file: "test_files/customs_options/deploystack.json",
-			desc: "test_files/customs_options/deploystack.txt",
+			path: "test_files/customs_options",
 			want: `********************************************************************************[1;36mDeploystack [0m
 Deploystack will walk you through setting some options for the  
 stack this solutions installs. 
@@ -196,14 +186,12 @@ It's going to take around [0;36m5 minutes[0m
 Choose number from list, or just [enter] for [1;36m3[0m
 > 
 [46mProject Details [0m 
-Stack Name: [1;36mdeploystack[0m
-Nodes:      [1;36m3[0m
+Nodes: [1;36m3[0m
 `,
 			err: nil,
 		},
 		"custom": {
-			file: "test_files/customs/deploystack.json",
-			desc: "test_files/customs/deploystack.txt",
+			path: "test_files/customs",
 			want: `********************************************************************************[1;36mDeploystack [0m
 Deploystack will walk you through setting some options for the  
 stack this solutions installs. 
@@ -218,8 +206,7 @@ It's going to take around [0;36m5 minutes[0m
 Enter value, or just [enter] for [1;36m3[0m
 > 
 [46mProject Details [0m 
-Stack Name: [1;36mdeploystack[0m
-Nodes:      [1;36m3[0m
+Nodes: [1;36m3[0m
 `,
 			err: nil,
 		},
@@ -228,7 +215,9 @@ Nodes:      [1;36m3[0m
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			s := NewStack()
-			err := s.ReadConfig(tc.file, tc.desc)
+
+			os.Chdir(tc.path)
+			err := s.FindAndReadRequired()
 
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
