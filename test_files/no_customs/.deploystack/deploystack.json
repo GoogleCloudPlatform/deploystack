@@ -1,5 +1,6 @@
 {	
 	"title":"TESTCONFIG",
+	"name":"test",
 	"duration":5,
 	"collect_project":true,
 	"collect_region":true,

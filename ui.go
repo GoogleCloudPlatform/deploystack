@@ -394,9 +394,9 @@ func ZoneManage(project, region string) (string, error) {
 func Start() {
 	fmt.Printf(Divider)
 	colorPrintln("Deploystack", TERMCYANB)
-	fmt.Printf("Deploystack will walk you through setting some options for the  \n")
-	fmt.Printf("stack this solutions installs. \n")
-	fmt.Printf("Most questions have a default that you can choose by hitting the Enter key  \n")
+	fmt.Printf("Deploystack will walk you through setting some options for the\n")
+	fmt.Printf("stack this solutions installs.\n")
+	fmt.Printf("Most questions have a default that you can choose by hitting the Enter key\n")
 	fmt.Printf(Divider)
 	colorPrintln("Press the Enter Key to continue", TERMCYANB)
 	var input string
