@@ -2,7 +2,6 @@ package deploystack
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"reflect"
 	"sort"
@@ -41,7 +40,6 @@ func TestGetBillingAccounts(t *testing.T) {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
 			if !reflect.DeepEqual(tc.want, got) {
-				fmt.Printf("%+v\n", got[0])
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}
 		})
