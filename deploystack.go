@@ -723,32 +723,6 @@ func (s *Stack) FindAndReadRequired() error {
 	return nil
 }
 
-// TODO: deprecate and remove
-// ReadConfig reads in a Config from a json file.
-func (s *Stack) ReadConfig(file, desc string) error {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		return fmt.Errorf("unable to read config file: %s", err)
-	}
-	config, err := NewConfigJSON(content)
-	if err != nil {
-		return fmt.Errorf("unable to parse config file: %s", err)
-	}
-
-	if len(desc) > 0 {
-		description, err := ioutil.ReadFile(desc)
-		if err != nil {
-			return fmt.Errorf("unable to read description file: %s", err)
-		}
-
-		config.Description = string(description)
-	}
-
-	s.Config = config
-
-	return nil
-}
-
 // Process passes through a process call to the underlying config.
 func (s *Stack) Process(output string) error {
 	return s.Config.Process(s, output)

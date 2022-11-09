@@ -55,20 +55,17 @@ func TestMain(m *testing.M) {
 
 func TestReadConfig(t *testing.T) {
 	tests := map[string]struct {
-		file string
-		desc string
+		path string
 		want Stack
 		err  error
 	}{
 		"error": {
-			file: "z.json",
-			desc: "z.txt",
+			path: "z.json",
 			want: Stack{},
-			err:  fmt.Errorf("unable to read config file: open z.json: no such file or directory"),
+			err:  fmt.Errorf("unable to parse config file: config file not present, looking for deploystack.json or .deploystack/deploystack.json"),
 		},
 		"no_custom": {
-			file: "test_files/no_customs/deploystack.json",
-			desc: "test_files/no_customs/deploystack.txt",
+			path: "test_files/no_customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -83,8 +80,7 @@ func TestReadConfig(t *testing.T) {
 			err: nil,
 		},
 		"custom": {
-			file: "test_files/customs/deploystack.json",
-			desc: "test_files/customs/deploystack.txt",
+			path: "test_files/customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -102,8 +98,7 @@ func TestReadConfig(t *testing.T) {
 			err: nil,
 		},
 		"custom_options": {
-			file: "test_files/customs_options/deploystack.json",
-			desc: "test_files/customs_options/deploystack.txt",
+			path: "test_files/customs_options",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -131,8 +126,18 @@ func TestReadConfig(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			s := NewStack()
-			err := s.ReadConfig(tc.file, tc.desc)
+			oldPWD, err := os.Getwd()
+			if err != nil {
+				t.Fatalf("error retriving wd for test: %s", err)
+			}
 
+			err = os.Chdir(tc.path)
+
+			err = s.FindAndReadRequired()
+			os.Chdir(oldPWD)
+			if err != nil && tc.err == nil {
+				t.Fatalf("error finding configs: %s", err)
+			}
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
@@ -161,14 +166,12 @@ func compareValues(want interface{}, got interface{}, t *testing.T) {
 
 func TestProcessCustoms(t *testing.T) {
 	tests := map[string]struct {
-		file string
-		desc string
+		path string
 		want string
 		err  error
 	}{
 		"custom_options": {
-			file: "test_files/customs_options/deploystack.json",
-			desc: "test_files/customs_options/deploystack.txt",
+			path: "test_files/customs_options",
 			want: `********************************************************************************[1;36mDeploystack [0m
 Deploystack will walk you through setting some options for the  
 stack this solutions installs. 
@@ -192,8 +195,7 @@ Nodes:      [1;36m3[0m
 			err: nil,
 		},
 		"custom": {
-			file: "test_files/customs/deploystack.json",
-			desc: "test_files/customs/deploystack.txt",
+			path: "test_files/customs",
 			want: `********************************************************************************[1;36mDeploystack [0m
 Deploystack will walk you through setting some options for the  
 stack this solutions installs. 
@@ -218,7 +220,19 @@ Nodes:      [1;36m3[0m
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			s := NewStack()
-			err := s.ReadConfig(tc.file, tc.desc)
+
+			oldPWD, err := os.Getwd()
+			if err != nil {
+				t.Fatalf("error retriving wd for test: %s", err)
+			}
+
+			err = os.Chdir(tc.path)
+
+			err = s.FindAndReadRequired()
+			os.Chdir(oldPWD)
+			if err != nil {
+				t.Fatalf("error finding configs: %s", err)
+			}
 
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
