@@ -763,6 +763,10 @@ func (s Stack) Terraform() string {
 			continue
 		}
 
+		if label == "stack_name" {
+			continue
+		}
+
 		if len(val) < 1 {
 			continue
 		}
