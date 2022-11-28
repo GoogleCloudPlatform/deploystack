@@ -1,4 +1,0 @@
-PROJECT=ds-tester-$1
-TRIGGERNAME=Test-Procedure
-
-gcloud beta builds triggers run  $TRIGGERNAME --project $PROJECT
