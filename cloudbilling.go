@@ -143,6 +143,9 @@ func ListBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBil
 	return res, nil
 }
 
+// ListBillingEnabledProjects queries the billing accounts a user has access to
+// to generate a list of projects for each billing account. Will hopefully
+// reduce the number of calls made to billing api
 func ListBillingEnabledProjects() (map[string]bool, error) {
 	r := map[string]bool{}
 	svc, err := getCloudbillingService()
