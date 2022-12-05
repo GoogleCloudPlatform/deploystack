@@ -26,7 +26,7 @@ func main() {
 	s := deploystack.NewStack()
 	s.ProcessFlags(f)
 
-	if err := s.ReadConfig("deploystack.json", "deploystack.txt"); err != nil {
+	if err := s.FindAndReadRequired(); err != nil {
 		log.Fatalf("could not read config file: %s", err)
 	}
 

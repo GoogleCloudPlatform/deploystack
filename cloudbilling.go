@@ -96,12 +96,25 @@ func ListBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBil
 	if err != nil {
 		return res, err
 	}
+
+	projs, err := ListBillingEnabledProjects()
+	if err != nil {
+		return res, err
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(len(p))
 
 	for _, v := range p {
 		go func(p *cloudresourcemanager.Project) {
 			defer wg.Done()
+
+			if _, ok := projs[p.ProjectId]; ok {
+				pwb := ProjectWithBilling{Name: p.Name, ID: p.ProjectId, BillingEnabled: true}
+				res = append(res, pwb)
+				return
+			}
+
 			// Getting random quota errors when somebody had too many projects.
 			// sleeping randoming for a second fixed it.
 			// I don't think these requests can be fixed by batching.
@@ -121,12 +134,43 @@ func ListBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBil
 
 				pwb := ProjectWithBilling{Name: p.Name, ID: p.ProjectId, BillingEnabled: tmp.BillingEnabled}
 				res = append(res, pwb)
+				return
 			}
 		}(v)
 	}
 	wg.Wait()
 
 	return res, nil
+}
+
+// ListBillingEnabledProjects queries the billing accounts a user has access to
+// to generate a list of projects for each billing account. Will hopefully
+// reduce the number of calls made to billing api
+func ListBillingEnabledProjects() (map[string]bool, error) {
+	r := map[string]bool{}
+	svc, err := getCloudbillingService()
+	if err != nil {
+		return r, err
+	}
+
+	bas, err := ListBillingAccounts()
+	if err != nil {
+		return r, err
+	}
+
+	for _, v := range bas {
+		result, err := svc.BillingAccounts.Projects.List(v.Name).Do()
+		if err != nil {
+			return r, err
+		}
+		for _, v := range result.ProjectBillingInfo {
+			if v.BillingEnabled {
+				r[v.ProjectId] = true
+			}
+		}
+	}
+
+	return r, nil
 }
 
 func randomInRange(min, max int) int {
