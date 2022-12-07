@@ -52,8 +52,14 @@ func TestGetProjects(t *testing.T) {
 			sort.Strings(tc.want)
 			sort.Strings(gotfiltered)
 
-			if len(gotfiltered) != len(tc.want) {
+			pass := false
+			for _, v := range gotfiltered {
+				if v == tc.want[0] {
+					pass = true
+				}
+			}
 
+			if !pass {
 				t.Logf("Expected:%s\n", tc.want)
 				t.Logf("Got     :%s", gotfiltered)
 				t.Fatalf("expected: %v, got: %v", len(tc.want), len(gotfiltered))
@@ -61,9 +67,6 @@ func TestGetProjects(t *testing.T) {
 
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
-			}
-			if !reflect.DeepEqual(tc.want, gotfiltered) {
-				t.Fatalf("expected: %v, got: %v", tc.want, gotfiltered)
 			}
 		})
 	}
