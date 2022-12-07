@@ -97,10 +97,10 @@ func ListBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBil
 		return res, err
 	}
 
-	projs, err := ListBillingEnabledProjects()
-	if err != nil {
-		return res, err
-	}
+	projs, _ := ListBillingEnabledProjects()
+	// if err != nil {
+	// 	return res, err
+	// }
 
 	var wg sync.WaitGroup
 	wg.Add(len(p))
