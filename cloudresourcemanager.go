@@ -48,6 +48,21 @@ func ProjectNumber(id string) (string, error) {
 	return resp, nil
 }
 
+// ProjectParent returns the parent of an input project
+func ProjectParent(id string) (*cloudresourcemanager.ResourceId, error) {
+	svc, err := getCloudResourceManagerService()
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := svc.Projects.Get(id).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return results.Parent, nil
+}
+
 // ListProjects gets a list of the ListProjects a user has access to
 func ListProjects() ([]ProjectWithBilling, error) {
 	resp := []ProjectWithBilling{}

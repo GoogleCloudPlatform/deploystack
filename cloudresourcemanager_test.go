@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"google.golang.org/api/cloudresourcemanager/v1"
 )
 
 func TestGetProjectNumbers(t *testing.T) {
@@ -18,6 +20,27 @@ func TestGetProjectNumbers(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got, err := ProjectNumber(tc.input)
+			if err != nil {
+				t.Fatalf("expected: no error, got: %v", err)
+			}
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestGetProjectParent(t *testing.T) {
+	tests := map[string]struct {
+		input string
+		want  *cloudresourcemanager.ResourceId
+	}{
+		"1": {input: creds["project_id"], want: &cloudresourcemanager.ResourceId{Id: creds["parent"], Type: creds["parent_type"]}},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := ProjectParent(tc.input)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}

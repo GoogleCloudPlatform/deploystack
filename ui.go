@@ -251,10 +251,12 @@ func extractAccount(s string) string {
 // ProjectManage promps a user to select a project.
 func ProjectManage() (string, string, error) {
 	createString := "CREATE NEW PROJECT"
-	project, err := ProjectID()
+	currentProject, err := ProjectID()
 	if err != nil {
 		return "", "", err
 	}
+
+	project := currentProject
 
 	projects, err := ListProjects()
 	if err != nil {
@@ -283,7 +285,7 @@ func ProjectManage() (string, string, error) {
 	project = lv.Value
 
 	if project == createString {
-		project, err = projectPrompt()
+		project, err = projectPrompt(currentProject)
 		if err != nil {
 			return "", "", err
 		}
@@ -298,7 +300,7 @@ func ProjectManage() (string, string, error) {
 }
 
 // projectPrompt manages the interaction of creating a project, including prompts.
-func projectPrompt() (string, error) {
+func projectPrompt(currentProject string) (string, error) {
 	result := ""
 	sec1 := NewSection("Creating the project")
 
@@ -321,7 +323,12 @@ func projectPrompt() (string, error) {
 			continue
 		}
 
-		if err := CreateProject(text, "", ""); err != nil {
+		parent, err := ProjectParent(currentProject)
+		if err != nil {
+			return "", fmt.Errorf("could not determine proper parent for project: %s ", err)
+		}
+
+		if err := CreateProject(text, parent.Id, parent.Type); err != nil {
 			fmt.Printf("%sProject name could not be created %s\n", TERMREDREV, TERMCLEAR)
 			fmt.Printf("%sReason: %s %s\n", TERMREDB, err, TERMCLEAR)
 			fmt.Printf("%sPlease choose another. %s\n", TERMREDREV, TERMCLEAR)
