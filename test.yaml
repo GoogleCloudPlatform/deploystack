@@ -21,6 +21,7 @@ steps:
      args:
       - -c
       - |
+        mkdir -p /root/.ssh/
         touch /root/.ssh/id_rsa
         chmod 400 /root/.ssh/id_rsa
         cp test_files/computenames_repos/known_hosts.github /root/.ssh/known_hosts
