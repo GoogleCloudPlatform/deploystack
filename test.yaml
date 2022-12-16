@@ -22,7 +22,7 @@ steps:
       - -c
       - |
         chmod 400 /root/.ssh/id_rsa
-        cp known_hosts.github /root/.ssh/known_hosts
+        cp test_files/computenames_repos/known_hosts.github /root/.ssh/known_hosts
    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
      entrypoint: bash
      args: ['-c','GOOGLE_APPLICATION_CREDENTIALS=creds.json && ./update']
