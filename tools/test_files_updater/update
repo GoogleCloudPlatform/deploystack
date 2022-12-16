@@ -12,3 +12,10 @@ echo "Billing JSON"
 cat $DIR/billing_accounts.json
 
 echo "Region files have been updated."
+
+cd "../../test_files/computenames_repos"
+git clone git@github.com:googlecloudplatform/deploystack-gcs-to-bq-with-least-privileges.git
+git clone https://github.com/GoogleCloudPlatform/deploystack-single-vm.git
+mkdir folder-no-git
+
+echo "Git repos for testing have been cloned"

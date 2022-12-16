@@ -536,3 +536,50 @@ func TestConfig(t *testing.T) {
 		}
 	}
 }
+
+func TestComputeNames(t *testing.T) {
+	tests := map[string]struct {
+		input string
+		want  string
+		err   error
+	}{
+		"http": {
+			"test_files/computenames_repos/deploystack-single-vm",
+			"single-vm",
+			nil,
+		},
+		"ssh": {
+			"test_files/computenames_repos/deploystack-gcs-to-bq-with-least-privileges",
+			"gcs-to-bq-with-least-privileges",
+			nil,
+		},
+		"nogit": {
+			"test_files/computenames_repos/folder-no-git",
+			"",
+			fmt.Errorf("could not open local git directory: repository does not exist"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			oldWD, _ := os.Getwd()
+			os.Chdir(tc.input)
+			defer os.Chdir(oldWD)
+
+			s := NewStack()
+			s.FindAndReadRequired()
+			err := s.Config.ComputeName()
+
+			os.Chdir(oldWD)
+
+			if !(tc.err == nil && err == nil) {
+				if errors.Is(tc.err, err) {
+					t.Fatalf("error expected: %v, got: %v", tc.err, err)
+				}
+			}
+
+			if !reflect.DeepEqual(tc.want, s.Config.Name) {
+				t.Fatalf("expected: %v, got: %v", tc.want, s.Config.Name)
+			}
+		})
+	}
+}
