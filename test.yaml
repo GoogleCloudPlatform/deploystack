@@ -13,22 +13,29 @@
 # limitations under the License.
 
 steps:
-   - name: 'bash'
-     args: ['-c','echo $$CREDS > creds.json']
-     secretEnv: ['CREDS']
    - name: 'gcr.io/cloud-builders/git'
+     secretEnv: ['SSH_KEY']
      entrypoint: 'bash'
      args:
-      - -c
-      - |
-        mkdir -p /root/.ssh/
-        touch /root/.ssh/id_rsa
-        chmod 400 /root/.ssh/id_rsa
-        cp test_files/computenames_repos/known_hosts.github /root/.ssh/known_hosts
+     - -c
+     - |
+       ssh-keyscan -t rsa github.com > known_hosts.github
+       echo "$$SSH_KEY" >> /root/.ssh/id_rsa
+       chmod 400 /root/.ssh/id_rsa
+       cp known_hosts.github /root/.ssh/known_hosts
+     volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+   - name: 'bash'
+     args: ['-c','echo $$CREDS > creds.json']
+     secretEnv: ['CREDS']     
    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
      entrypoint: bash
      args: ['-c','GOOGLE_APPLICATION_CREDENTIALS=creds.json && ./update']
      dir: "tools/test_files_updater/"
+     volumes:
+     - name: 'ssh'
+       path: /root/.ssh
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ]
@@ -45,3 +52,5 @@ availableSecrets:
   secretManager:
   - versionName: projects/$PROJECT_ID/secrets/creds/versions/latest
     env: 'CREDS'
+  - versionName: projects/$PROJECT_ID/secrets/ssh-private-key/versions/latest
+    env: 'SSH_KEY'
