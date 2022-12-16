@@ -522,6 +522,11 @@ func (c *Config) ComputeName() error {
 			}
 		}
 	}
+
+	// Fixes bug where ssh called repos have issues. Super edge case, but
+	// now its all testable
+	remote = strings.ReplaceAll(remote, "git@github.com:", "https://github.com/")
+
 	u, err := url.Parse(remote)
 	if err != nil {
 		return fmt.Errorf("could not parse git url: %s", err)
