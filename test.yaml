@@ -23,9 +23,6 @@ steps:
       - |
         chmod 400 /root/.ssh/id_rsa
         cp known_hosts.github /root/.ssh/known_hosts
-     volumes:
-      - name: 'ssh'
-        path: /root/.ssh  
    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
      entrypoint: bash
      args: ['-c','GOOGLE_APPLICATION_CREDENTIALS=creds.json && ./update']
