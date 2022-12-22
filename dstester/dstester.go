@@ -13,11 +13,28 @@ import (
 )
 
 var (
-	// ErrorURLFail is thrown when a http poll fails
-	ErrorURLFail = fmt.Errorf("the url did not return 200 after time allotted")
-	// ErrorCheckFail is thrown when a check fails
-	ErrorCheckFail = fmt.Errorf("there was an issue with the poll")
+	gcloud    = ""
+	terraform = ""
 )
+
+func init() {
+	gcloud = which("gcloud")
+	terraform = which("terraform")
+}
+
+func which(command string) string {
+	cmd := exec.Command("which")
+	cmd.Args = append(cmd.Args, command)
+	result, _ := cmd.Output()
+
+	return strings.TrimSpace(string(result))
+}
+
+// ErrorURLFail is thrown when a http poll fails
+var ErrorURLFail = fmt.Errorf("the url did not return 200 after time allotted")
+
+// ErrorCheckFail is thrown when a check fails
+var ErrorCheckFail = fmt.Errorf("there was an issue with the poll")
 
 // Terraform is a resource for calling Terraform with a consistent set of
 // variables.
@@ -26,14 +43,24 @@ type Terraform struct {
 	Vars map[string]string // collection of vars passed into terraform call
 }
 
-func (t Terraform) exec(command string, opt ...string) (string, error) {
+func (tf Terraform) exec(command string, opt ...string) (string, error) {
+	cmd := tf.cmd(command, opt...)
+
+	dat, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("error: '%s'", string(dat))
+	}
+	return string(dat), nil
+}
+
+func (tf Terraform) cmd(command string, opt ...string) *exec.Cmd {
 	cmd := exec.Command("terraform")
-	cmd.Args = append(cmd.Args, fmt.Sprintf("-chdir=%s", t.Dir))
+	cmd.Args = append(cmd.Args, fmt.Sprintf("-chdir=%s", tf.Dir))
 	cmd.Args = append(cmd.Args, command)
 
 	if command == "apply" || command == "destroy" {
 		cmd.Args = append(cmd.Args, "-auto-approve")
-		for i, v := range t.Vars {
+		for i, v := range tf.Vars {
 			cmd.Args = append(cmd.Args, "-var")
 			cmd.Args = append(cmd.Args, fmt.Sprintf("%s=%s", i, v))
 		}
@@ -45,37 +72,38 @@ func (t Terraform) exec(command string, opt ...string) (string, error) {
 		}
 	}
 
-	dat, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("error: '%s'", string(dat))
-	}
-	return string(dat), nil
+	return cmd
+}
+
+func (tf Terraform) string(command string, opt ...string) string {
+	cmd := tf.cmd(command, opt...)
+	return cmd.String()
 }
 
 // Output extracts a terraform output variable from the terraform state
-func (t Terraform) Output(variable string) (string, error) {
-	return t.exec("output", variable)
+func (tf Terraform) Output(variable string) (string, error) {
+	return tf.exec("output", variable)
 }
 
 // Init runs a terraform init command
-func (t Terraform) Init() (string, error) {
-	return t.exec("init")
+func (tf Terraform) Init() (string, error) {
+	return tf.exec("init")
 }
 
 // Apply runs a terraform apply command passing in the variables to the command
-func (t Terraform) Apply() (string, error) {
-	return t.exec("apply")
+func (tf Terraform) Apply() (string, error) {
+	return tf.exec("apply")
 }
 
 // Destroy runs a terraform destroy command
-func (t Terraform) Destroy() (string, error) {
-	return t.exec("destroy")
+func (tf Terraform) Destroy() (string, error) {
+	return tf.exec("destroy")
 }
 
 // InitApplyForTest runs terraform init and apply and can output extra
 // information if debug is set to true
-func (t Terraform) InitApplyForTest(test *testing.T, debug bool) {
-	out, err := t.Init()
+func (tf Terraform) InitApplyForTest(test *testing.T, debug bool) {
+	out, err := tf.Init()
 	if err != nil {
 		test.Fatalf("expected no error, got: '%v'", err)
 	}
@@ -84,7 +112,7 @@ func (t Terraform) InitApplyForTest(test *testing.T, debug bool) {
 		test.Logf("init: %s\n", out)
 	}
 
-	out2, err := t.Apply()
+	out2, err := tf.Apply()
 	if err != nil {
 		test.Fatalf("expected no error, got: '%v'", err)
 	}
@@ -98,8 +126,8 @@ func (t Terraform) InitApplyForTest(test *testing.T, debug bool) {
 
 // DestroyForTest runs terraform destroy and can output extra information if
 // debug is set to true
-func (t Terraform) DestroyForTest(test *testing.T, debug bool) {
-	out3, err := t.Destroy()
+func (tf Terraform) DestroyForTest(test *testing.T, debug bool) {
+	out3, err := tf.Destroy()
 	if err != nil {
 		test.Fatalf("expected no error, got: '%v'", err)
 	}
@@ -111,14 +139,14 @@ func (t Terraform) DestroyForTest(test *testing.T, debug bool) {
 	return
 }
 
-// GCPResources is a list of resources
-type GCPResources struct {
-	Items   []GCPResource
+// Resources is a list of resources
+type Resources struct {
+	Items   []Resource
 	Project string
 }
 
 // Init runs through the items in the list and sets some prereqs
-func (gs *GCPResources) Init() {
+func (gs *Resources) Init() {
 	for i, v := range gs.Items {
 		if v.Project == "" {
 			v.Project = gs.Project
@@ -127,19 +155,20 @@ func (gs *GCPResources) Init() {
 	}
 }
 
-// GCPResource represents a resource in Google Cloud that we want to check
-// to see if it exists
-type GCPResource struct {
-	Product   string
-	Name      string
-	Field     string
-	Append    string
-	Project   string
-	Expected  string
-	Arguments map[string]string
+// Resource represents a resource in Google Cloud that we want to check
+// to see if it exists. In most cases a gcloud command will be built using
+// this content
+type Resource struct {
+	Product   string            // Portion of the gcloud command between gcloud and describe
+	Name      string            // The name of the resource to describe
+	Field     string            // The field to use in format directive. Defaults to 'name'
+	Append    string            // A string of content to be added to the end of the command string
+	Project   string            // The GCP project to use for the gcloud command
+	Expected  string            // The exepcted value that will be checking for. Defaults to vaule of Name
+	Arguments map[string]string // A set of key value pairs that will be added to the end of the gcloud command
 }
 
-func (g *GCPResource) desc() *exec.Cmd {
+func (g *Resource) desc() *exec.Cmd {
 	cmd := exec.Command("gcloud")
 
 	for _, v := range strings.Split(g.Product, " ") {
@@ -158,21 +187,48 @@ func (g *GCPResource) desc() *exec.Cmd {
 		cmd.Args = append(cmd.Args, fmt.Sprintf("--%s", i), v)
 	}
 
+	if g.Project != "" {
+		cmd.Args = append(cmd.Args, fmt.Sprintf("--project=%s", g.Project))
+	}
+
 	if g.Field == "" {
 		g.Field = "name"
 	}
 
 	cmd.Args = append(cmd.Args, fmt.Sprintf("--format=value(%s)", g.Field))
 
+	return cmd
+}
+
+func (g *Resource) delete() *exec.Cmd {
+	cmd := exec.Command("gcloud")
+
+	for _, v := range strings.Split(g.Product, " ") {
+		cmd.Args = append(cmd.Args, v)
+	}
+
+	cmd.Args = append(cmd.Args, "delete", g.Name)
+
+	if len(g.Append) > 0 {
+		for _, v := range strings.Split(g.Append, " ") {
+			cmd.Args = append(cmd.Args, v)
+		}
+	}
+
+	for i, v := range g.Arguments {
+		cmd.Args = append(cmd.Args, fmt.Sprintf("--%s", i), v)
+	}
+
 	if g.Project != "" {
 		cmd.Args = append(cmd.Args, fmt.Sprintf("--project=%s", g.Project))
 	}
+	cmd.Args = append(cmd.Args, "-q")
 
 	return cmd
 }
 
-// Describe runs a gcloud describe call to ensure that the resource exists
-func (g *GCPResource) Describe() (string, error) {
+// Exists runs a gcloud describe call to ensure that the resource exists
+func (g *Resource) Exists() (string, error) {
 	cmd := g.desc()
 
 	dat, err := cmd.CombinedOutput()
@@ -184,9 +240,9 @@ func (g *GCPResource) Describe() (string, error) {
 	return out, nil
 }
 
-// DescribeCommand gives the string for  a gcloud describe call to ensure that
+// existsString gives the string for  a gcloud describe call to ensure that
 // the resource exists
-func (g *GCPResource) DescribeCommand() string {
+func (g *Resource) existsString() string {
 	cmd := g.desc()
 
 	for i, v := range cmd.Args {
@@ -200,12 +256,17 @@ func (g *GCPResource) DescribeCommand() string {
 	return cmd.String()
 }
 
+func (g *Resource) deleteString() string {
+	cmd := g.delete()
+	return cmd.String()
+}
+
 // TextExistence runs through and tests for the existence of each of the
 // GCPResources
-func TextExistence(t *testing.T, items []GCPResource) {
+func TextExistence(t *testing.T, items []Resource) {
 	t.Logf("Testing for existence of GCP resources")
 	testsExists := map[string]struct {
-		input GCPResource
+		input Resource
 		want  string
 	}{}
 	for _, v := range items {
@@ -214,22 +275,21 @@ func TextExistence(t *testing.T, items []GCPResource) {
 		}
 
 		testsExists[fmt.Sprintf("Test %s %s exists", v.Product, v.Name)] = struct {
-			input GCPResource
+			input Resource
 			want  string
 		}{v, v.Expected}
 	}
 
 	for name, tc := range testsExists {
 		t.Run(name, func(t *testing.T) {
-			got, err := tc.input.Describe()
+			got, err := tc.input.Exists()
 			if err != nil {
-
+				debug := strings.ReplaceAll(tc.input.existsString(), gcloud, "gcloud")
 				if strings.Contains(err.Error(), "was not found") {
-					debug := strings.ReplaceAll(tc.input.DescribeCommand(), which("gcloud"), "gcloud")
 					t.Fatalf("expected item to exist, it did not\n To debug:\n %s", debug)
 				}
 
-				t.Fatalf("expected no error, got: '%v'", err)
+				t.Fatalf("expected no error, got: '%v' To debug:\n %s", err, debug)
 			}
 
 			if !reflect.DeepEqual(tc.want, got) {
@@ -246,29 +306,22 @@ func TextExistence(t *testing.T, items []GCPResource) {
 	}
 }
 
-func which(s string) string {
-	cmd := exec.Command("which")
-	cmd.Args = append(cmd.Args, s)
-	result, _ := cmd.Output()
-	return strings.TrimSpace(string(result))
-}
-
 // TextNonExistence runs through and tests for the lack of existence of each of
 // the GCPResources
-func TextNonExistence(t *testing.T, items []GCPResource) {
+func TextNonExistence(t *testing.T, items []Resource) {
 	t.Logf("Testing for non-existence of GCP resources")
 	testsNotExists := map[string]struct {
-		input GCPResource
+		input Resource
 	}{}
 	for _, v := range items {
 		testsNotExists[fmt.Sprintf("Test %s %s does not exist", v.Product, v.Name)] = struct {
-			input GCPResource
+			input Resource
 		}{v}
 	}
 
 	for name, tc := range testsNotExists {
 		t.Run(name, func(t *testing.T) {
-			_, err := tc.input.Describe()
+			_, err := tc.input.Exists()
 			if err == nil {
 				t.Fatalf("expected error, got no error")
 			}
@@ -276,15 +329,19 @@ func TextNonExistence(t *testing.T, items []GCPResource) {
 	}
 }
 
-// TestChecks Cycles through the checks and runs them.
-func TestChecks(t *testing.T, polls []Check, tf Terraform) {
-	t.Logf("Testing polls to check resource readiness")
+// TestOperations Cycles through the operations and runs them.
+func TestOperations(t *testing.T, operations Operations, tf Terraform) {
+	if len(operations.Items) == 0 {
+		return
+	}
+
+	t.Logf(operations.Label)
 	testsPolls := map[string]struct {
-		input Check
+		input Operation
 	}{}
-	for _, v := range polls {
-		testsPolls[fmt.Sprintf("Test poll %s for %s", v.Output, v.Type)] = struct {
-			input Check
+	for _, v := range operations.Items {
+		testsPolls[fmt.Sprintf("Operation %s %s", operations.Key, v.Type)] = struct {
+			input Operation
 		}{v}
 	}
 
@@ -295,15 +352,15 @@ func TestChecks(t *testing.T, polls []Check, tf Terraform) {
 				t.Fatalf("expected no error, got: '%v'", err)
 			}
 			if !ok {
-				t.Fatalf("poll failed")
+				t.Fatalf("operation failed")
 			}
 		})
 	}
 }
 
-// HTTPPoll polls a url attempts number of times with a delay of interval
+// httpPoll polls a url attempts number of times with a delay of interval
 // between attempts
-func HTTPPoll(url, query string, interval, attempts int) (bool, error) {
+func httpPoll(url, query string, interval, attempts int) (bool, error) {
 	urlToUse := strings.ReplaceAll(url, "\"", "")
 	urlToUse = strings.TrimSpace(urlToUse)
 	client := http.Client{
@@ -322,8 +379,8 @@ func HTTPPoll(url, query string, interval, attempts int) (bool, error) {
 	return false, fmt.Errorf("%s debug: %s", ErrorURLFail, urlToUse)
 }
 
-// CustomCheck allows for a custom bash command to be run as set in "custom"
-func CustomCheck(command string) (bool, error) {
+// customCheck allows for a custom bash command to be run as set in "custom"
+func customCheck(command string) (bool, error) {
 	sl := strings.Split(command, " ")
 
 	cmd := exec.Command(sl[0])
@@ -336,9 +393,15 @@ func CustomCheck(command string) (bool, error) {
 	return true, nil
 }
 
-// Check represents an intersitial check to be run between terraform apply and
+// sleep is an operation that allows for delays in operations
+func sleep(interval int) (bool, error) {
+	time.Sleep(time.Duration(interval) * time.Second)
+	return true, nil
+}
+
+// Operation represents an intersitial check to be run between terraform apply and
 // terraform destroy
-type Check struct {
+type Operation struct {
 	Output   string
 	Type     string
 	Attempts int
@@ -348,9 +411,9 @@ type Check struct {
 }
 
 // Do performs the operation that the check is supposed to run
-func (c Check) Do(tf Terraform) (bool, error) {
-	i := c.Interval
-	a := c.Attempts
+func (o Operation) Do(tf Terraform) (bool, error) {
+	i := o.Interval
+	a := o.Attempts
 
 	if a == 0 {
 		a = 50
@@ -360,16 +423,149 @@ func (c Check) Do(tf Terraform) (bool, error) {
 		i = 5
 	}
 
-	val, err := tf.Output(c.Output)
+	val, err := tf.Output(o.Output)
 	if err != nil {
 		return false, err
 	}
-	switch c.Type {
+	switch o.Type {
 	case "httpPoll":
-		return HTTPPoll(val, c.Query, a, i)
+		return httpPoll(val, o.Query, a, i)
+	case "sleep":
+		return sleep(i)
 	case "customCheck":
-		return CustomCheck(c.Custom)
+		return customCheck(o.Custom)
 	}
 
 	return false, ErrorCheckFail
+}
+
+// Operations are a set of operations to perform and certain times in the lifecycle
+// of a test
+type Operations struct {
+	Items []Operation
+	Label string
+	Key   string
+}
+
+// Add an operation to the list of operations
+func (os *Operations) Add(o Operation) {
+	os.Items = append(os.Items, o)
+}
+
+// OperationsSets are the whole collection of all of the pre and post operations
+type OperationsSets map[string]Operations
+
+// Add an operation to the underlying set of Operations.
+func (os *OperationsSets) Add(target string, o Operation) {
+	tmp := (*os)[target]
+	tmp.Add(o)
+	(*os)[target] = tmp
+}
+
+// NewOperationsSet returns the default set of operation sets
+func NewOperationsSet() OperationsSets {
+	ops := OperationsSets{}
+
+	ops["preTest"] = Operations{
+		Key:   "preTest",
+		Label: "Operations to be run before any tests",
+	}
+	ops["preApply"] = Operations{
+		Key:   "preApply",
+		Label: "Operations to be run after terraform init and before terraform apply",
+	}
+	ops["postApply"] = Operations{
+		Key:   "postApply",
+		Label: "Operations to be run after terraform apply",
+	}
+	ops["preDestroy"] = Operations{
+		Key:   "preDestroy",
+		Label: "Operations to be run after terraform apply and before terraform destroy",
+	}
+	ops["postDestroy"] = Operations{
+		Key:   "postDestroy",
+		Label: "Operations to be run after terraform destroy",
+	}
+	ops["postTest"] = Operations{
+		Key:   "postTest",
+		Label: "Operations to be after any tests",
+	}
+
+	return ops
+}
+
+// TestStack runs the test for an entire Deploystack test given the right inputs
+func TestStack(t *testing.T, tf Terraform, resources Resources, ops OperationsSets, debug bool) {
+	TestOperations(t, ops["preTest"], tf)
+	resources.Init()
+	TestOperations(t, ops["preApply"], tf)
+	tf.InitApplyForTest(t, debug)
+	TestOperations(t, ops["postApply"], tf)
+	TextExistence(t, resources.Items)
+	TestOperations(t, ops["preDestroy"], tf)
+	tf.DestroyForTest(t, debug)
+	TestOperations(t, ops["postDestroy"], tf)
+	TextNonExistence(t, resources.Items)
+	TestOperations(t, ops["postTest"], tf)
+}
+
+// DebugCommands will spit out all of the executables that the framework calls
+// under the covers for debugging purposes
+func DebugCommands(t *testing.T, tf Terraform, resources Resources) {
+	fmt.Printf("gcloud describe commands \n")
+	for _, v := range resources.Items {
+		output := strings.ReplaceAll(v.existsString(), gcloud, "gcloud")
+		fmt.Printf("%s\n", output)
+	}
+	fmt.Println("")
+
+	fmt.Printf("gcloud delete commands \n")
+	for _, v := range resources.Items {
+		cmd := v.delete().String()
+		output := strings.ReplaceAll(cmd, gcloud, "gcloud")
+		fmt.Printf("%s\n", output)
+	}
+	fmt.Println("")
+
+	fmt.Printf("terraform commands \n")
+	cmds := []string{"init", "apply", "destroy"}
+
+	for _, v := range cmds {
+		output := tf.string(v)
+		output = strings.ReplaceAll(output, terraform, "terraform")
+		fmt.Printf("%s\n", output)
+	}
+}
+
+// Clean calls the deletion version of all of the gcloud commands to wipe out
+// all of the resources in the project
+func Clean(t *testing.T, tf Terraform, resources Resources) {
+	for _, v := range resources.Items {
+		cmd := v.delete()
+
+		// Big issue is that storage buckets needs to be emptied before they are
+		// deleted
+		if strings.Contains(cmd.String(), "alpha storage buckets") {
+			rm := exec.Command("gcloud")
+			rm.Args = append(rm.Args, "alpha", "storage", "rm", "-r")
+
+			for _, v := range cmd.Args {
+				if strings.Contains(v, "gs://") {
+					rm.Args = append(rm.Args, fmt.Sprintf("%s/**", v))
+				}
+			}
+
+			dat, err := rm.CombinedOutput()
+			if err != nil {
+				t.Logf("bucket removal issue: %s", string(dat))
+			}
+
+		}
+
+		dat, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Logf("delete issue: %s", string(dat))
+		}
+
+	}
 }
