@@ -130,11 +130,13 @@ func (gs *GCPResources) Init() {
 // GCPResource represents a resource in Google Cloud that we want to check
 // to see if it exists
 type GCPResource struct {
-	Product string
-	Name    string
-	Field   string
-	Append  string
-	Project string
+	Product   string
+	Name      string
+	Field     string
+	Append    string
+	Project   string
+	Expected  string
+	Arguments map[string]string
 }
 
 func (g *GCPResource) desc() *exec.Cmd {
@@ -150,6 +152,10 @@ func (g *GCPResource) desc() *exec.Cmd {
 		for _, v := range strings.Split(g.Append, " ") {
 			cmd.Args = append(cmd.Args, v)
 		}
+	}
+
+	for i, v := range g.Arguments {
+		cmd.Args = append(cmd.Args, fmt.Sprintf("--%s", i), v)
 	}
 
 	if g.Field == "" {
@@ -203,10 +209,14 @@ func TextExistence(t *testing.T, items []GCPResource) {
 		want  string
 	}{}
 	for _, v := range items {
+		if v.Expected == "" {
+			v.Expected = v.Name
+		}
+
 		testsExists[fmt.Sprintf("Test %s %s exists", v.Product, v.Name)] = struct {
 			input GCPResource
 			want  string
-		}{v, v.Name}
+		}{v, v.Expected}
 	}
 
 	for name, tc := range testsExists {
@@ -223,6 +233,13 @@ func TextExistence(t *testing.T, items []GCPResource) {
 			}
 
 			if !reflect.DeepEqual(tc.want, got) {
+				// artifact registry call leaks stuff into stderr
+				if strings.Contains(got, "Repository Size") {
+					if strings.Contains(got, tc.want) {
+						return
+					}
+				}
+
 				t.Fatalf("expected: '%v', got: '%v'", tc.want, got)
 			}
 		})
