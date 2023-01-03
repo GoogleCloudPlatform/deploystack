@@ -4,7 +4,7 @@ go 1.19
 
 require github.com/GoogleCloudPlatform/deploystack v0.0.0-20221104194723-690b8e66d4b1
 
-replace github.com/GoogleCloudPlatform/deploystack => ../
+replace github.com/GoogleCloudPlatform/deploystack => ../../
 
 require (
 	cloud.google.com/go v0.105.0 // indirect

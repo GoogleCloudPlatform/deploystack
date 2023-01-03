@@ -8,12 +8,12 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-WORKDIR /usr/src/app/cmd/basic
+WORKDIR /usr/src/app/cmd/basic-docker
 
 RUN go mod download && go mod verify
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -v -o /usr/local/bin/deploystack ./...
 
-FROM scratch AS runtime
+FROM gcr.io/distroless/base AS runtime
 
 COPY --from=builder /usr/local/bin/deploystack /deploystack
 
