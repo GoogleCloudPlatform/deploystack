@@ -1,0 +1,19 @@
+{	
+	"title":"YESORNOSITE",
+	"name":"storage-hosting-with-domain",
+	"duration":5,
+	"documentation_link": "https://yesornosite.deploystack.dev/",
+	"collect_project": true,
+	"custom_settings": [
+		{
+		  "name": "Roles",
+		  "description": "Please choose the role that you need for this project",
+		  "options": [
+				"roles/reviewer|Project Reviewer",
+				"roles/owner|Project Owner",
+				"roles/vison.reader|Cloud Vision Reader"
+		  ],
+		  "default" : "roles/owner"
+		}
+	  ]
+}
