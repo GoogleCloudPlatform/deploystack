@@ -899,28 +899,6 @@ func (s Section) Close() {
 	fmt.Printf("%s\n", Divider)
 }
 
-// ProjectID gets the currently set default project
-func ProjectID() (string, error) {
-	cmd := exec.Command("gcloud", "config", "get-value", "project")
-	out, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("cannot get project id: %s ", err)
-	}
-
-	return strings.TrimSpace(string(out)), nil
-}
-
-// ProjectIDSet sets the currently set default project
-func ProjectIDSet(project string) error {
-	cmd := exec.Command("gcloud", "config", "set", "project", project)
-	_, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("cannot set project id: %s ", err)
-	}
-
-	return nil
-}
-
 // LabeledValue is a struct that contains a label/value pair
 type LabeledValue struct {
 	Value string

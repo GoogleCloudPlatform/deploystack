@@ -3,6 +3,7 @@ package deploystack
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
@@ -198,6 +199,28 @@ func GrantProjectIAMRole(project, role, principal string) error {
 
 	if _, err := cloudResourceManagerService.Projects.SetIamPolicy(project, &setReq).Do(); err != nil {
 		return fmt.Errorf("cannot set iam policy role (%s) for project (%s): %s", role, project, err)
+	}
+
+	return nil
+}
+
+// ProjectID gets the currently set default project
+func ProjectID() (string, error) {
+	cmd := exec.Command("gcloud", "config", "get-value", "project")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("cannot get project id: %s ", err)
+	}
+
+	return strings.TrimSpace(string(out)), nil
+}
+
+// ProjectIDSet sets the currently set default project
+func ProjectIDSet(project string) error {
+	cmd := exec.Command("gcloud", "config", "set", "project", project)
+	_, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("cannot set project id: %s ", err)
 	}
 
 	return nil
