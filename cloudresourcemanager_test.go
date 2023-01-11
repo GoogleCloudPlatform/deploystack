@@ -132,3 +132,29 @@ func TestCreateProject(t *testing.T) {
 		})
 	}
 }
+
+func TestGetProject(t *testing.T) {
+	expected := projectID
+
+	old, err := ProjectID()
+	if err != nil {
+		t.Fatalf("retrieving old project: expected: no error, got: %v", err)
+	}
+
+	if err := ProjectIDSet(expected); err != nil {
+		t.Fatalf("setting expecgted project: expected: no error, got: %v", err)
+	}
+
+	got, err := ProjectID()
+	if err != nil {
+		t.Fatalf("expected: no error, got: %v", err)
+	}
+
+	if !reflect.DeepEqual(expected, got) {
+		t.Fatalf("expected: %v, got: %v", expected, got)
+	}
+
+	if err := ProjectIDSet(old); err != nil {
+		t.Fatalf("resetting old project: expected: no error, got: %v", err)
+	}
+}
