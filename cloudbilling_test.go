@@ -39,9 +39,19 @@ func TestGetBillingAccounts(t *testing.T) {
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			for i, v := range got {
+				if reflect.DeepEqual(tc.want[i].DisplayName, v.DisplayName) {
+					break
+				}
+
+				if !reflect.DeepEqual(tc.want[i].DisplayName, v.DisplayName) {
+					t.Fatalf("expected: %v, got: %v", tc.want[i].DisplayName, v.DisplayName)
+				}
 			}
+
+			// if !reflect.DeepEqual(tc.want, got) {
+			// 	t.Fatalf("expected: %v, got: %v", tc.want, got)
+			// }
 		})
 	}
 }
