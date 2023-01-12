@@ -202,3 +202,18 @@ func GrantProjectIAMRole(project, role, principal string) error {
 
 	return nil
 }
+
+// CheckProject confirms that a project actually exists
+func CheckProject(project string) bool {
+	svc, err := getCloudResourceManagerService()
+	if err != nil {
+		return false
+	}
+
+	_, err = svc.Projects.Get(project).Do()
+	if err != nil {
+		return false
+	}
+
+	return true
+}
