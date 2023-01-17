@@ -2,6 +2,7 @@ package deploystack
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -665,6 +666,273 @@ func TestExtractAccount(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := extractAccount(tc.input)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestNewLabeledValue(t *testing.T) {
+	tests := map[string]struct {
+		input string
+		want  LabeledValue
+	}{
+		"Basic":     {input: "test", want: LabeledValue{"test", "test", false}},
+		"Delimited": {input: "test|Test Value", want: LabeledValue{"test", "Test Value", false}},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := NewLabeledValue(tc.input)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestLabeledValueRender(t *testing.T) {
+	tests := map[string]struct {
+		input LabeledValue
+		want  string
+	}{
+		"Basic":   {input: LabeledValue{"test", "test", false}, want: " 1) test "},
+		"Default": {input: LabeledValue{"test", "test", true}, want: "[1;36m 1) test [0m"},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.input.RenderUI(1, len(tc.input.Label))
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestNewLabeledValues(t *testing.T) {
+	tests := map[string]struct {
+		input        []string
+		defaultValue string
+		want         LabeledValues
+	}{
+		"Basic":       {input: []string{"test"}, defaultValue: "", want: LabeledValues{{"test", "test", false}}},
+		"WithDefault": {input: []string{"test"}, defaultValue: "test", want: LabeledValues{{"test", "test", true}}},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := NewLabeledValues(tc.input, tc.defaultValue)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestLabeledValuesSelectUI(t *testing.T) {
+	tests := map[string]struct {
+		list  LabeledValues
+		input string
+		want  LabeledValue
+	}{
+		"Basic": {
+			list: LabeledValues{
+				{"test1", "test1", true},
+				{"test2", "test2", false},
+			},
+			input: "2\n",
+			want:  LabeledValue{"test2", "test2", false},
+		},
+		"Default": {
+			list: LabeledValues{
+				{"test1", "test1", true},
+				{"test2", "test2", false},
+			},
+			input: "\n",
+			want:  LabeledValue{"test1", "test1", true},
+		},
+		"No Default": {
+			list: LabeledValues{
+				{"test1", "test1", false},
+				{"test2", "test2", false},
+			},
+			input: "test\n",
+			want:  LabeledValue{"", "", false},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			orig := os.Stdin
+
+			testReader, err := ioutil.TempFile("", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer testReader.Close()
+
+			os.Stdin = testReader
+
+			_, err = io.WriteString(testReader, tc.input)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, err = testReader.Seek(0, os.SEEK_SET)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			got := tc.list.SelectUI()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+
+			os.Stdin = orig
+		})
+	}
+}
+
+func TestLabeledValuesRender(t *testing.T) {
+	tests := map[string]struct {
+		input LabeledValues
+		want  string
+	}{
+		"Basic":   {input: LabeledValues{{"test", "test", false}}, want: " 1) test \n"},
+		"Default": {input: LabeledValues{{"test", "test", true}}, want: "[1;36m 1) test [0m\n"},
+		"2Columns": {
+			input: LabeledValues{
+				{"test1", "test1", true},
+				{"test2", "test2", false},
+				{"test3", "test3", false},
+				{"test4", "test4", false},
+				{"test5", "test5", false},
+				{"test6", "test6", false},
+				{"test7", "test7", false},
+				{"test8", "test8", false},
+				{"test9", "test9", false},
+				{"test10", "test10", false},
+				{"test11", "test11", false},
+				{"test12", "test12", false},
+			},
+			want: `[1;36m 1) test1  [0m 7) test7  
+ 2) test2   8) test8  
+ 3) test3   9) test9  
+ 4) test4  10) test10 
+ 5) test5  11) test11 
+ 6) test6  12) test12 
+`,
+		},
+		"2ColumnsOdd": {
+			input: LabeledValues{
+				{"test1", "test1", true},
+				{"test2", "test2", false},
+				{"test3", "test3", false},
+				{"test4", "test4", false},
+				{"test5", "test5", false},
+				{"test6", "test6", false},
+				{"test7", "test7", false},
+				{"test8", "test8", false},
+				{"test9", "test9", false},
+				{"test10", "test10", false},
+				{"test11", "test11", false},
+			},
+			want: `[1;36m 1) test1  [0m 7) test7  
+ 2) test2   8) test8  
+ 3) test3   9) test9  
+ 4) test4  10) test10 
+ 5) test5  11) test11 
+ 6) test6  
+`,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.input.RenderListUI()
+			if !reflect.DeepEqual(tc.want, got) {
+				fmt.Println(diff.Diff(got, tc.want))
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestLabeledValuesGetDefaultValue(t *testing.T) {
+	tests := map[string]struct {
+		input LabeledValues
+		want  LabeledValue
+	}{
+		"Basic":       {input: LabeledValues{{"test", "test", false}}, want: LabeledValue{"", "", false}},
+		"WithDefault": {input: LabeledValues{{"test", "test", true}}, want: LabeledValue{"test", "test", true}},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.input.GetDefault()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestLabeledValuesSort(t *testing.T) {
+	tests := map[string]struct {
+		input LabeledValues
+		want  LabeledValues
+	}{
+		"Basic": {
+			input: LabeledValues{{"test2", "test2", false}, {"test1", "test1", false}},
+			want:  LabeledValues{{"test1", "test1", false}, {"test2", "test2", false}},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc.input.Sort()
+			if !reflect.DeepEqual(tc.want, tc.input) {
+				t.Fatalf("expected: %v, got: %v", tc.want, tc.input)
+			}
+		})
+	}
+}
+
+func TestLabeledValuesLongestLen(t *testing.T) {
+	tests := map[string]struct {
+		input LabeledValues
+		want  int
+	}{
+		"Basic": {
+			input: LabeledValues{{"test2", "test2", false}, {"test1", "test1", false}, {"test1test1", "test1test1", false}},
+			want:  10,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.input.LongestLen()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestCleanTerminalChars(t *testing.T) {
+	tests := map[string]struct {
+		input string
+		want  string
+	}{
+		"Basic": {input: " 1) test ", want: " 1) test "},
+		"Chars": {input: "[1;36m 1) test [0m", want: " 1) test "},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := cleanTerminalChars(tc.input)
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}

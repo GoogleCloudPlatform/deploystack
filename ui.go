@@ -3,8 +3,10 @@ package deploystack
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -409,3 +411,185 @@ func Start() {
 	var input string
 	fmt.Scanln(&input)
 }
+
+// LabeledValue is a struct that contains a label/value pair
+type LabeledValue struct {
+	Value     string
+	Label     string
+	IsDefault bool
+}
+
+// NewLabeledValue takes a string and converts it to a LabeledValue. If a |
+// delimiter is present it will split into a different label/value
+func NewLabeledValue(s string) LabeledValue {
+	l := LabeledValue{s, s, false}
+
+	if strings.Contains(s, "|") {
+		sl := strings.Split(s, "|")
+		l = LabeledValue{sl[0], sl[1], false}
+	}
+
+	return l
+}
+
+// RenderUI creates a string that will evantually be shown to a user with
+// terminal formatting characters and what not.
+// extracted render function to make unit testing easier
+func (l LabeledValue) RenderUI(index, width int) string {
+	if l.IsDefault {
+		return fmt.Sprintf("%s%2d) %-*s %s", TERMCYANB, index, width, l.Label, TERMCLEAR)
+	}
+	return fmt.Sprintf("%2d) %-*s ", index, width, l.Label)
+}
+
+// LabeledValues is collection of LabledValue structs
+type LabeledValues []LabeledValue
+
+// SelectUI handles showing a user the list of values an allowing them to select
+// one from the list
+func (l LabeledValues) SelectUI() LabeledValue {
+	itemCount := len(l)
+	answer := l.GetDefault()
+	defaultExists := answer == LabeledValue{}
+
+	ui := l.RenderListUI()
+	fmt.Print(ui)
+
+	if defaultExists {
+		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, answer.Label, TERMCLEAR)
+	} else {
+		fmt.Printf("Choose number from list.\n")
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("> ")
+		text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+
+		if len(text) == 0 {
+			break
+		}
+
+		opt, err := strconv.Atoi(text)
+		if err != nil || opt > itemCount {
+			fmt.Printf("Please enter a numeric between 1 and %d\n", itemCount)
+			fmt.Printf("You entered %s\n", text)
+			continue
+		}
+
+		answer = l[opt-1]
+		break
+
+	}
+
+	return answer
+}
+
+// Sort orders the LabeledValues by Label
+func (l *LabeledValues) Sort() {
+	sort.Slice(*l, func(i, j int) bool {
+		return (*l)[i].Label < (*l)[j].Label
+	})
+}
+
+// LongestLen returns the length of longest LABEL in the list
+func (l *LabeledValues) LongestLen() int {
+	longest := 0
+
+	for _, v := range *l {
+		if len(v.Label) > longest {
+			longest = len(cleanTerminalChars(v.Label))
+		}
+	}
+
+	return longest
+}
+
+// GetDefault returns the deafult value of the LabeledValues list
+func (l *LabeledValues) GetDefault() LabeledValue {
+	for _, v := range *l {
+		if v.IsDefault {
+			return v
+		}
+	}
+	return LabeledValue{}
+}
+
+// RenderListUI creates a string that will evantually be shown to a user with
+// terminal formatting characters and what not in a multi column list if there
+// are enough entries
+// extracted render function to make unit testing easier
+func (l LabeledValues) RenderListUI() string {
+	sb := strings.Builder{}
+	width := l.LongestLen()
+	itemCount := len(l)
+
+	if itemCount < 11 {
+		for i, v := range l {
+			sb.WriteString(v.RenderUI(i+1, width))
+			sb.WriteString("\n")
+		}
+	} else {
+		halfcount := int(math.Ceil(float64(itemCount / 2)))
+
+		if float64(halfcount) < float64(itemCount)/2 {
+			halfcount++
+		}
+
+		for i := 0; i < halfcount; i++ {
+			sb.WriteString(l[i].RenderUI(i+1, width))
+
+			idx := i + halfcount + 1
+
+			if idx > itemCount {
+				sb.WriteString("\n")
+				break
+			}
+
+			sb.WriteString(l[idx-1].RenderUI(idx, width))
+
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
+}
+
+// NewLabeledValues takes a slice of strings and returns a list of LabeledValues
+func NewLabeledValues(sl []string, defaultValue string) LabeledValues {
+	r := LabeledValues{}
+
+	for _, v := range sl {
+		val := NewLabeledValue(v)
+		if val.Value == defaultValue {
+			val.IsDefault = true
+		}
+
+		r = append(r, val)
+	}
+	return r
+}
+
+func cleanTerminalChars(s string) string {
+	replacements := []string{
+		TERMCYAN, "",
+		TERMCYANB, "",
+		TERMCYANREV, "",
+		TERMRED, "",
+		TERMREDB, "",
+		TERMREDREV, "",
+		TERMCLEAR, "",
+		TERMCLEARSCREEN, "",
+		TERMGREY, "",
+	}
+
+	replacer := strings.NewReplacer(replacements...)
+
+	r := replacer.Replace(s)
+
+	return r
+}
+
+// Get rid of build spacer
+// Get rid of print with default
