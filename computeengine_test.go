@@ -195,9 +195,9 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 				},
 			},
 			want: LabeledValues{
-				LabeledValue{"centos-cloud", "centos-cloud"},
-				LabeledValue{"debian-cloud", "debian-cloud"},
-				LabeledValue{"windows-cloud", "windows-cloud"},
+				LabeledValue{"centos-cloud", "centos-cloud", false},
+				LabeledValue{"debian-cloud", "debian-cloud", false},
+				LabeledValue{"windows-cloud", "windows-cloud", false},
 			},
 		},
 	}
@@ -205,7 +205,7 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := getListOfImageFamilies(tc.input)
 
-			got.sort()
+			got.Sort()
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
@@ -234,10 +234,10 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 			family:  "centos-server-pro",
 			project: "centos-cloud",
 			want: LabeledValues{
-				LabeledValue{"centos-cloud/centos-server-1", "centos-server-1"},
-				LabeledValue{"centos-cloud/centos-server-2", "centos-server-2"},
-				LabeledValue{"centos-cloud/centos-server-3", "centos-server-3"},
-				LabeledValue{"centos-cloud/centos-server-4", "centos-server-4 (Latest)"},
+				LabeledValue{"centos-cloud/centos-server-1", "centos-server-1", false},
+				LabeledValue{"centos-cloud/centos-server-2", "centos-server-2", false},
+				LabeledValue{"centos-cloud/centos-server-3", "centos-server-3", false},
+				LabeledValue{"centos-cloud/centos-server-4", "centos-server-4 (Latest)", true},
 			},
 		},
 	}
@@ -273,12 +273,12 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 			},
 			family: "n1-standard",
 			want: LabeledValues{
-				LabeledValue{"n1-standard-1", "n1-standard-1 1 Proc"},
-				LabeledValue{"n1-standard-2", "n1-standard-2 2 Proc"},
-				LabeledValue{"n1-standard-4", "n1-standard-4 4 Proc"},
-				LabeledValue{"n1-standard-8", "n1-standard-8 8 Proc"},
-				LabeledValue{"n1-standard-16", "n1-standard-16 16 Proc"},
-				LabeledValue{"n1-standard-32", "n1-standard-32 32 Proc"},
+				LabeledValue{"n1-standard-1", "n1-standard-1 1 Proc", true},
+				LabeledValue{"n1-standard-2", "n1-standard-2 2 Proc", false},
+				LabeledValue{"n1-standard-4", "n1-standard-4 4 Proc", false},
+				LabeledValue{"n1-standard-8", "n1-standard-8 8 Proc", false},
+				LabeledValue{"n1-standard-16", "n1-standard-16 16 Proc", false},
+				LabeledValue{"n1-standard-32", "n1-standard-32 32 Proc", false},
 			},
 		},
 	}
@@ -312,9 +312,9 @@ func TestGetListOfMachineTypeFamily(t *testing.T) {
 				},
 			},
 			want: LabeledValues{
-				LabeledValue{"n1-standard", "n1 standard"},
-				LabeledValue{"n1-highmem", "n1 highmem"},
-				LabeledValue{"a1-highmem", "a1 highmem"},
+				LabeledValue{"n1-standard", "n1 standard", false},
+				LabeledValue{"n1-highmem", "n1 highmem", false},
+				LabeledValue{"a1-highmem", "a1 highmem", false},
 			},
 		},
 	}
@@ -322,7 +322,7 @@ func TestGetListOfMachineTypeFamily(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := getListOfMachineTypeFamily(tc.input)
 
-			tc.want.sort()
+			tc.want.Sort()
 
 			for i, v := range got {
 				if !reflect.DeepEqual(tc.want[i].Value, v.Value) {

@@ -227,14 +227,15 @@ type Custom struct {
 func (c *Custom) Collect() error {
 	fmt.Printf("%s%s: %s\n", TERMCYANB, c.Description, TERMCLEAR)
 
-	def := c.Default
+	defaultValue := c.Default
 
 	if c.PrependProject {
-		def = fmt.Sprintf("%s-%s", c.project, c.Default)
+		defaultValue = fmt.Sprintf("%s-%s", c.project, c.Default)
 	}
 
 	if len(c.Options) > 0 {
-		c.Value = listSelect(toLabeledValueSlice(c.Options), def).Value
+		list := NewLabeledValues(c.Options, defaultValue)
+		c.Value = list.SelectUI().Value
 		return nil
 	}
 
@@ -258,7 +259,7 @@ func (c *Custom) Collect() error {
 		result = text
 
 		if len(text) == 0 {
-			text = def
+			text = defaultValue
 		}
 
 		switch c.Validation {
@@ -826,7 +827,8 @@ func (s Stack) PrintSettings() {
 		keys = append(keys, i)
 	}
 
-	longest := longestLength(toLabeledValueSlice(keys))
+	list := NewLabeledValues(keys, "")
+	longest := list.LongestLen()
 
 	fmt.Printf("\n%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
@@ -869,9 +871,9 @@ func (s Stack) PrintSettings() {
 }
 
 func printSetting(name, value string, longest int) {
-	sp := buildSpacer(name, longest)
 	formatted := strings.Title(strings.ReplaceAll(name, "_", " "))
-	fmt.Printf("%s:%s %s%s%s\n", formatted, sp, TERMCYANB, value, TERMCLEAR)
+	formatted = fmt.Sprintf("%s:", formatted)
+	fmt.Printf("%-*s %s%s%s\n", longest+1, formatted, TERMCYANB, value, TERMCLEAR)
 }
 
 // Section allows for division of tasks in a DeployStack

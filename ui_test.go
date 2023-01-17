@@ -35,6 +35,8 @@ Choose number from list, or just [enter] for [1;36mus-central1-a[0m
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			EnableService(tc.project, "compute.googleapis.com")
+
 			got := captureOutput(func() {
 				ZoneManage(tc.project, tc.region)
 			})
@@ -55,7 +57,7 @@ func TestSelectFromListRender(t *testing.T) {
 		want  string
 	}{
 		"Odd below 10": {
-			input: toLabeledValueSlice([]string{"one", "two", "three"}),
+			input: NewLabeledValues([]string{"one", "two", "three"}, "two"),
 			def:   "two",
 			want: ` 1) one   
 [1;36m 2) two   [0m
@@ -64,7 +66,7 @@ Choose number from list, or just [enter] for [1;36mtwo[0m
 > `,
 		},
 		"Even below 10": {
-			input: toLabeledValueSlice([]string{"one", "two", "three", "four", "five", "six"}),
+			input: NewLabeledValues([]string{"one", "two", "three", "four", "five", "six"}, "six"),
 			def:   "six",
 			want: ` 1) one   
  2) two   
@@ -76,7 +78,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
 		"EvenNumber above 10": {
-			input: toLabeledValueSlice([]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"}),
+			input: NewLabeledValues([]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"}, "six"),
 			def:   "six",
 			want: ` 1) one     7) seven  
  2) two     8) eight  
@@ -88,7 +90,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
 		"OddNumber above 10": {
-			input: toLabeledValueSlice([]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"}),
+			input: NewLabeledValues([]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"}, "six"),
 			def:   "six",
 			want: ` 1) one     7) seven  
  2) two     8) eight  
@@ -100,7 +102,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 > `,
 		},
 		"ProjectList": {
-			input: toLabeledValueSlice([]string{
+			input: NewLabeledValues([]string{
 				"CREATE NEW PROJECT",
 				"aiab-test-project",
 				"appinabox-baslclb-tester",
@@ -139,7 +141,7 @@ Choose number from list, or just [enter] for [1;36msix[0m
 				"zprojectnamedeletefrzcl",
 				"zprojectnamedeletehgzcu",
 				"zprojectnamedeleteveday",
-			}),
+			}, "stackinabox"),
 			def: "stackinabox",
 			want: ` 1) CREATE NEW PROJECT            20) microsites-appinabox          
  2) aiab-test-project             21) microsites-deploystack        
@@ -168,7 +170,7 @@ Choose number from list, or just [enter] for [1;36mstackinabox[0m
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := captureOutput(func() {
-				listSelect(tc.input, tc.def)
+				tc.input.SelectUI()
 			})
 
 			if !reflect.DeepEqual(tc.want, got) {
@@ -511,7 +513,7 @@ func TestMachineTypeManage(t *testing.T) {
 		zone    string
 		want    string
 	}{
-		"Default": {"", projectID, "us-central1-a", "n1-standard-1"},
+		"Default": {"", projectID, "us-central1-a", "t2d-standard-1"},
 	}
 
 	for name, tc := range tests {

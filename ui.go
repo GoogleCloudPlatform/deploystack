@@ -19,7 +19,7 @@ func ImageManage(project string) (string, error) {
 	fmt.Println(Divider)
 
 	colorPrintln("Choose an operating system.", TERMCYANB)
-	ImageTypeProject := listSelect(DiskProjects, DefaultImageProject)
+	ImageTypeProject := DiskProjects.SelectUI()
 
 	fmt.Printf("Polling for %s images...\n", ImageTypeProject.Value)
 	images, err := images(project, ImageTypeProject.Value)
@@ -30,12 +30,12 @@ func ImageManage(project string) (string, error) {
 	families := getListOfImageFamilies(images)
 
 	colorPrintln("Choose a disk family to use for this application.", TERMCYANB)
-	family := listSelect(families, DefaultImageFamily)
+	family := families.SelectUI()
 
 	imagesByFam := getListOfImageTypesByFamily(images, ImageTypeProject.Value, family.Value)
 
 	colorPrintln("Choose a disk type to use for this application.", TERMCYANB)
-	result := listSelect(imagesByFam, imagesByFam[len(imagesByFam)-1].Value)
+	result := imagesByFam.SelectUI()
 
 	return result.Value, nil
 }
@@ -60,12 +60,12 @@ func MachineTypeManage(project, zone string) (string, error) {
 	typefamilies := getListOfMachineTypeFamily(types)
 
 	fmt.Printf("Choose an Machine Type Family\n")
-	familyProject := listSelect(typefamilies, DefaultMachineType)
+	familyProject := typefamilies.SelectUI()
 
 	filteredtypes := getListOfMachineTypeByFamily(types, familyProject.Value)
 
 	fmt.Printf("%sChoose a machine type to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	result := listSelect(filteredtypes, filteredtypes[0].Value)
+	result := filteredtypes.SelectUI()
 
 	return result.Value, nil
 }
@@ -78,7 +78,8 @@ func (gce GCEInstanceConfig) Print(title string) {
 		keys = append(keys, i)
 	}
 
-	longest := longestLength(toLabeledValueSlice(keys))
+	list := NewLabeledValues(keys, "")
+	longest := list.LongestLen()
 
 	colorPrintln(title, TERMCYANREV)
 	exclude := []string{}
@@ -240,7 +241,8 @@ func BillingAccountManage() (string, error) {
 	}
 
 	fmt.Printf("\n%sPlease select one of your billing accounts to use with this project%s.\n", TERMCYAN, TERMCLEAR)
-	result := listSelect(toLabeledValueSlice(labeled), labeled[0])
+	list := NewLabeledValues(labeled, labeled[0])
+	result := list.SelectUI()
 
 	return extractAccount(result.Value), nil
 }
@@ -277,13 +279,14 @@ func ProjectManage() (string, string, error) {
 		lvs = append(lvs, lv)
 	}
 
-	lvs = append([]LabeledValue{{createString, createString}}, lvs...)
+	lvs = append([]LabeledValue{{createString, createString, false}}, lvs...)
+	lvs.SetDefault(project)
 
 	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", TERMCYANB, TERMCLEAR)
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
 	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
 
-	lv := listSelect(lvs, project)
+	lv := lvs.SelectUI()
 	project = lv.Value
 
 	if project == createString {
@@ -291,7 +294,7 @@ func ProjectManage() (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
-		lv = LabeledValue{project, project}
+		lv = LabeledValue{project, project, false}
 	}
 
 	if err := ProjectIDSet(project); err != nil {
@@ -373,14 +376,16 @@ func RegionsList(project, product string) ([]string, error) {
 }
 
 // RegionManage promps a user to select a region.
-func RegionManage(project, product, def string) (string, error) {
+func RegionManage(project, product, defaultValue string) (string, error) {
 	fmt.Printf("Polling for regions...\n")
 	regions, err := RegionsList(project, product)
 	if err != nil {
 		return "", err
 	}
+
 	fmt.Printf("%sChoose a valid region to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	region := listSelect(toLabeledValueSlice(regions), def)
+	list := NewLabeledValues(regions, defaultValue)
+	region := list.SelectUI()
 
 	return region.Value, nil
 }
@@ -394,7 +399,10 @@ func ZoneManage(project, region string) (string, error) {
 	}
 
 	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	zone := listSelect(toLabeledValueSlice(zones), zones[0])
+
+	list := NewLabeledValues(zones, zones[0])
+	zone := list.SelectUI()
+
 	return zone.Value, nil
 }
 
@@ -450,7 +458,7 @@ type LabeledValues []LabeledValue
 func (l LabeledValues) SelectUI() LabeledValue {
 	itemCount := len(l)
 	answer := l.GetDefault()
-	defaultExists := answer == LabeledValue{}
+	defaultExists := answer != LabeledValue{}
 
 	ui := l.RenderListUI()
 	fmt.Print(ui)
@@ -515,6 +523,16 @@ func (l *LabeledValues) GetDefault() LabeledValue {
 		}
 	}
 	return LabeledValue{}
+}
+
+// SetDefault sets the default value of the list
+func (l *LabeledValues) SetDefault(value string) {
+	for i, v := range *l {
+		if v.Value == value {
+			v.IsDefault = true
+			(*l)[i] = v
+		}
+	}
 }
 
 // RenderListUI creates a string that will evantually be shown to a user with
@@ -590,6 +608,3 @@ func cleanTerminalChars(s string) string {
 
 	return r
 }
-
-// Get rid of build spacer
-// Get rid of print with default

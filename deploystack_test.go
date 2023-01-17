@@ -583,3 +583,37 @@ func TestComputeNames(t *testing.T) {
 		})
 	}
 }
+
+func TestPrintSetting(t *testing.T) {
+	tests := map[string]struct {
+		name    string
+		value   string
+		longest int
+		want    string
+	}{
+		"Region": {
+			"region",
+			"test-a",
+			6,
+			"Region: [1;36mtest-a[0m\n",
+		},
+		"Zone": {
+			"zone",
+			"test-a",
+			6,
+			"Zone:   [1;36mtest-a[0m\n",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := captureOutput(func() {
+				printSetting(tc.name, tc.value, tc.longest)
+			})
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected:\n|%s|\ngot:\n|%s|", tc.want, got)
+			}
+		})
+	}
+}
