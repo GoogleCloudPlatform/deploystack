@@ -513,7 +513,8 @@ func TestMachineTypeManage(t *testing.T) {
 		zone    string
 		want    string
 	}{
-		"Default": {"", projectID, "us-central1-a", "t2d-standard-1"},
+		// TODO: force this to use whatever the console sets as default
+		"Default": {"", projectID, "us-central1-a", "t2a-standard-1"},
 	}
 
 	for name, tc := range tests {
