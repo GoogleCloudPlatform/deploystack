@@ -224,6 +224,7 @@ func ProjectIDSet(project string) error {
 	}
 
 	return nil
+}
 
 // CheckProject confirms that a project actually exists
 func CheckProject(project string) bool {
