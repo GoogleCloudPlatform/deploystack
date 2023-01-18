@@ -54,7 +54,13 @@ func TestGetProjectParent(t *testing.T) {
 		input string
 		want  *cloudresourcemanager.ResourceId
 	}{
-		"1": {input: creds["project_id"], want: &cloudresourcemanager.ResourceId{Id: creds["parent"], Type: creds["parent_type"]}},
+		"1": {
+			input: creds["project_id"],
+			want: &cloudresourcemanager.ResourceId{
+				Id:   creds["parent"],
+				Type: creds["parent_type"],
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -104,7 +110,7 @@ func TestGetProjects(t *testing.T) {
 			if !pass {
 				t.Logf("Expected:%s\n", tc.want)
 				t.Logf("Got     :%s", gotfiltered)
-				t.Fatalf("expected: %v, got: %v", len(tc.want), len(gotfiltered))
+				t.Fatalf("expected: %v got: %v", len(tc.want), len(gotfiltered))
 			}
 
 			if err != nil {
@@ -119,9 +125,18 @@ func TestCreateProject(t *testing.T) {
 		input string
 		err   error
 	}{
-		"Too long":  {input: "zprojectnamedeletethisprojectnamehastoomanycharacters", err: ErrorProjectCreateTooLong},
-		"Bad Chars": {input: "ALLUPERCASEDONESTWORK", err: ErrorProjectInvalidCharacters},
-		"Spaces":    {input: "spaces in name", err: ErrorProjectInvalidCharacters},
+		"Too long": {
+			input: "zprojectnamedeletethisprojectnamehastoomanycharacters",
+			err:   ErrorProjectCreateTooLong,
+		},
+		"Bad Chars": {
+			input: "ALLUPERCASEDONESTWORK",
+			err:   ErrorProjectInvalidCharacters,
+		},
+		"Spaces": {
+			input: "spaces in name",
+			err:   ErrorProjectInvalidCharacters,
+		},
 		// "Duplicate": {input: projectID, err: ErrorProjectAlreadyExists},
 	}
 
@@ -134,5 +149,31 @@ func TestCreateProject(t *testing.T) {
 				t.Fatalf("expected: %v, got: %v project: %s", tc.err, err, name)
 			}
 		})
+	}
+}
+
+func TestGetProject(t *testing.T) {
+	expected := projectID
+
+	old, err := ProjectID()
+	if err != nil {
+		t.Fatalf("retrieving old project: expected: no error, got: %v", err)
+	}
+
+	if err := ProjectIDSet(expected); err != nil {
+		t.Fatalf("setting expecgted project: expected: no error, got: %v", err)
+	}
+
+	got, err := ProjectID()
+	if err != nil {
+		t.Fatalf("expected: no error, got: %v", err)
+	}
+
+	if !reflect.DeepEqual(expected, got) {
+		t.Fatalf("expected: %v, got: %v", expected, got)
+	}
+
+	if err := ProjectIDSet(old); err != nil {
+		t.Fatalf("resetting old project: expected: no error, got: %v", err)
 	}
 }

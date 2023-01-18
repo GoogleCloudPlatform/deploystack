@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"net/url"
 	"os"
 	"os/exec"
@@ -228,14 +227,15 @@ type Custom struct {
 func (c *Custom) Collect() error {
 	fmt.Printf("%s%s: %s\n", TERMCYANB, c.Description, TERMCLEAR)
 
-	def := c.Default
+	defaultValue := c.Default
 
 	if c.PrependProject {
-		def = fmt.Sprintf("%s-%s", c.project, c.Default)
+		defaultValue = fmt.Sprintf("%s-%s", c.project, c.Default)
 	}
 
 	if len(c.Options) > 0 {
-		c.Value = listSelect(toLabeledValueSlice(c.Options), def).Value
+		list := NewLabeledValues(c.Options, defaultValue)
+		c.Value = list.SelectUI().Value
 		return nil
 	}
 
@@ -259,7 +259,7 @@ func (c *Custom) Collect() error {
 		result = text
 
 		if len(text) == 0 {
-			text = def
+			text = defaultValue
 		}
 
 		switch c.Validation {
@@ -827,7 +827,8 @@ func (s Stack) PrintSettings() {
 		keys = append(keys, i)
 	}
 
-	longest := longestLength(toLabeledValueSlice(keys))
+	list := NewLabeledValues(keys, "")
+	longest := list.LongestLen()
 
 	fmt.Printf("\n%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
 
@@ -870,9 +871,9 @@ func (s Stack) PrintSettings() {
 }
 
 func printSetting(name, value string, longest int) {
-	sp := buildSpacer(name, longest)
 	formatted := strings.Title(strings.ReplaceAll(name, "_", " "))
-	fmt.Printf("%s:%s %s%s%s\n", formatted, sp, TERMCYANB, value, TERMCLEAR)
+	formatted = fmt.Sprintf("%s:", formatted)
+	fmt.Printf("%-*s %s%s%s\n", longest+1, formatted, TERMCYANB, value, TERMCLEAR)
 }
 
 // Section allows for division of tasks in a DeployStack
@@ -897,189 +898,4 @@ func (s Section) Close() {
 	fmt.Printf("%s\n", Divider)
 	fmt.Printf("%s%s - %sdone%s\n", TERMCYAN, s.Title, TERMCYANB, TERMCLEAR)
 	fmt.Printf("%s\n", Divider)
-}
-
-// ProjectID gets the currently set default project
-func ProjectID() (string, error) {
-	cmd := exec.Command("gcloud", "config", "get-value", "project")
-	out, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("cannot get project id: %s ", err)
-	}
-
-	return strings.TrimSpace(string(out)), nil
-}
-
-// ProjectIDSet sets the currently set default project
-func ProjectIDSet(project string) error {
-	cmd := exec.Command("gcloud", "config", "set", "project", project)
-	_, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("cannot set project id: %s ", err)
-	}
-
-	return nil
-}
-
-// LabeledValue is a struct that contains a label/value pair
-type LabeledValue struct {
-	Value string
-	Label string
-}
-
-// LabeledValues is collection of LabledValues
-type LabeledValues []LabeledValue
-
-func (l LabeledValues) find(value string) LabeledValue {
-	for _, v := range l {
-		if v.Value == value {
-			return v
-		}
-	}
-	return LabeledValue{}
-}
-
-func (l *LabeledValues) sort() {
-	sort.Slice(*l, func(i, j int) bool {
-		return (*l)[i].Label < (*l)[j].Label
-	})
-}
-
-func toLabeledValueSlice(sl []string) LabeledValues {
-	r := LabeledValues{}
-
-	for _, v := range sl {
-		val := LabeledValue{v, v}
-		if strings.Contains(v, "|") {
-			sl := strings.Split(v, "|")
-			val = LabeledValue{sl[0], sl[1]}
-		}
-
-		r = append(r, val)
-	}
-	return r
-}
-
-// listSelect presents a slice of strings as a list from which
-// the user can select. It also highlights and preesnts behvaior for the
-// default
-func listSelect(sl LabeledValues, def string) LabeledValue {
-	itemCount := len(sl)
-	halfcount := int(math.Ceil(float64(itemCount / 2)))
-	width := longestLength(sl)
-	defaultExists := false
-
-	if itemCount < 11 {
-		for i, v := range sl {
-			if ok := printWithDefault(i+1, width, v.Value, v.Label, def); ok {
-				defaultExists = true
-			}
-			fmt.Printf("\n")
-		}
-	} else {
-
-		if float64(halfcount) < float64(itemCount)/2 {
-			halfcount++
-		}
-
-		for i := 0; i < halfcount; i++ {
-			v := sl[i]
-			if ok := printWithDefault(i+1, width, v.Value, v.Label, def); ok {
-				defaultExists = true
-			}
-
-			idx := i + halfcount + 1
-
-			if idx > itemCount {
-				fmt.Printf("\n")
-				break
-			}
-
-			v2 := sl[idx-1]
-			if ok := printWithDefault(idx, width, v2.Value, v2.Label, def); ok {
-				defaultExists = true
-			}
-
-			fmt.Printf("\n")
-		}
-	}
-
-	answer := sl.find(def)
-	reader := bufio.NewReader(os.Stdin)
-	if defaultExists {
-		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, answer.Label, TERMCLEAR)
-	} else {
-		fmt.Printf("Choose number from list.\n")
-	}
-
-	for {
-		fmt.Print("> ")
-		text, _ := reader.ReadString('\n')
-		text = strings.Replace(text, "\n", "", -1)
-
-		if len(text) == 0 {
-			break
-		}
-
-		opt, err := strconv.Atoi(text)
-		if err != nil || opt > itemCount {
-			fmt.Printf("Please enter a numeric between 1 and %d\n", itemCount)
-			fmt.Printf("You entered %s\n", text)
-			continue
-		}
-
-		answer = sl[opt-1]
-		break
-
-	}
-
-	return answer
-}
-
-func printWithDefault(idx, width int, value, label, def string) bool {
-	sp := buildSpacer(cleanTerminalCharsFromString(label), width)
-
-	if value == def {
-		fmt.Printf("%s%2d) %s %s%s", TERMCYANB, idx, label, sp, TERMCLEAR)
-		return true
-	}
-	fmt.Printf("%2d) %s %s", idx, label, sp)
-	return false
-}
-
-func buildSpacer(s string, l int) string {
-	sb := strings.Builder{}
-
-	for i := 0; i < l-len(s); i++ {
-		sb.WriteString(" ")
-	}
-
-	return sb.String()
-}
-
-func longestLength(sl []LabeledValue) int {
-	longest := 0
-
-	for _, v := range sl {
-		if len(v.Label) > longest {
-			longest = len(cleanTerminalCharsFromString(v.Label))
-		}
-	}
-
-	return longest
-}
-
-func cleanTerminalCharsFromString(s string) string {
-	r := s
-	r = strings.ReplaceAll(r, TERMCYAN, "")
-	r = strings.ReplaceAll(r, TERMCYANB, "")
-	r = strings.ReplaceAll(r, TERMCYANREV, "")
-	r = strings.ReplaceAll(r, TERMRED, "")
-	r = strings.ReplaceAll(r, TERMREDB, "")
-	r = strings.ReplaceAll(r, TERMREDREV, "")
-	r = strings.ReplaceAll(r, TERMCLEAR, "")
-	r = strings.ReplaceAll(r, TERMCLEARSCREEN, "")
-	r = strings.ReplaceAll(r, TERMGREY, "")
-
-	return r
 }

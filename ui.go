@@ -3,8 +3,10 @@ package deploystack
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -17,7 +19,7 @@ func ImageManage(project string) (string, error) {
 	fmt.Println(Divider)
 
 	colorPrintln("Choose an operating system.", TERMCYANB)
-	ImageTypeProject := listSelect(DiskProjects, DefaultImageProject)
+	ImageTypeProject := DiskProjects.SelectUI()
 
 	fmt.Printf("Polling for %s images...\n", ImageTypeProject.Value)
 	images, err := images(project, ImageTypeProject.Value)
@@ -28,12 +30,12 @@ func ImageManage(project string) (string, error) {
 	families := getListOfImageFamilies(images)
 
 	colorPrintln("Choose a disk family to use for this application.", TERMCYANB)
-	family := listSelect(families, DefaultImageFamily)
+	family := families.SelectUI()
 
 	imagesByFam := getListOfImageTypesByFamily(images, ImageTypeProject.Value, family.Value)
 
 	colorPrintln("Choose a disk type to use for this application.", TERMCYANB)
-	result := listSelect(imagesByFam, imagesByFam[len(imagesByFam)-1].Value)
+	result := imagesByFam.SelectUI()
 
 	return result.Value, nil
 }
@@ -58,12 +60,12 @@ func MachineTypeManage(project, zone string) (string, error) {
 	typefamilies := getListOfMachineTypeFamily(types)
 
 	fmt.Printf("Choose an Machine Type Family\n")
-	familyProject := listSelect(typefamilies, DefaultMachineType)
+	familyProject := typefamilies.SelectUI()
 
 	filteredtypes := getListOfMachineTypeByFamily(types, familyProject.Value)
 
 	fmt.Printf("%sChoose a machine type to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	result := listSelect(filteredtypes, filteredtypes[0].Value)
+	result := filteredtypes.SelectUI()
 
 	return result.Value, nil
 }
@@ -76,7 +78,8 @@ func (gce GCEInstanceConfig) Print(title string) {
 		keys = append(keys, i)
 	}
 
-	longest := longestLength(toLabeledValueSlice(keys))
+	list := NewLabeledValues(keys, "")
+	longest := list.LongestLen()
 
 	colorPrintln(title, TERMCYANREV)
 	exclude := []string{}
@@ -238,7 +241,8 @@ func BillingAccountManage() (string, error) {
 	}
 
 	fmt.Printf("\n%sPlease select one of your billing accounts to use with this project%s.\n", TERMCYAN, TERMCLEAR)
-	result := listSelect(toLabeledValueSlice(labeled), labeled[0])
+	list := NewLabeledValues(labeled, labeled[0])
+	result := list.SelectUI()
 
 	return extractAccount(result.Value), nil
 }
@@ -275,13 +279,14 @@ func ProjectManage() (string, string, error) {
 		lvs = append(lvs, lv)
 	}
 
-	lvs = append([]LabeledValue{{createString, createString}}, lvs...)
+	lvs = append([]LabeledValue{{createString, createString, false}}, lvs...)
+	lvs.SetDefault(project)
 
 	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", TERMCYANB, TERMCLEAR)
 	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
 	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
 
-	lv := listSelect(lvs, project)
+	lv := lvs.SelectUI()
 	project = lv.Value
 
 	if project == createString {
@@ -289,7 +294,7 @@ func ProjectManage() (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
-		lv = LabeledValue{project, project}
+		lv = LabeledValue{project, project, false}
 	}
 
 	if err := ProjectIDSet(project); err != nil {
@@ -321,6 +326,15 @@ func projectPrompt(currentProject string) (string, error) {
 		if len(text) == 0 {
 			fmt.Printf("%sPlease enter a new project name to create: %s\n", TERMCYANB, TERMCLEAR)
 			continue
+		}
+
+		if currentProject == "" {
+			tmp, err := ListProjects()
+			if err != nil || len(tmp) == 0 || tmp[0].ID == "" {
+				return "", fmt.Errorf("could not determine an alternate project for parent detection: %s ", err)
+			}
+
+			currentProject = tmp[0].ID
 		}
 
 		parent, err := ProjectParent(currentProject)
@@ -371,14 +385,16 @@ func RegionsList(project, product string) ([]string, error) {
 }
 
 // RegionManage promps a user to select a region.
-func RegionManage(project, product, def string) (string, error) {
+func RegionManage(project, product, defaultValue string) (string, error) {
 	fmt.Printf("Polling for regions...\n")
 	regions, err := RegionsList(project, product)
 	if err != nil {
 		return "", err
 	}
+
 	fmt.Printf("%sChoose a valid region to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	region := listSelect(toLabeledValueSlice(regions), def)
+	list := NewLabeledValues(regions, defaultValue)
+	region := list.SelectUI()
 
 	return region.Value, nil
 }
@@ -392,7 +408,10 @@ func ZoneManage(project, region string) (string, error) {
 	}
 
 	fmt.Printf("%sChoose a valid zone to use for this application. %s\n", TERMCYANB, TERMCLEAR)
-	zone := listSelect(toLabeledValueSlice(zones), zones[0])
+
+	list := NewLabeledValues(zones, zones[0])
+	zone := list.SelectUI()
+
 	return zone.Value, nil
 }
 
@@ -408,4 +427,193 @@ func Start() {
 	colorPrintln("Press the Enter Key to continue", TERMCYANB)
 	var input string
 	fmt.Scanln(&input)
+}
+
+// LabeledValue is a struct that contains a label/value pair
+type LabeledValue struct {
+	Value     string
+	Label     string
+	IsDefault bool
+}
+
+// NewLabeledValue takes a string and converts it to a LabeledValue. If a |
+// delimiter is present it will split into a different label/value
+func NewLabeledValue(s string) LabeledValue {
+	l := LabeledValue{s, s, false}
+
+	if strings.Contains(s, "|") {
+		sl := strings.Split(s, "|")
+		l = LabeledValue{sl[0], sl[1], false}
+	}
+
+	return l
+}
+
+// RenderUI creates a string that will evantually be shown to a user with
+// terminal formatting characters and what not.
+// extracted render function to make unit testing easier
+func (l LabeledValue) RenderUI(index, width int) string {
+	if l.IsDefault {
+		return fmt.Sprintf("%s%2d) %-*s %s", TERMCYANB, index, width, l.Label, TERMCLEAR)
+	}
+	return fmt.Sprintf("%2d) %-*s ", index, width, l.Label)
+}
+
+// LabeledValues is collection of LabledValue structs
+type LabeledValues []LabeledValue
+
+// SelectUI handles showing a user the list of values an allowing them to select
+// one from the list
+func (l LabeledValues) SelectUI() LabeledValue {
+	itemCount := len(l)
+	answer := l.GetDefault()
+	defaultExists := answer != LabeledValue{}
+
+	ui := l.RenderListUI()
+	fmt.Print(ui)
+
+	if defaultExists {
+		fmt.Printf("Choose number from list, or just [enter] for %s%s%s\n", TERMCYANB, answer.Label, TERMCLEAR)
+	} else {
+		fmt.Printf("Choose number from list.\n")
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("> ")
+		text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+
+		if len(text) == 0 {
+			break
+		}
+
+		opt, err := strconv.Atoi(text)
+		if err != nil || opt > itemCount {
+			fmt.Printf("Please enter a numeric between 1 and %d\n", itemCount)
+			fmt.Printf("You entered %s\n", text)
+			continue
+		}
+
+		answer = l[opt-1]
+		break
+
+	}
+
+	return answer
+}
+
+// Sort orders the LabeledValues by Label
+func (l *LabeledValues) Sort() {
+	sort.Slice(*l, func(i, j int) bool {
+		return (*l)[i].Label < (*l)[j].Label
+	})
+}
+
+// LongestLen returns the length of longest LABEL in the list
+func (l *LabeledValues) LongestLen() int {
+	longest := 0
+
+	for _, v := range *l {
+		if len(v.Label) > longest {
+			longest = len(cleanTerminalChars(v.Label))
+		}
+	}
+
+	return longest
+}
+
+// GetDefault returns the deafult value of the LabeledValues list
+func (l *LabeledValues) GetDefault() LabeledValue {
+	for _, v := range *l {
+		if v.IsDefault {
+			return v
+		}
+	}
+	return LabeledValue{}
+}
+
+// SetDefault sets the default value of the list
+func (l *LabeledValues) SetDefault(value string) {
+	for i, v := range *l {
+		if v.Value == value {
+			v.IsDefault = true
+			(*l)[i] = v
+		}
+	}
+}
+
+// RenderListUI creates a string that will evantually be shown to a user with
+// terminal formatting characters and what not in a multi column list if there
+// are enough entries
+// extracted render function to make unit testing easier
+func (l LabeledValues) RenderListUI() string {
+	sb := strings.Builder{}
+	width := l.LongestLen()
+	itemCount := len(l)
+
+	if itemCount < 11 {
+		for i, v := range l {
+			sb.WriteString(v.RenderUI(i+1, width))
+			sb.WriteString("\n")
+		}
+	} else {
+		halfcount := int(math.Ceil(float64(itemCount / 2)))
+
+		if float64(halfcount) < float64(itemCount)/2 {
+			halfcount++
+		}
+
+		for i := 0; i < halfcount; i++ {
+			sb.WriteString(l[i].RenderUI(i+1, width))
+
+			idx := i + halfcount + 1
+
+			if idx > itemCount {
+				sb.WriteString("\n")
+				break
+			}
+
+			sb.WriteString(l[idx-1].RenderUI(idx, width))
+
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
+}
+
+// NewLabeledValues takes a slice of strings and returns a list of LabeledValues
+func NewLabeledValues(sl []string, defaultValue string) LabeledValues {
+	r := LabeledValues{}
+
+	for _, v := range sl {
+		val := NewLabeledValue(v)
+		if val.Value == defaultValue {
+			val.IsDefault = true
+		}
+
+		r = append(r, val)
+	}
+	return r
+}
+
+func cleanTerminalChars(s string) string {
+	replacements := []string{
+		TERMCYAN, "",
+		TERMCYANB, "",
+		TERMCYANREV, "",
+		TERMRED, "",
+		TERMREDB, "",
+		TERMREDREV, "",
+		TERMCLEAR, "",
+		TERMCLEARSCREEN, "",
+		TERMGREY, "",
+	}
+
+	replacer := strings.NewReplacer(replacements...)
+
+	r := replacer.Replace(s)
+
+	return r
 }

@@ -15,7 +15,8 @@ var computeService *compute.Service
 var DiskProjects = LabeledValues{
 	LabeledValue{Label: "CentOS", Value: "centos-cloud"},
 	LabeledValue{Label: "Container-Optimized OS (COS)", Value: "cos-cloud"},
-	LabeledValue{Label: "Debian", Value: "debian-cloud"},
+	// TODO: figure out how to best set this to DefaultImageProject
+	LabeledValue{Label: "Debian", Value: "debian-cloud", IsDefault: true},
 	LabeledValue{Label: "Fedora CoreOS", Value: "fedora-coreos-cloud"},
 	LabeledValue{Label: "Red Hat Enterprise Linux (RHEL)", Value: "rhel-cloud"},
 	LabeledValue{Label: "Red Hat Enterprise Linux (RHEL) for SAP", Value: "rhel-sap-cloud"},
@@ -188,9 +189,10 @@ func getListOfMachineTypeFamily(imgs *compute.MachineTypeList) LabeledValues {
 		if key == "" {
 			continue
 		}
-		lb = append(lb, LabeledValue{value, key})
+		lb = append(lb, LabeledValue{value, key, false})
 	}
-	lb.sort()
+	lb.SetDefault(DefaultImageFamily)
+	lb.Sort()
 	return lb
 }
 
@@ -213,9 +215,11 @@ func getListOfMachineTypeByFamily(imgs *compute.MachineTypeList, family string) 
 		if strings.Contains(v.Name, family) {
 			value := v.Name
 			label := fmt.Sprintf("%s %s", v.Name, v.Description)
-			lb = append(lb, LabeledValue{value, label})
+			lb = append(lb, LabeledValue{value, label, false})
 		}
 	}
+	lb.SetDefault(lb[0].Value)
+
 	return lb
 }
 
@@ -231,9 +235,10 @@ func getListOfImageFamilies(imgs *compute.ImageList) LabeledValues {
 		if i == "" {
 			continue
 		}
-		lb = append(lb, LabeledValue{i, i})
+		lb = append(lb, LabeledValue{i, i, false})
 	}
-	lb.sort()
+	lb.SetDefault(DefaultImageFamily)
+	lb.Sort()
 	return lb
 }
 
@@ -243,14 +248,15 @@ func getListOfImageTypesByFamily(imgs *compute.ImageList, project, family string
 	for _, v := range imgs.Items {
 		if v.Family == family {
 			value := fmt.Sprintf("%s/%s", project, v.Name)
-			lb = append(lb, LabeledValue{value, v.Name})
+			lb = append(lb, LabeledValue{value, v.Name, false})
 		}
 	}
 
 	last := lb[len(lb)-1]
 	last.Label = fmt.Sprintf("%s (Latest)", last.Label)
 	lb[len(lb)-1] = last
-	lb.sort()
+	lb.Sort()
+	lb.SetDefault(last.Value)
 
 	return lb
 }
