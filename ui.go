@@ -328,6 +328,15 @@ func projectPrompt(currentProject string) (string, error) {
 			continue
 		}
 
+		if currentProject == "" {
+			tmp, err := ListProjects()
+			if err != nil || len(tmp) == 0 || tmp[0].ID == "" {
+				return "", fmt.Errorf("could not determine an alternate project for parent detection: %s ", err)
+			}
+
+			currentProject = tmp[0].ID
+		}
+
 		parent, err := ProjectParent(currentProject)
 		if err != nil {
 			return "", fmt.Errorf("could not determine proper parent for project: %s ", err)
