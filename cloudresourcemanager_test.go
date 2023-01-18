@@ -30,6 +30,25 @@ func TestGetProjectNumbers(t *testing.T) {
 	}
 }
 
+func TestCheckProject(t *testing.T) {
+	tests := map[string]struct {
+		input string
+		want  bool
+	}{
+		"Does Exists":     {input: creds["project_id"], want: true},
+		"Does Not Exists": {input: "ds-does-not-exst", want: false},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := CheckProject(tc.input)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestGetProjectParent(t *testing.T) {
 	tests := map[string]struct {
 		input string
