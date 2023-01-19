@@ -41,8 +41,8 @@ Choose number from list, or just [enter] for [1;36mus-central1-a[0m
 				ZoneManage(tc.project, tc.region)
 			})
 
-			fmt.Println(diff.Diff(got, tc.want))
 			if !reflect.DeepEqual(tc.want, got) {
+				fmt.Println(diff.Diff(got, tc.want))
 				fmt.Printf("ProjectID: %s\n", projectID)
 				t.Fatalf("expected: \n|%v|\ngot: \n|%v|", tc.want, got)
 			}
@@ -505,6 +505,11 @@ func TestRegionManage(t *testing.T) {
 }
 
 func TestMachineTypeManage(t *testing.T) {
+	defaultValue := "t2a-standard-1"
+	if os.Getenv("USER") == "tpryan" {
+		defaultValue = "t2d-standard-1"
+	}
+
 	_, rescueStdout := blockOutput()
 	defer func() { os.Stdout = rescueStdout }()
 	tests := map[string]struct {
@@ -513,8 +518,7 @@ func TestMachineTypeManage(t *testing.T) {
 		zone    string
 		want    string
 	}{
-		// TODO: force this to use whatever the console sets as default
-		"Default": {"", projectID, "us-central1-a", "t2a-standard-1"},
+		"Default": {"", projectID, "us-central1-a", defaultValue},
 	}
 
 	for name, tc := range tests {
@@ -700,15 +704,16 @@ func TestLabeledValueRender(t *testing.T) {
 		input LabeledValue
 		want  string
 	}{
-		"Basic":   {input: LabeledValue{"test", "test", false}, want: " 1) test "},
-		"Default": {input: LabeledValue{"test", "test", true}, want: "[1;36m 1) test [0m"},
+		"Basic":             {input: LabeledValue{"test", "test", false}, want: " 1) test "},
+		"Default":           {input: LabeledValue{"test", "test", true}, want: "[1;36m 1) test [0m"},
+		"WithTerminalChars": {input: LabeledValue{"[1;30mds-opsagent (Billing Disabled)[0m", "[1;30mds-opsagent (Billing Disabled)[0m", false}, want: " 1) [1;30mds-opsagent (Billing Disabled)[0m            "},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := tc.input.RenderUI(1, len(tc.input.Label))
 			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
+				t.Fatalf("expected: \n%v, \ngot: \n%v", tc.want, got)
 			}
 		})
 	}
@@ -912,6 +917,22 @@ func TestLabeledValuesLongestLen(t *testing.T) {
 			input: LabeledValues{{"test2", "test2", false}, {"test1", "test1", false}, {"test1test1", "test1test1", false}},
 			want:  10,
 		},
+		"Complex": {
+			input: LabeledValues{
+				{"ds-test-no-billing", "[1;30mds-test-no-billing (Billing Disabled)[0m", false},
+				{"ds-opsagent", "[1;30mds-opsagent (Billing Disabled)[0m", false},
+				{"ds-tester-nosql-client-server", "ds-tester-nosql-client-server", false},
+				{"neos-tester", "neos-tester", false},
+				{"ds-artifacts-cloudshell", "ds-artifacts-cloudshell", false},
+				{"summit-walkthrough", "summit-walkthrough", false},
+				{"ds-tester-todo-fixed", "ds-tester-todo-fixed", false},
+				{"ds-tester-opsagent", "ds-tester-opsagent", false},
+				{"ds-tester-singlevm", "ds-tester-singlevm", false},
+				{"run-integrations-test", "run-integrations-test", false},
+				{"ds-tester-deploystack", "ds-tester-deploystack", true},
+			},
+			want: 37,
+		},
 	}
 
 	for name, tc := range tests {
@@ -990,11 +1011,10 @@ func TestLabeledValuesRenderUIBugCheck(t *testing.T) {
 
 	got := lvs.RenderListUI()
 
-	// t.Logf("\n%s\n", got)
-
 	if !reflect.DeepEqual(want, got) {
+		t.Logf("%+v\n", lvs)
 		fmt.Println(diff.Diff(got, want))
-		t.Fatalf("expected: \n|%v|\ngot: \n|%v|", want, got)
+		t.Fatalf("expected: \n%v\ngot: \n%v", want, got)
 	}
 }
 
