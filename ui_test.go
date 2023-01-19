@@ -505,10 +505,7 @@ func TestRegionManage(t *testing.T) {
 }
 
 func TestMachineTypeManage(t *testing.T) {
-	defaultValue := "t2a-standard-1"
-	if os.Getenv("USER") == "tpryan" {
-		defaultValue = "t2d-standard-1"
-	}
+	defaultValue := "t2d-standard-1"
 
 	_, rescueStdout := blockOutput()
 	defer func() { os.Stdout = rescueStdout }()
