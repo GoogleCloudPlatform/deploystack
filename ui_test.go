@@ -943,6 +943,61 @@ func TestCleanTerminalChars(t *testing.T) {
 	}
 }
 
+func TestLabeledValuesRenderUIBugCheck(t *testing.T) {
+	want := ` 1) CREATE NEW PROJECT                     7) ds-tester-opsagent                    
+ 2) ds-artifacts-cloudshell                8) ds-tester-singlevm                    
+ 3) [1;30mds-opsagent (Billing Disabled)[0m         9) ds-tester-todo-fixed                  
+ 4) [1;30mds-test-no-billing (Billing Disabled)[0m 10) neos-tester                           
+[1;36m 5) ds-tester-deploystack                 [0m11) run-integrations-test                 
+ 6) ds-tester-nosql-client-server         12) summit-walkthrough                    
+`
+
+	createString := "CREATE NEW PROJECT"
+	project := "ds-tester-deploystack"
+	projects := []struct {
+		ID             string
+		Name           string
+		BillingEnabled bool
+	}{
+		{"ds-test-no-billing", "ds-test-no-billing", false},
+		{"ds-opsagent", "ds-opsagent", false},
+		{"ds-tester-nosql-client-server", "ds-tester-nosql-client-server", true},
+		{"neos-tester", "neos-tester", true},
+		{"ds-artifacts-cloudshell", "ds-artifacts-cloudshell", true},
+		{"summit-walkthrough", "summit-walkthrough", true},
+		{"ds-tester-todo-fixed", "ds-tester-todo-fixed", true},
+		{"ds-tester-opsagent", "ds-tester-opsagent", true},
+		{"ds-tester-singlevm", "ds-tester-singlevm", true},
+		{"run-integrations-test", "run-integrations-test", true},
+		{"ds-tester-deploystack", "ds-tester-deploystack", true},
+	}
+
+	lvs := LabeledValues{}
+
+	for _, v := range projects {
+		lv := LabeledValue{Label: v.Name, Value: v.ID}
+
+		if !v.BillingEnabled {
+			lv.Label = fmt.Sprintf("%s%s (Billing Disabled)%s", TERMGREY, v.Name, TERMCLEAR)
+		}
+
+		lvs = append(lvs, lv)
+	}
+
+	lvs.Sort()
+	lvs = append([]LabeledValue{{createString, createString, false}}, lvs...)
+	lvs.SetDefault(project)
+
+	got := lvs.RenderListUI()
+
+	// t.Logf("\n%s\n", got)
+
+	if !reflect.DeepEqual(want, got) {
+		fmt.Println(diff.Diff(got, want))
+		t.Fatalf("expected: \n|%v|\ngot: \n|%v|", want, got)
+	}
+}
+
 // func TestManageProject(t *testing.T) {
 // 	tests := map[string]struct {
 // 		want string
