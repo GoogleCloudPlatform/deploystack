@@ -507,7 +507,9 @@ func (l LabeledValues) SelectUI() LabeledValue {
 // Sort orders the LabeledValues by Label
 func (l *LabeledValues) Sort() {
 	sort.Slice(*l, func(i, j int) bool {
-		return (*l)[i].Label < (*l)[j].Label
+		iStr := strings.ToLower(cleanTerminalChars((*l)[i].Label))
+		jStr := strings.ToLower(cleanTerminalChars((*l)[j].Label))
+		return iStr < jStr
 	})
 }
 
