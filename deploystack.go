@@ -470,7 +470,7 @@ func (c Config) PrintHeader() {
 func (c Config) Process(s *Stack, output string) error {
 	Start()
 	c.PrintHeader()
-	var project, region, zone, projectnumber, billingaccount, projectName, name string
+	var project, region, zone, projectnumber, billingaccount, name string
 	var err error
 
 	for i, v := range c.HardSet {
@@ -478,7 +478,6 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	project = s.GetSetting("project_id")
-	projectName = s.GetSetting("project_name")
 	region = s.GetSetting("region")
 	zone = s.GetSetting("zone")
 	name = s.Config.Name
@@ -494,12 +493,14 @@ func (c Config) Process(s *Stack, output string) error {
 	defaultUserAgent = fmt.Sprintf("deploystack/%s", s.Config.Name)
 
 	if c.Project && len(project) == 0 {
-		project, projectName, err = ProjectManage()
-		if err != nil {
-			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
+		c.Projects = Projects{
+			Items: []Project{
+				{
+					Name:       "project_id",
+					UserPrompt: "Choose a project to use for this application.",
+				},
+			},
 		}
-		s.AddSetting("project_id", project)
-		s.AddSetting("project_name", projectName)
 	}
 
 	if len(c.Projects.Items) > 0 {

@@ -1,6 +1,19 @@
-{	
-	"title":"Project List Example",
-	"name":"project-list-example",
-	"duration":5,
-	"collect_project": true
+{
+  "title": "Project List Example",
+  "name": "project-list-example",
+  "duration": 5,
+  "projects": {
+    "items": [
+      {
+        "variable_name": "project_id",
+        "user_prompt": "Choose a project to use for this application",
+        "set_as_default": true
+      },
+      {
+        "variable_name": "project_id_2",
+        "user_prompt": "Choose a second project to use for this application",
+        "set_as_default": false
+      }
+    ]
+  }
 }
