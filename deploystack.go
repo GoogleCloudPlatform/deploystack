@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -140,49 +139,6 @@ func BuildDivider(width int) (string, error) {
 		sb.WriteString("*")
 	}
 	return sb.String(), nil
-}
-
-// Flags is a collection variables that can be passed in from the CLI
-type Flags struct {
-	Project string            `json:"project"`
-	Region  string            `json:"region"`
-	Zone    string            `json:"zone"`
-	Custom  map[string]string `json:"custom"`
-}
-
-// HandleFlags consolidates all of the cli flag login in the package instead of
-// relegating that to the calling file. Not super idiomatic, but allows us
-// to leave all of this code in one place.
-func HandleFlags() Flags {
-	f := Flags{}
-	m := make(map[string]string)
-	projectPtr := flag.String("project", "", "A Google Cloud Project ID")
-	regionPtr := flag.String("region", "", "A Google Cloud Region")
-	zonePtr := flag.String("zone", "", "A Google Cloud Zone")
-	customPtr := flag.String("custom", "", "A list of custom variables that can be passed in")
-
-	flag.Parse()
-
-	f.Project = *projectPtr
-	f.Region = *regionPtr
-	f.Zone = *zonePtr
-
-	rawString := *customPtr
-
-	cSl := strings.Split(rawString, ",")
-
-	for _, v := range cSl {
-		if len(v) == 0 {
-			continue
-		}
-		rawVK := strings.ReplaceAll(v, " ", "=")
-		kv := strings.Split(rawVK, "=")
-		fmt.Printf("kv %+v\n", kv)
-		m[kv[0]] = kv[1]
-	}
-	f.Custom = m
-
-	return f
 }
 
 // Config represents the settings this app will collect from a user. It should
@@ -714,17 +670,6 @@ func NewStack() Stack {
 	s := Stack{}
 	s.Settings = make(map[string]string)
 	return s
-}
-
-// ProcessFlags handles adding the contents of the flags to the stack settings
-func (s *Stack) ProcessFlags(f Flags) {
-	s.AddSetting("project_id", f.Project)
-	s.AddSetting("region", f.Region)
-	s.AddSetting("zone", f.Zone)
-
-	for i, v := range f.Custom {
-		s.AddSetting(i, v)
-	}
 }
 
 func (s *Stack) findAndReadConfig() (Config, error) {

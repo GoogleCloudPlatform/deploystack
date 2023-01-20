@@ -23,9 +23,7 @@ import (
 func main() {
 	deploystack.ClearScreen()
 
-	f := deploystack.HandleFlags()
 	s := deploystack.NewStack()
-	s.ProcessFlags(f)
 
 	if err := s.FindAndReadRequired(); err != nil {
 		log.Fatalf("could not read config file: %s", err)
