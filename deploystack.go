@@ -208,6 +208,100 @@ type Config struct {
 	PathTerraform        string            `json:"path_terraform" yaml:"path_terraform"`
 	PathMessages         string            `json:"path_messages" yaml:"path_messages"`
 	PathScripts          string            `json:"path_scripts" yaml:"path_scripts"`
+	Projects             Projects          `json:"projects" yaml:"projects"`
+}
+
+// Project represets a GCP project for use in a stack
+type Project struct {
+	Name         string `json:"variable_name"  yaml:"variable_name"`
+	UserPrompt   string `json:"user_prompt"  yaml:"user_prompt"`
+	SetAsDefault bool   `json:"set_as_default"  yaml:"set_as_default"`
+	value        string
+}
+
+// Projects is a list of projects that we will collect info for
+type Projects struct {
+	Items           []Project `json:"items"  yaml:"items"`
+	AllowDuplicates bool      `json:"allow_duplicates"  yaml:"allow_duplicates"`
+}
+
+// func removeProject(slice []ProjectWithBilling, s int) []ProjectWithBilling {
+// 	return append(slice[:s], slice[s+1:]...)
+// }
+
+func removeProject(s []ProjectWithBilling, index int) []ProjectWithBilling {
+	ret := make([]ProjectWithBilling, 0)
+	ret = append(ret, s[:index]...)
+	return append(ret, s[index+1:]...)
+}
+
+// Collect calls the collect method of all of the Projects in the
+// collection in the order in which they were placed there.
+func (p *Projects) Collect(projects []ProjectWithBilling, defaultProject string) error {
+	for i, v := range p.Items {
+		if err := v.Collect(projects, defaultProject); err != nil {
+			return fmt.Errorf("error getting project (%s) from user:  %s", v.Name, err)
+		}
+		p.Items[i] = v
+
+		if v.SetAsDefault {
+			if err := ProjectIDSet(v.value); err != nil {
+				return fmt.Errorf("error: unable to set project (%s) in environment: %s", defaultProject, err)
+			}
+		}
+
+		if !p.AllowDuplicates {
+			for i, p := range projects {
+				if p.ID == v.value {
+					projects = removeProject(projects, i)
+					break
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// Collect will collect either an exisitng project or create a new one
+func (p *Project) Collect(projects []ProjectWithBilling, defaultProject string) error {
+	var err error
+	createString := "CREATE NEW PROJECT"
+
+	lvs := LabeledValues{}
+
+	for _, v := range projects {
+		lv := LabeledValue{Label: v.Name, Value: v.ID}
+
+		if !v.BillingEnabled {
+			lv.Label = fmt.Sprintf("%s%s (Billing Disabled)%s", TERMGREY, v.Name, TERMCLEAR)
+		}
+
+		lvs = append(lvs, lv)
+	}
+
+	lvs = append([]LabeledValue{{createString, createString, false}}, lvs...)
+	lvs.SetDefault(defaultProject)
+
+	fmt.Printf("\n%s%s%s\n\n", TERMCYANB, p.UserPrompt, TERMCLEAR)
+	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
+	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
+
+	lv := lvs.SelectUI()
+	project := lv.Value
+
+	if project == createString {
+		project, err = projectPrompt(defaultProject)
+		if err != nil {
+			return err
+		}
+		lv = LabeledValue{project, project, false}
+	}
+
+	p.value = project
+
+	return nil
 }
 
 // Custom represents a custom setting that we would like to collect from a user
@@ -406,6 +500,30 @@ func (c Config) Process(s *Stack, output string) error {
 		}
 		s.AddSetting("project_id", project)
 		s.AddSetting("project_name", projectName)
+	}
+
+	if len(c.Projects.Items) > 0 {
+
+		defaultProject, err := ProjectID()
+		if err != nil {
+			// TODO: make sure to edit these errors
+			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
+		}
+
+		projects, err := ListProjects()
+		if err != nil {
+			// TODO: make sure to edit these errors
+			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
+		}
+
+		if err := c.Projects.Collect(projects, defaultProject); err != nil {
+			handleProcessError(fmt.Errorf("error collecting project settings: %s", err))
+		}
+
+		for _, v := range c.Projects.Items {
+			s.AddSetting(v.Name, v.value)
+		}
+
 	}
 
 	if c.ConfigureGCEInstance {
