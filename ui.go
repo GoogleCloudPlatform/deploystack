@@ -401,6 +401,10 @@ func NewLabeledValue(s string) LabeledValue {
 // terminal formatting characters and what not.
 // extracted render function to make unit testing easier
 func (l LabeledValue) RenderUI(index, width int) string {
+	stripped := cleanTerminalChars(l.Label)
+	offset := len(l.Label) - len(stripped)
+	width += offset
+
 	if l.IsDefault {
 		return fmt.Sprintf("%s%2d) %-*s %s", TERMCYANB, index, width, l.Label, TERMCLEAR)
 	}
@@ -455,7 +459,9 @@ func (l LabeledValues) SelectUI() LabeledValue {
 // Sort orders the LabeledValues by Label
 func (l *LabeledValues) Sort() {
 	sort.Slice(*l, func(i, j int) bool {
-		return (*l)[i].Label < (*l)[j].Label
+		iStr := strings.ToLower(cleanTerminalChars((*l)[i].Label))
+		jStr := strings.ToLower(cleanTerminalChars((*l)[j].Label))
+		return iStr < jStr
 	})
 }
 
@@ -464,7 +470,7 @@ func (l *LabeledValues) LongestLen() int {
 	longest := 0
 
 	for _, v := range *l {
-		if len(v.Label) > longest {
+		if len(cleanTerminalChars(v.Label)) > longest {
 			longest = len(cleanTerminalChars(v.Label))
 		}
 	}
