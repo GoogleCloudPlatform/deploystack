@@ -505,8 +505,6 @@ func TestRegionManage(t *testing.T) {
 }
 
 func TestMachineTypeManage(t *testing.T) {
-	defaultValue := "t2d-standard-1"
-
 	_, rescueStdout := blockOutput()
 	defer func() { os.Stdout = rescueStdout }()
 	tests := map[string]struct {
