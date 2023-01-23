@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -614,6 +615,125 @@ func TestPrintSetting(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected:\n|%s|\ngot:\n|%s|", tc.want, got)
 			}
+		})
+	}
+}
+
+func TestProjectsCollect(t *testing.T) {
+	testProjectsList := []ProjectWithBilling{
+		{Name: "test01", ID: "test01", BillingEnabled: true},
+		{Name: "test02", ID: "test02", BillingEnabled: true},
+		{Name: "test03", ID: "test03", BillingEnabled: true},
+		{Name: "test04", ID: "test04", BillingEnabled: true},
+		{Name: "test05", ID: "test05", BillingEnabled: true},
+		{Name: "test06", ID: "test06", BillingEnabled: true},
+		{Name: "test07", ID: "test07", BillingEnabled: true},
+		{Name: "test08", ID: "test08", BillingEnabled: true},
+		{Name: "test09", ID: "test09", BillingEnabled: true},
+		{Name: "test10", ID: "test10", BillingEnabled: true},
+		{Name: "test11", ID: "test11", BillingEnabled: true},
+		{Name: "test12", ID: "test12", BillingEnabled: true},
+	}
+	defaultProject := "test04"
+
+	tests := map[string]struct {
+		beforeProjects Projects
+		afterProjects  Projects
+		input          string
+		want           string
+	}{
+		"simple": {
+			beforeProjects: Projects{
+				Items: []Project{
+					{
+						Name:       "test_project_1",
+						UserPrompt: "Pick a first project",
+					},
+					{
+						Name:       "test_project_2",
+						UserPrompt: "Pick a second project",
+					},
+				},
+			},
+			input: "12\n\n",
+			afterProjects: Projects{
+				Items: []Project{
+					{
+						Name:       "test_project_1",
+						UserPrompt: "Pick a first project",
+						value:      "test11",
+					},
+					{
+						Name:       "test_project_2",
+						UserPrompt: "Pick a second project",
+						value:      "test04",
+					},
+				},
+			},
+			want: `
+[1;36mPick a first project[0m
+
+[46mNOTE:[0;36m This app will make changes to the project. [0m
+While those changes are reverseable, it would be better to put it in a fresh new project. 
+ 1) CREATE NEW PROJECT  8) test07             
+ 2) test01              9) test08             
+ 3) test02             10) test09             
+ 4) test03             11) test10             
+[1;36m 5) test04             [0m12) test11             
+ 6) test05             13) test12             
+ 7) test06             
+Choose number from list, or just [enter] for [1;36mtest04[0m
+> 
+[1;36mPick a second project[0m
+
+[46mNOTE:[0;36m This app will make changes to the project. [0m
+While those changes are reverseable, it would be better to put it in a fresh new project. 
+ 1) CREATE NEW PROJECT  7) test06             
+ 2) test01              8) test07             
+ 3) test02              9) test08             
+ 4) test03             10) test09             
+[1;36m 5) test04             [0m11) test10             
+ 6) test05             12) test12             
+Choose number from list, or just [enter] for [1;36mtest04[0m
+> `,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			origStdin := os.Stdin
+
+			testStdin, err := ioutil.TempFile("", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer testStdin.Close()
+
+			os.Stdin = testStdin
+
+			if _, err := io.WriteString(testStdin, tc.input); err != nil {
+				t.Fatalf("expected: no error got: error(%s)", err)
+			}
+
+			if _, err = testStdin.Seek(0, os.SEEK_SET); err != nil {
+				t.Fatalf("expected: no error got: error(%s)", err)
+			}
+
+			got := captureOutput(func() {
+				tc.beforeProjects.Collect(testProjectsList, defaultProject)
+			})
+
+			if !reflect.DeepEqual(tc.afterProjects, tc.beforeProjects) {
+				t.Fatalf("expected:\n%v\ngot:\n%v", tc.afterProjects, tc.beforeProjects)
+			}
+
+			if !reflect.DeepEqual(tc.want, string(got)) {
+				os.Stdin = origStdin
+				fmt.Println(diff.Diff(got, tc.want))
+				t.Fatal("Should be the same")
+			}
+			os.Stdin = origStdin
 		})
 	}
 }

@@ -505,8 +505,6 @@ func TestRegionManage(t *testing.T) {
 }
 
 func TestMachineTypeManage(t *testing.T) {
-	defaultValue := "t2d-standard-1"
-
 	_, rescueStdout := blockOutput()
 	defer func() { os.Stdout = rescueStdout }()
 	tests := map[string]struct {
@@ -515,7 +513,8 @@ func TestMachineTypeManage(t *testing.T) {
 		zone    string
 		want    string
 	}{
-		"Default": {"", projectID, "us-central1-a", defaultValue},
+		// TODO: force this to use whatever the console sets as default
+		"Default": {"", projectID, "us-central1-a", "t2d-standard-1"},
 	}
 
 	for name, tc := range tests {

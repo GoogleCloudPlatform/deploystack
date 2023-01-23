@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -142,49 +141,6 @@ func BuildDivider(width int) (string, error) {
 	return sb.String(), nil
 }
 
-// Flags is a collection variables that can be passed in from the CLI
-type Flags struct {
-	Project string            `json:"project"`
-	Region  string            `json:"region"`
-	Zone    string            `json:"zone"`
-	Custom  map[string]string `json:"custom"`
-}
-
-// HandleFlags consolidates all of the cli flag login in the package instead of
-// relegating that to the calling file. Not super idiomatic, but allows us
-// to leave all of this code in one place.
-func HandleFlags() Flags {
-	f := Flags{}
-	m := make(map[string]string)
-	projectPtr := flag.String("project", "", "A Google Cloud Project ID")
-	regionPtr := flag.String("region", "", "A Google Cloud Region")
-	zonePtr := flag.String("zone", "", "A Google Cloud Zone")
-	customPtr := flag.String("custom", "", "A list of custom variables that can be passed in")
-
-	flag.Parse()
-
-	f.Project = *projectPtr
-	f.Region = *regionPtr
-	f.Zone = *zonePtr
-
-	rawString := *customPtr
-
-	cSl := strings.Split(rawString, ",")
-
-	for _, v := range cSl {
-		if len(v) == 0 {
-			continue
-		}
-		rawVK := strings.ReplaceAll(v, " ", "=")
-		kv := strings.Split(rawVK, "=")
-		fmt.Printf("kv %+v\n", kv)
-		m[kv[0]] = kv[1]
-	}
-	f.Custom = m
-
-	return f
-}
-
 // Config represents the settings this app will collect from a user. It should
 // be in a json file. The idea is minimal programming has to be done to setup
 // a DeployStack and export out a tfvars file for terraform part of solution.
@@ -208,6 +164,100 @@ type Config struct {
 	PathTerraform        string            `json:"path_terraform" yaml:"path_terraform"`
 	PathMessages         string            `json:"path_messages" yaml:"path_messages"`
 	PathScripts          string            `json:"path_scripts" yaml:"path_scripts"`
+	Projects             Projects          `json:"projects" yaml:"projects"`
+}
+
+// Project represets a GCP project for use in a stack
+type Project struct {
+	Name         string `json:"variable_name"  yaml:"variable_name"`
+	UserPrompt   string `json:"user_prompt"  yaml:"user_prompt"`
+	SetAsDefault bool   `json:"set_as_default"  yaml:"set_as_default"`
+	value        string
+}
+
+// Projects is a list of projects that we will collect info for
+type Projects struct {
+	Items           []Project `json:"items"  yaml:"items"`
+	AllowDuplicates bool      `json:"allow_duplicates"  yaml:"allow_duplicates"`
+}
+
+// func removeProject(slice []ProjectWithBilling, s int) []ProjectWithBilling {
+// 	return append(slice[:s], slice[s+1:]...)
+// }
+
+func removeProject(s []ProjectWithBilling, index int) []ProjectWithBilling {
+	ret := make([]ProjectWithBilling, 0)
+	ret = append(ret, s[:index]...)
+	return append(ret, s[index+1:]...)
+}
+
+// Collect calls the collect method of all of the Projects in the
+// collection in the order in which they were placed there.
+func (p *Projects) Collect(projects []ProjectWithBilling, defaultProject string) error {
+	for i, v := range p.Items {
+		if err := v.Collect(projects, defaultProject); err != nil {
+			return fmt.Errorf("error getting project (%s) from user:  %s", v.Name, err)
+		}
+		p.Items[i] = v
+
+		if v.SetAsDefault {
+			if err := ProjectIDSet(v.value); err != nil {
+				return fmt.Errorf("error: unable to set project (%s) in environment: %s", defaultProject, err)
+			}
+		}
+
+		if !p.AllowDuplicates {
+			for i, p := range projects {
+				if p.ID == v.value {
+					projects = removeProject(projects, i)
+					break
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// Collect will collect either an exisitng project or create a new one
+func (p *Project) Collect(projects []ProjectWithBilling, defaultProject string) error {
+	var err error
+	createString := "CREATE NEW PROJECT"
+
+	lvs := LabeledValues{}
+
+	for _, v := range projects {
+		lv := LabeledValue{Label: v.Name, Value: v.ID}
+
+		if !v.BillingEnabled {
+			lv.Label = fmt.Sprintf("%s%s (Billing Disabled)%s", TERMGREY, v.Name, TERMCLEAR)
+		}
+
+		lvs = append(lvs, lv)
+	}
+
+	lvs = append([]LabeledValue{{createString, createString, false}}, lvs...)
+	lvs.SetDefault(defaultProject)
+
+	fmt.Printf("\n%s%s%s\n\n", TERMCYANB, p.UserPrompt, TERMCLEAR)
+	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
+	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
+
+	lv := lvs.SelectUI()
+	project := lv.Value
+
+	if project == createString {
+		project, err = projectPrompt(defaultProject)
+		if err != nil {
+			return err
+		}
+		lv = LabeledValue{project, project, false}
+	}
+
+	p.value = project
+
+	return nil
 }
 
 // Custom represents a custom setting that we would like to collect from a user
@@ -376,7 +426,7 @@ func (c Config) PrintHeader() {
 func (c Config) Process(s *Stack, output string) error {
 	Start()
 	c.PrintHeader()
-	var project, region, zone, projectnumber, billingaccount, projectName, name string
+	var project, region, zone, projectnumber, billingaccount, name string
 	var err error
 
 	for i, v := range c.HardSet {
@@ -384,7 +434,6 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	project = s.GetSetting("project_id")
-	projectName = s.GetSetting("project_name")
 	region = s.GetSetting("region")
 	zone = s.GetSetting("zone")
 	name = s.Config.Name
@@ -400,12 +449,38 @@ func (c Config) Process(s *Stack, output string) error {
 	defaultUserAgent = fmt.Sprintf("deploystack/%s", s.Config.Name)
 
 	if c.Project && len(project) == 0 {
-		project, projectName, err = ProjectManage()
+		c.Projects = Projects{
+			Items: []Project{
+				{
+					Name:       "project_id",
+					UserPrompt: "Choose a project to use for this application.",
+				},
+			},
+		}
+	}
+
+	if len(c.Projects.Items) > 0 {
+
+		defaultProject, err := ProjectID()
 		if err != nil {
+			// TODO: make sure to edit these errors
 			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
 		}
-		s.AddSetting("project_id", project)
-		s.AddSetting("project_name", projectName)
+
+		projects, err := ListProjects()
+		if err != nil {
+			// TODO: make sure to edit these errors
+			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
+		}
+
+		if err := c.Projects.Collect(projects, defaultProject); err != nil {
+			handleProcessError(fmt.Errorf("error collecting project settings: %s", err))
+		}
+
+		for _, v := range c.Projects.Items {
+			s.AddSetting(v.Name, v.value)
+		}
+
 	}
 
 	if c.ConfigureGCEInstance {
@@ -595,17 +670,6 @@ func NewStack() Stack {
 	s := Stack{}
 	s.Settings = make(map[string]string)
 	return s
-}
-
-// ProcessFlags handles adding the contents of the flags to the stack settings
-func (s *Stack) ProcessFlags(f Flags) {
-	s.AddSetting("project_id", f.Project)
-	s.AddSetting("region", f.Region)
-	s.AddSetting("zone", f.Zone)
-
-	for i, v := range f.Custom {
-		s.AddSetting(i, v)
-	}
 }
 
 func (s *Stack) findAndReadConfig() (Config, error) {

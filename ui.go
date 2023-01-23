@@ -252,58 +252,6 @@ func extractAccount(s string) string {
 	return strings.ReplaceAll(sl[1], ")", "")
 }
 
-// ProjectManage promps a user to select a project.
-func ProjectManage() (string, string, error) {
-	createString := "CREATE NEW PROJECT"
-	currentProject, err := ProjectID()
-	if err != nil {
-		return "", "", err
-	}
-
-	project := currentProject
-
-	projects, err := ListProjects()
-	if err != nil {
-		return "", "", err
-	}
-
-	lvs := LabeledValues{}
-
-	for _, v := range projects {
-		lv := LabeledValue{Label: v.Name, Value: v.ID}
-
-		if !v.BillingEnabled {
-			lv.Label = fmt.Sprintf("%s%s (Billing Disabled)%s", TERMGREY, v.Name, TERMCLEAR)
-		}
-
-		lvs = append(lvs, lv)
-	}
-
-	lvs = append([]LabeledValue{{createString, createString, false}}, lvs...)
-	lvs.SetDefault(project)
-
-	fmt.Printf("\n%sChoose a project to use for this application.%s\n\n", TERMCYANB, TERMCLEAR)
-	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
-	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
-
-	lv := lvs.SelectUI()
-	project = lv.Value
-
-	if project == createString {
-		project, err = projectPrompt(currentProject)
-		if err != nil {
-			return "", "", err
-		}
-		lv = LabeledValue{project, project, false}
-	}
-
-	if err := ProjectIDSet(project); err != nil {
-		return lv.Value, lv.Label, fmt.Errorf("error: unable to set project (%s) in environment: %s", project, err)
-	}
-
-	return lv.Value, lv.Label, nil
-}
-
 // projectPrompt manages the interaction of creating a project, including prompts.
 func projectPrompt(currentProject string) (string, error) {
 	result := ""
