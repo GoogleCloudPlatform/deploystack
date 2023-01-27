@@ -25,7 +25,8 @@ func getIAMService() (*iam.Service, error) {
 	return svc, nil
 }
 
-func CreateServiceAccount(project, username, displayName string) (string, error) {
+// ServiceAccountCreate creates a service account. A little on the nose
+func ServiceAccountCreate(project, username, displayName string) (string, error) {
 	svc, err := getIAMService()
 	if err != nil {
 		return "", err

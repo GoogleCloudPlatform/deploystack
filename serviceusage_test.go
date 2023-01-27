@@ -23,7 +23,7 @@ func TestServiceEnable(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := EnableService(tc.project, tc.service)
+			err := ServiceEnable(tc.project, tc.service)
 			if err != tc.err {
 				t.Fatalf("expected: %v got: %v", tc.err, err)
 			}
@@ -37,7 +37,7 @@ func TestServiceEnable(t *testing.T) {
 			}
 
 			if tc.disable {
-				DisableService(tc.project, tc.service)
+				ServiceDisable(tc.project, tc.service)
 			}
 		})
 	}
@@ -56,7 +56,7 @@ func TestServiceDisable(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := DisableService(tc.project, tc.service)
+			err := ServiceDisable(tc.project, tc.service)
 			if err != tc.err {
 				t.Fatalf("expected: %v got: %v", tc.err, err)
 			}

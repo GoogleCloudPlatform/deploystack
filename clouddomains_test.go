@@ -126,7 +126,7 @@ func TestDomainIsAvailable(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := domainIsAvailable(projectID, tc.domain)
+			got, err := DomainIsAvailable(projectID, tc.domain)
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
@@ -174,7 +174,7 @@ func TestDomainIsVerified(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := domainsIsVerified(tc.project, tc.domain)
+			got, err := DomainIsVerified(tc.project, tc.domain)
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)

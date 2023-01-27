@@ -33,9 +33,9 @@ func getServiceUsageService(project string) (*serviceusage.Service, error) {
 	return svc, nil
 }
 
-// EnableService enable a service in the selected project so that query calls
+// ServiceEnable enable a service in the selected project so that query calls
 // to various lists will work.
-func EnableService(project, service string) error {
+func ServiceEnable(project, service string) error {
 	if _, ok := enabledServices[service]; ok {
 		return nil
 	}
@@ -109,8 +109,8 @@ func ServiceIsEnabled(project, service string) (bool, error) {
 	return false, nil
 }
 
-// DisableService disables a service in the selected project
-func DisableService(project, service string) error {
+// ServiceDisable disables a service in the selected project
+func ServiceDisable(project, service string) error {
 	svc, err := getServiceUsageService(project)
 	if err != nil {
 		return err

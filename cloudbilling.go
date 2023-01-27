@@ -31,8 +31,8 @@ func getCloudbillingService() (*cloudbilling.APIService, error) {
 	return svc, nil
 }
 
-// ListBillingAccounts gets a list of the billing accounts a user has access to
-func ListBillingAccounts() ([]*cloudbilling.BillingAccount, error) {
+// BillingAccountList gets a list of the billing accounts a user has access to
+func BillingAccountList() ([]*cloudbilling.BillingAccount, error) {
 	resp := []*cloudbilling.BillingAccount{}
 	svc, err := getCloudbillingService()
 	if err != nil {
@@ -47,8 +47,8 @@ func ListBillingAccounts() ([]*cloudbilling.BillingAccount, error) {
 	return results.BillingAccounts, nil
 }
 
-// AttachBillingAccount will enable billing in a given project
-func AttachBillingAccount(project, account string) error {
+// BillingAccountAttach will enable billing in a given project
+func BillingAccountAttach(project, account string) error {
 	retries := 10
 	svc, err := getCloudbillingService()
 	if err != nil {
@@ -88,8 +88,8 @@ func AttachBillingAccount(project, account string) error {
 	return looperr
 }
 
-// ListBillingForProjects gets a list of projects with their billing information
-func ListBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBilling, error) {
+// ProjectListWithBilling gets a list of projects with their billing information
+func ProjectListWithBilling(p []*cloudresourcemanager.Project) ([]ProjectWithBilling, error) {
 	res := []ProjectWithBilling{}
 
 	svc, err := getCloudbillingService()
@@ -97,7 +97,7 @@ func ListBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBil
 		return res, err
 	}
 
-	projs, _ := ListBillingEnabledProjects()
+	projs, _ := ProjectListWithBillingEnabled()
 	// if err != nil {
 	// 	return res, err
 	// }
@@ -143,17 +143,17 @@ func ListBillingForProjects(p []*cloudresourcemanager.Project) ([]ProjectWithBil
 	return res, nil
 }
 
-// ListBillingEnabledProjects queries the billing accounts a user has access to
+// ProjectListWithBillingEnabled queries the billing accounts a user has access to
 // to generate a list of projects for each billing account. Will hopefully
 // reduce the number of calls made to billing api
-func ListBillingEnabledProjects() (map[string]bool, error) {
+func ProjectListWithBillingEnabled() (map[string]bool, error) {
 	r := map[string]bool{}
 	svc, err := getCloudbillingService()
 	if err != nil {
 		return r, err
 	}
 
-	bas, err := ListBillingAccounts()
+	bas, err := BillingAccountList()
 	if err != nil {
 		return r, err
 	}

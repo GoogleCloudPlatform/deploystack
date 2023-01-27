@@ -35,7 +35,7 @@ Choose number from list, or just [enter] for [1;36mus-central1-a[0m
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			EnableService(tc.project, "compute.googleapis.com")
+			ServiceEnable(tc.project, "compute.googleapis.com")
 
 			got := captureOutput(func() {
 				ZoneManage(tc.project, tc.region)
@@ -552,7 +552,7 @@ func TestMachineTypeManage(t *testing.T) {
 func TestImageManage(t *testing.T) {
 	_, rescueStdout := blockOutput()
 	defer func() { os.Stdout = rescueStdout }()
-	defaultImage, err := getLatestImage(projectID, DefaultImageProject, DefaultImageFamily)
+	defaultImage, err := ComputeImageLatestGet(projectID, DefaultImageProject, DefaultImageFamily)
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)
 	}
@@ -600,7 +600,7 @@ func TestImageManage(t *testing.T) {
 func TestGCEInstanceManage(t *testing.T) {
 	_, rescueStdout := blockOutput()
 	defer func() { os.Stdout = rescueStdout }()
-	defaultImage, err := getLatestImage(projectID, DefaultImageProject, DefaultImageFamily)
+	defaultImage, err := ComputeImageLatestGet(projectID, DefaultImageProject, DefaultImageFamily)
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)
 	}

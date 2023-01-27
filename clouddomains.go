@@ -31,7 +31,7 @@ func getDomainsClient(project string) (*domains.Client, error) {
 		return domainsClient, nil
 	}
 
-	if err := EnableService(project, "domains.googleapis.com"); err != nil {
+	if err := ServiceEnable(project, "domains.googleapis.com"); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
@@ -196,14 +196,14 @@ func DomainManage(s *Stack) (string, error) {
 		fmt.Println(Divider)
 		fmt.Println(msgDomainAvailablityHeader)
 
-		domainInfo, err = domainIsAvailable(project, domain)
+		domainInfo, err = DomainIsAvailable(project, domain)
 		if err != nil {
 			return "", fmt.Errorf("error checking domain availability %s", err)
 		}
 
 		if domainInfo.Availability == domainspb.RegisterParameters_UNAVAILABLE {
 
-			isVerified, err := domainsIsVerified(project, domain)
+			isVerified, err := DomainIsVerified(project, domain)
 			if err != nil {
 				return "", fmt.Errorf("error verifying domain %s", err)
 			}
@@ -254,7 +254,7 @@ func DomainManage(s *Stack) (string, error) {
 		return "", ErrorDomainUserDeny
 	}
 
-	if err := domainRegister(project, domainInfo, contact); err != nil {
+	if err := DomainRegister(project, domainInfo, contact); err != nil {
 		return "", fmt.Errorf("error registering domain %s", err)
 	}
 	fmt.Println(Divider)
@@ -308,7 +308,8 @@ func RegistrarContactManage(file string) (ContactData, error) {
 	return d, nil
 }
 
-func domainsSearch(project, domain string) ([]*domainspb.RegisterParameters, error) {
+// DomainsSearch checks the Cloud Domain api for the input domain
+func DomainsSearch(project, domain string) ([]*domainspb.RegisterParameters, error) {
 	c, err := getDomainsClient(project)
 	if err != nil {
 		return nil, err
@@ -326,8 +327,10 @@ func domainsSearch(project, domain string) ([]*domainspb.RegisterParameters, err
 	return resp.RegisterParameters, nil
 }
 
-func domainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error) {
-	list, err := domainsSearch(project, domain)
+// DomainIsAvailable checks to see if a given domain is available for
+// registration
+func DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error) {
+	list, err := DomainsSearch(project, domain)
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +343,8 @@ func domainIsAvailable(project, domain string) (*domainspb.RegisterParameters, e
 	return nil, err
 }
 
-func domainsIsVerified(project, domain string) (bool, error) {
+// DomainIsVerified checks to see if a given domain belongs to this user
+func DomainIsVerified(project, domain string) (bool, error) {
 	c, err := getDomainsClient(project)
 	if err != nil {
 		return false, fmt.Errorf("cannot get domains client: %s", err)
@@ -368,7 +372,8 @@ func domainsIsVerified(project, domain string) (bool, error) {
 	return false, nil
 }
 
-func domainRegister(project string, domaininfo *domainspb.RegisterParameters, contact ContactData) error {
+// DomainRegister handles registring a domain on behalf of the user.
+func DomainRegister(project string, domaininfo *domainspb.RegisterParameters, contact ContactData) error {
 	parent := fmt.Sprintf("projects/%s/locations/global", project)
 
 	c, err := getDomainsClient(project)

@@ -27,7 +27,7 @@ func TestGenerateFunctionSignedURL(t *testing.T) {
 			retext := fmt.Sprintf("https://storage.googleapis.com/uploads-[0-9]+.%s.cloudfunctions.appspot.com/[0-9a-fA-F-]+.zip\\?GoogleAccessId=service-[0-9]+@gcf-admin-robot.iam.gserviceaccount.com&Expires=[0-9]+&Signature=[0-9a-zA-Z%%]+", tc.region)
 			reSignedURL := regexp.MustCompile(retext)
 
-			got, err := GenerateFunctionSignedURL(tc.project, tc.region)
+			got, err := FunctionGenerateSignedURL(tc.project, tc.region)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -56,7 +56,7 @@ func TestGetFunctionRegions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := RegionsFunctionsList(tc.project)
+			got, err := FunctionRegionList(tc.project)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -99,7 +99,7 @@ func TestCloudFunctionCreate(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := DeployFunction(tc.project, tc.region, tc.function)
+			err := FunctionDeploy(tc.project, tc.region, tc.function)
 			if err != tc.err {
 				t.Fatalf("expected: %+v, got: %+v", tc.err, err)
 			}
@@ -108,7 +108,7 @@ func TestCloudFunctionCreate(t *testing.T) {
 			limit := 36
 			count := 0
 			for !functionDeletable {
-				f, err := GetFunction(tc.project, tc.region, "testFunctionName")
+				f, err := FunctionGet(tc.project, tc.region, "testFunctionName")
 				if err != nil {
 					t.Fatalf("polling function: expected: no error got: %+v", err)
 				}
@@ -125,7 +125,7 @@ func TestCloudFunctionCreate(t *testing.T) {
 
 			}
 
-			err = DeleteFunction(tc.project, tc.region, "testFunctionName")
+			err = FunctionDelete(tc.project, tc.region, "testFunctionName")
 			if err != tc.err {
 				t.Fatalf("deleting function: expected: no error got: %+v", err)
 			}

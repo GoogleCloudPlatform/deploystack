@@ -30,8 +30,8 @@ var DiskProjects = LabeledValues{
 	LabeledValue{Label: "Windows Server", Value: "windows-cloud"},
 }
 
-// RegionsComputeList will return a list of regions for Compute Engine
-func RegionsComputeList(project string) ([]string, error) {
+// ComputeRegionList will return a list of regions for Compute Engine
+func ComputeRegionList(project string) ([]string, error) {
 	resp := []string{}
 
 	svc, err := getComputeService(project)
@@ -58,7 +58,7 @@ func getComputeService(project string) (*compute.Service, error) {
 		return computeService, nil
 	}
 
-	if err := EnableService(project, "compute.googleapis.com"); err != nil {
+	if err := ServiceEnable(project, "compute.googleapis.com"); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
@@ -74,8 +74,8 @@ func getComputeService(project string) (*compute.Service, error) {
 	return svc, nil
 }
 
-// zones will return a list of zones in a given region
-func zones(project, region string) ([]string, error) {
+// ComputeZoneList will return a list of ComputeZoneList in a given region
+func ComputeZoneList(project, region string) ([]string, error) {
 	resp := []string{}
 
 	svc, err := getComputeService(project)
@@ -99,7 +99,9 @@ func zones(project, region string) ([]string, error) {
 	return resp, nil
 }
 
-func machineTypes(project, zone string) (*compute.MachineTypeList, error) {
+// ComputeMachineTypeList retrieves the list of Machine Types available in a
+// given zone
+func ComputeMachineTypeList(project, zone string) (*compute.MachineTypeList, error) {
 	resp := &compute.MachineTypeList{}
 
 	svc, err := getComputeService(project)
@@ -119,7 +121,9 @@ func formatMBToGB(i int64) string {
 	return fmt.Sprintf("%d GB", i/1024)
 }
 
-func images(project, imageproject string) (*compute.ImageList, error) {
+// ComputeImageList gets the list of disk images available for a given image
+// project
+func ComputeImageList(project, imageproject string) (*compute.ImageList, error) {
 	resp := &compute.ImageList{}
 
 	svc, err := getComputeService(project)
@@ -147,7 +151,8 @@ func images(project, imageproject string) (*compute.ImageList, error) {
 	return results, nil
 }
 
-func getLatestImage(project, imageproject, imagefamily string) (string, error) {
+// ComputeImageLatestGet retrieves the latest image from a particular family
+func ComputeImageLatestGet(project, imageproject, imagefamily string) (string, error) {
 	resp := ""
 
 	svc, err := getComputeService(project)
@@ -174,7 +179,8 @@ func getLatestImage(project, imageproject, imagefamily string) (string, error) {
 	return "", fmt.Errorf("error: could not find ")
 }
 
-func getListOfMachineTypeFamily(imgs *compute.MachineTypeList) LabeledValues {
+// ComputeMachineTypeFamilyList gets the list of machine type families
+func ComputeMachineTypeFamilyList(imgs *compute.MachineTypeList) LabeledValues {
 	fam := make(map[string]string)
 	lb := LabeledValues{}
 
@@ -196,7 +202,9 @@ func getListOfMachineTypeFamily(imgs *compute.MachineTypeList) LabeledValues {
 	return lb
 }
 
-func getListOfMachineTypeByFamily(imgs *compute.MachineTypeList, family string) LabeledValues {
+// ComputeMachineTypeListByFamily retrieves the list of machine types available
+// for each family
+func ComputeMachineTypeListByFamily(imgs *compute.MachineTypeList, family string) LabeledValues {
 	lb := LabeledValues{}
 
 	tempTypes := []compute.MachineType{}
@@ -223,7 +231,8 @@ func getListOfMachineTypeByFamily(imgs *compute.MachineTypeList, family string) 
 	return lb
 }
 
-func getListOfImageFamilies(imgs *compute.ImageList) LabeledValues {
+// ComputeImageFamilyList gets a list of image families
+func ComputeImageFamilyList(imgs *compute.ImageList) LabeledValues {
 	fam := make(map[string]bool)
 	lb := LabeledValues{}
 
@@ -242,7 +251,8 @@ func getListOfImageFamilies(imgs *compute.ImageList) LabeledValues {
 	return lb
 }
 
-func getListOfImageTypesByFamily(imgs *compute.ImageList, project, family string) LabeledValues {
+// ComputeImageTypeListByFamily retrieves a list of iamge types by the family
+func ComputeImageTypeListByFamily(imgs *compute.ImageList, project, family string) LabeledValues {
 	lb := LabeledValues{}
 
 	for _, v := range imgs.Items {

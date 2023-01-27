@@ -28,7 +28,8 @@ func getStorageService() (*storage.Client, error) {
 	return svc, nil
 }
 
-func CreateStorageBucket(project, bucket string) error {
+// StorageBucketCreate creates a storage buck in Cloud Storage
+func StorageBucketCreate(project, bucket string) error {
 	svc, err := getStorageService()
 	if err != nil {
 		return err
@@ -41,7 +42,8 @@ func CreateStorageBucket(project, bucket string) error {
 	return nil
 }
 
-func CreateStorageObject(project, bucket, path string) (string, error) {
+// StorageObjectCreate creates an object in a particular bucket in Cloud Storage
+func StorageObjectCreate(project, bucket, path string) (string, error) {
 	svc, err := getStorageService()
 	if err != nil {
 		return "", err

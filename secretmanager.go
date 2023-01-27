@@ -26,8 +26,8 @@ func getSecretManagerService() (*secretmanager.Service, error) {
 	return svc, nil
 }
 
-// CreateSecret creates a secret and populates the lastest version with a payload.
-func CreateSecret(project, name, payload string) error {
+// SecretCreate creates a secret and populates the lastest version with a payload.
+func SecretCreate(project, name, payload string) error {
 	svc, err := getSecretManagerService()
 	if err != nil {
 		return err
@@ -63,8 +63,8 @@ func CreateSecret(project, name, payload string) error {
 	return nil
 }
 
-// DeleteSecret deletes a secret
-func DeleteSecret(project, name string) error {
+// SecretDelete deletes a secret
+func SecretDelete(project, name string) error {
 	svc, err := getSecretManagerService()
 	if err != nil {
 		return err
