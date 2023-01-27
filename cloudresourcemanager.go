@@ -31,8 +31,8 @@ func getCloudResourceManagerService() (*cloudresourcemanager.Service, error) {
 	return svc, nil
 }
 
-// ProjectNumber will get the project_number for the input projectid
-func ProjectNumber(id string) (string, error) {
+// ProjectNumberGet will get the project_number for the input projectid
+func ProjectNumberGet(id string) (string, error) {
 	resp := ""
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
@@ -49,8 +49,8 @@ func ProjectNumber(id string) (string, error) {
 	return resp, nil
 }
 
-// ProjectParent returns the parent of an input project
-func ProjectParent(id string) (*cloudresourcemanager.ResourceId, error) {
+// ProjectParentGet returns the parent of an input project
+func ProjectParentGet(id string) (*cloudresourcemanager.ResourceId, error) {
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
 		return nil, err
@@ -64,8 +64,8 @@ func ProjectParent(id string) (*cloudresourcemanager.ResourceId, error) {
 	return results.Parent, nil
 }
 
-// ListProjects gets a list of the ListProjects a user has access to
-func ListProjects() ([]ProjectWithBilling, error) {
+// ProjectList gets a list of the ProjectList a user has access to
+func ProjectList() ([]ProjectWithBilling, error) {
 	resp := []ProjectWithBilling{}
 
 	svc, err := getCloudResourceManagerService()
@@ -78,7 +78,7 @@ func ListProjects() ([]ProjectWithBilling, error) {
 		return resp, err
 	}
 
-	pwb, err := ListBillingForProjects(results.Projects)
+	pwb, err := ProjectListWithBilling(results.Projects)
 	if err != nil {
 		return resp, err
 	}
@@ -108,9 +108,9 @@ func (p ProjectWithBilling) ToLabledValue() LabeledValue {
 	return r
 }
 
-// CreateProject does the work of actually creating a new project in your
+// ProjectCreate does the work of actually creating a new project in your
 // GCP account
-func CreateProject(project, parent, parentType string) error {
+func ProjectCreate(project, parent, parentType string) error {
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
 		return err
@@ -160,9 +160,9 @@ func CreateProject(project, parent, parentType string) error {
 	return ErrorProjectCreateTooLong
 }
 
-// DeleteProject does the work of actually deleting an existing project in
+// ProjectDelete does the work of actually deleting an existing project in
 // your GCP account
-func DeleteProject(project string) error {
+func ProjectDelete(project string) error {
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
 		return err
@@ -176,8 +176,8 @@ func DeleteProject(project string) error {
 	return nil
 }
 
-// GrantProjectIAMRole grants a given principal a given role in a given project
-func GrantProjectIAMRole(project, role, principal string) error {
+// ProjectGrantIAMRole grants a given principal a given role in a given project
+func ProjectGrantIAMRole(project, role, principal string) error {
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
 		return err
@@ -204,8 +204,8 @@ func GrantProjectIAMRole(project, role, principal string) error {
 	return nil
 }
 
-// ProjectID gets the currently set default project
-func ProjectID() (string, error) {
+// ProjectIDGet gets the currently set default project
+func ProjectIDGet() (string, error) {
 	cmd := exec.Command("gcloud", "config", "get-value", "project")
 	out, err := cmd.Output()
 	if err != nil {
@@ -226,8 +226,8 @@ func ProjectIDSet(project string) error {
 	return nil
 }
 
-// CheckProject confirms that a project actually exists
-func CheckProject(project string) bool {
+// ProjectExists confirms that a project actually exists
+func ProjectExists(project string) bool {
 	svc, err := getCloudResourceManagerService()
 	if err != nil {
 		return false

@@ -25,8 +25,8 @@ func getCloudBuildService() (*cloudbuild.Service, error) {
 	return svc, nil
 }
 
-// CreateCloudBuildTrigger creates a build trigger in a given project
-func CreateCloudBuildTrigger(project string, trigger cloudbuild.BuildTrigger) (*cloudbuild.BuildTrigger, error) {
+// CloudBuildTriggerCreate creates a build trigger in a given project
+func CloudBuildTriggerCreate(project string, trigger cloudbuild.BuildTrigger) (*cloudbuild.BuildTrigger, error) {
 	svc, err := getCloudBuildService()
 	if err != nil {
 		return nil, err
@@ -41,8 +41,8 @@ func CreateCloudBuildTrigger(project string, trigger cloudbuild.BuildTrigger) (*
 	return result, nil
 }
 
-// DeleteCloudBuildTrigger deletes a build trigger in a given project
-func DeleteCloudBuildTrigger(project string, triggerid string) error {
+// CloudBuildTriggerDelete deletes a build trigger in a given project
+func CloudBuildTriggerDelete(project string, triggerid string) error {
 	svc, err := getCloudBuildService()
 	if err != nil {
 		return err

@@ -14,12 +14,12 @@ func TestSecretCreate(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := CreateSecret(tc.project, tc.name, tc.payload)
+			err := SecretCreate(tc.project, tc.name, tc.payload)
 			if err != tc.err {
 				t.Fatalf("expected: %+v, got: %+v", tc.err, err)
 			}
 
-			err = DeleteSecret(tc.project, tc.name)
+			err = SecretDelete(tc.project, tc.name)
 			if err != tc.err {
 				t.Fatalf("expected: no error got: %+v", err)
 			}

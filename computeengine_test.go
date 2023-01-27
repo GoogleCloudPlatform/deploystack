@@ -32,7 +32,7 @@ func TestGetComputeRegions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := RegionsComputeList(tc.project)
+			got, err := ComputeRegionList(tc.project)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -62,7 +62,7 @@ func TestZones(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := zones(tc.project, tc.region)
+			got, err := ComputeZoneList(tc.project, tc.region)
 			if err != nil {
 				t.Fatalf("expected: no error, got: project-%s:%v", projectID, err)
 			}
@@ -109,7 +109,7 @@ func TestGetMachineTypes(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := machineTypes(tc.project, tc.zone)
+			got, err := ComputeMachineTypeList(tc.project, tc.zone)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -203,7 +203,7 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := getListOfImageFamilies(tc.input)
+			got := ComputeImageFamilyList(tc.input)
 
 			got.Sort()
 
@@ -243,7 +243,7 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := getListOfImageTypesByFamily(tc.input, tc.project, tc.family)
+			got := ComputeImageTypeListByFamily(tc.input, tc.project, tc.family)
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
@@ -284,7 +284,7 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := getListOfMachineTypeByFamily(tc.input, tc.family)
+			got := ComputeMachineTypeListByFamily(tc.input, tc.family)
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
@@ -320,7 +320,7 @@ func TestGetListOfMachineTypeFamily(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := getListOfMachineTypeFamily(tc.input)
+			got := ComputeMachineTypeFamilyList(tc.input)
 
 			tc.want.Sort()
 
@@ -391,7 +391,7 @@ func TestImages(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := images(tc.project, tc.imageProject)
+			got, err := ComputeImageList(tc.project, tc.imageProject)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -438,7 +438,7 @@ func TestGetLatestImage(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := getLatestImage(tc.project, tc.imageProject, tc.imageFamily)
+			got, err := ComputeImageLatestGet(tc.project, tc.imageProject, tc.imageFamily)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}

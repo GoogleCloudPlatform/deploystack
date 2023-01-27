@@ -26,8 +26,8 @@ func getSchedulerService() (*scheduler.CloudSchedulerClient, error) {
 	return svc, nil
 }
 
-// ScheduleJob creates a Cloud Scheduler Job
-func ScheduleJob(project, region string, job schedulerpb.Job) error {
+// JobSchedule creates a Cloud Scheduler Job
+func JobSchedule(project, region string, job schedulerpb.Job) error {
 	ctx := context.Background()
 	svc, err := getSchedulerService()
 	if err != nil {
@@ -47,8 +47,8 @@ func ScheduleJob(project, region string, job schedulerpb.Job) error {
 	return nil
 }
 
-// DeleteJob deletes a Cloud Scheduler Job
-func DeleteJob(project, region, job string) error {
+// JobDelete deletes a Cloud Scheduler Job
+func JobDelete(project, region, job string) error {
 	ctx := context.Background()
 	svc, err := getSchedulerService()
 	if err != nil {

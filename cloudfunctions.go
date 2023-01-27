@@ -15,7 +15,7 @@ func getCloudFunctionsService(project string) (*cloudfunctions.Service, error) {
 		return cloudfunctionsService, nil
 	}
 
-	if err := EnableService(project, "cloudfunctions.googleapis.com"); err != nil {
+	if err := ServiceEnable(project, "cloudfunctions.googleapis.com"); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
@@ -31,11 +31,11 @@ func getCloudFunctionsService(project string) (*cloudfunctions.Service, error) {
 	return svc, nil
 }
 
-// RegionsFunctionsList will return a list of regions for Cloud Functions
-func RegionsFunctionsList(project string) ([]string, error) {
+// FunctionRegionList will return a list of regions for Cloud Functions
+func FunctionRegionList(project string) ([]string, error) {
 	resp := []string{}
 
-	if err := EnableService(project, "cloudfunctions.googleapis.com"); err != nil {
+	if err := ServiceEnable(project, "cloudfunctions.googleapis.com"); err != nil {
 		return resp, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
@@ -58,8 +58,8 @@ func RegionsFunctionsList(project string) ([]string, error) {
 	return resp, nil
 }
 
-// DeployFunction deploys a Cloud Function.
-func DeployFunction(project, region string, f cloudfunctions.CloudFunction) error {
+// FunctionDeploy deploys a Cloud Function.
+func FunctionDeploy(project, region string, f cloudfunctions.CloudFunction) error {
 	svc, err := getCloudFunctionsService(project)
 	if err != nil {
 		return err
@@ -73,8 +73,8 @@ func DeployFunction(project, region string, f cloudfunctions.CloudFunction) erro
 	return nil
 }
 
-// DeleteFunction deletes a Cloud Function.
-func DeleteFunction(project, region, name string) error {
+// FunctionDelete deletes a Cloud Function.
+func FunctionDelete(project, region, name string) error {
 	svc, err := getCloudFunctionsService(project)
 	if err != nil {
 		return err
@@ -87,8 +87,8 @@ func DeleteFunction(project, region, name string) error {
 	return nil
 }
 
-// GetFunction gets the details of a Cloud Function.
-func GetFunction(project, region, name string) (*cloudfunctions.CloudFunction, error) {
+// FunctionGet gets the details of a Cloud Function.
+func FunctionGet(project, region, name string) (*cloudfunctions.CloudFunction, error) {
 	svc, err := getCloudFunctionsService(project)
 	if err != nil {
 		return nil, err
@@ -103,7 +103,9 @@ func GetFunction(project, region, name string) (*cloudfunctions.CloudFunction, e
 	return result, nil
 }
 
-func GenerateFunctionSignedURL(project, region string) (string, error) {
+// FunctionGenerateSignedURL generates a signed url for use with uploading to
+// Cloud Storage
+func FunctionGenerateSignedURL(project, region string) (string, error) {
 	location := fmt.Sprintf("projects/%s/locations/%s", project, region)
 	svc, err := getCloudFunctionsService(project)
 	if err != nil {

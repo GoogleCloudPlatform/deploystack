@@ -36,12 +36,12 @@ func TestScheduleJob(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := ScheduleJob(tc.project, tc.region, tc.job)
+			err := JobSchedule(tc.project, tc.region, tc.job)
 			if err != tc.err {
 				t.Fatalf("expected: %+v, got: %+v", tc.err, err)
 			}
 
-			err = DeleteJob(tc.project, tc.region, tc.name)
+			err = JobDelete(tc.project, tc.region, tc.name)
 			if err != tc.err {
 				t.Fatalf("expected: no error got: %+v", err)
 			}

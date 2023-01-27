@@ -36,12 +36,12 @@ func TestTriggerCreate(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := CreateCloudBuildTrigger(tc.project, tc.trigger)
+			got, err := CloudBuildTriggerCreate(tc.project, tc.trigger)
 			if err != tc.err {
 				t.Fatalf("expected: %+v, got: %+v", tc.err, err)
 			}
 
-			err = DeleteCloudBuildTrigger(tc.project, got.Id)
+			err = CloudBuildTriggerDelete(tc.project, got.Id)
 			if err != tc.err {
 				t.Fatalf("expected: no error got: %+v", err)
 			}

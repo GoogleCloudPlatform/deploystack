@@ -461,13 +461,13 @@ func (c Config) Process(s *Stack, output string) error {
 
 	if len(c.Projects.Items) > 0 {
 
-		defaultProject, err := ProjectID()
+		defaultProject, err := ProjectIDGet()
 		if err != nil {
 			// TODO: make sure to edit these errors
 			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
 		}
 
-		projects, err := ListProjects()
+		projects, err := ProjectList()
 		if err != nil {
 			// TODO: make sure to edit these errors
 			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
@@ -524,7 +524,7 @@ func (c Config) Process(s *Stack, output string) error {
 	}
 
 	if c.ProjectNumber {
-		projectnumber, err = ProjectNumber(project)
+		projectnumber, err = ProjectNumberGet(project)
 		if err != nil {
 			handleProcessError(fmt.Errorf("error managing project number settings: %s", err))
 		}

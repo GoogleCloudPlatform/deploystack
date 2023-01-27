@@ -22,17 +22,17 @@ func ImageManage(project string) (string, error) {
 	ImageTypeProject := DiskProjects.SelectUI()
 
 	fmt.Printf("Polling for %s images...\n", ImageTypeProject.Value)
-	images, err := images(project, ImageTypeProject.Value)
+	images, err := ComputeImageList(project, ImageTypeProject.Value)
 	if err != nil {
 		return "", err
 	}
 
-	families := getListOfImageFamilies(images)
+	families := ComputeImageFamilyList(images)
 
 	colorPrintln("Choose a disk family to use for this application.", TERMCYANB)
 	family := families.SelectUI()
 
-	imagesByFam := getListOfImageTypesByFamily(images, ImageTypeProject.Value, family.Value)
+	imagesByFam := ComputeImageTypeListByFamily(images, ImageTypeProject.Value, family.Value)
 
 	colorPrintln("Choose a disk type to use for this application.", TERMCYANB)
 	result := imagesByFam.SelectUI()
@@ -52,17 +52,17 @@ func MachineTypeManage(project, zone string) (string, error) {
 	fmt.Println(Divider)
 
 	fmt.Printf("Polling for machine types...\n")
-	types, err := machineTypes(project, zone)
+	types, err := ComputeMachineTypeList(project, zone)
 	if err != nil {
 		return "", fmt.Errorf("error polling for machine types : %s", err)
 	}
 
-	typefamilies := getListOfMachineTypeFamily(types)
+	typefamilies := ComputeMachineTypeFamilyList(types)
 
 	fmt.Printf("Choose an Machine Type Family\n")
 	familyProject := typefamilies.SelectUI()
 
-	filteredtypes := getListOfMachineTypeByFamily(types, familyProject.Value)
+	filteredtypes := ComputeMachineTypeListByFamily(types, familyProject.Value)
 
 	fmt.Printf("%sChoose a machine type to use for this application. %s\n", TERMCYANB, TERMCLEAR)
 	result := filteredtypes.SelectUI()
@@ -122,7 +122,7 @@ func GCEInstanceManage(project, basename string) (GCEInstanceConfig, error) {
 	var err error
 	configs := make(map[string]string)
 
-	defaultImage, err := getLatestImage(project, DefaultImageProject, DefaultImageFamily)
+	defaultImage, err := ComputeImageLatestGet(project, DefaultImageProject, DefaultImageFamily)
 	if err != nil {
 		return configs, err
 	}
@@ -224,7 +224,7 @@ func GCEInstanceManage(project, basename string) (GCEInstanceConfig, error) {
 // BillingAccountManage either grabs the users only BillingAccount or
 // presents a list of BillingAccounts to select from.
 func BillingAccountManage() (string, error) {
-	accounts, err := ListBillingAccounts()
+	accounts, err := BillingAccountList()
 	if err != nil {
 		return "", fmt.Errorf("could not get list of billing accounts: %s", err)
 	}
@@ -277,7 +277,7 @@ func projectPrompt(currentProject string) (string, error) {
 		}
 
 		if currentProject == "" {
-			tmp, err := ListProjects()
+			tmp, err := ProjectList()
 			if err != nil || len(tmp) == 0 || tmp[0].ID == "" {
 				return "", fmt.Errorf("could not determine an alternate project for parent detection: %s ", err)
 			}
@@ -285,12 +285,12 @@ func projectPrompt(currentProject string) (string, error) {
 			currentProject = tmp[0].ID
 		}
 
-		parent, err := ProjectParent(currentProject)
+		parent, err := ProjectParentGet(currentProject)
 		if err != nil {
 			return "", fmt.Errorf("could not determine proper parent for project: %s ", err)
 		}
 
-		if err := CreateProject(text, parent.Id, parent.Type); err != nil {
+		if err := ProjectCreate(text, parent.Id, parent.Type); err != nil {
 			fmt.Printf("%sProject name could not be created %s\n", TERMREDREV, TERMCLEAR)
 			fmt.Printf("%sReason: %s %s\n", TERMREDB, err, TERMCLEAR)
 			fmt.Printf("%sPlease choose another. %s\n", TERMREDREV, TERMCLEAR)
@@ -311,7 +311,7 @@ func projectPrompt(currentProject string) (string, error) {
 		return "", fmt.Errorf("could not determine proper billing account: %s ", err)
 	}
 
-	if err := AttachBillingAccount(result, account); err != nil {
+	if err := BillingAccountAttach(result, account); err != nil {
 		return "", fmt.Errorf("could not link billing account: %s ", err)
 	}
 	sec2.Close()
@@ -322,11 +322,11 @@ func projectPrompt(currentProject string) (string, error) {
 func RegionsList(project, product string) ([]string, error) {
 	switch product {
 	case "compute":
-		return RegionsComputeList(project)
+		return ComputeRegionList(project)
 	case "functions":
-		return RegionsFunctionsList(project)
+		return FunctionRegionList(project)
 	case "run":
-		return regionsRun(project)
+		return RunRegionsList(project)
 	}
 
 	return []string{}, fmt.Errorf("invalid product (%s) requested", product)
@@ -350,7 +350,7 @@ func RegionManage(project, product, defaultValue string) (string, error) {
 // ZoneManage promps a user to select a zone.
 func ZoneManage(project, region string) (string, error) {
 	fmt.Printf("Polling for zones...\n")
-	zones, err := zones(project, region)
+	zones, err := ComputeZoneList(project, region)
 	if err != nil {
 		return "", err
 	}
