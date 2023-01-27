@@ -3,6 +3,7 @@
   "name": "project-list-example",
   "duration": 5,
   "projects": {
+    "allow_duplicates": false,
     "items": [
       {
         "variable_name": "project_id",

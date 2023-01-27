@@ -88,7 +88,22 @@ tfvars file that will drive the terraform script.
 		  ],
 	  "default" : "roles/owner|Project Owner"
     }
-  ]
+  ],
+  "projects": {
+    "allow_duplicates": false,
+    "items": [
+      {
+        "variable_name": "project_id",
+        "user_prompt": "Choose a project to use for this application",
+        "set_as_default": true
+      },
+      {
+        "variable_name": "project_id_2",
+        "user_prompt": "Choose a second project to use for this application",
+        "set_as_default": false
+      }
+    ]
+  }
 }
 ```
 
@@ -97,30 +112,36 @@ tfvars file that will drive the terraform script.
 You can also use a yaml file if you are using the .deploystack folder setup. 
 
 ```yaml
-"title": "Three Tier App (TODO)"
-"duration": 9 
-"documentation_link": "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/three-tier-app"
-"collect_project": true
-"collect_project_number": true
-"collect_region": true
-"collect_billing_account": false
-"region_type": "run"
-"region_default": "us-central1"
-"collect_zone": true
-# You can even include comments in this yaml
-"hard_settings":
-  "basename": "three-tier-app"
-"custom_settings":
-  - 1:
-    "name" : "nodes"
-    "description": "Please enter the number of nodes"
-    "default" : "roles/owner|Project Owner"
-    "options" :
-      - "roles/reviewer|Project Reviewer"
-      - "roles/owner|Project Owner"
-      - "roles/vison.reader|Cloud Vision Reader"
-
+title: Basic Title
+duration: 5
+collect_project: true
+collect_region: true
+region_type: functions
+region_default: us-central1
+collect_zone: true
+hard_settings:
+  basename: appprefix
+custom_settings:
+- name: nodes
+  description: Please enter the number of nodes
+  options:
+  - roles/reviewer|Project Reviewer
+  - roles/owner|Project Owner
+  - roles/vison.reader|Cloud Vision Reader
+  default: roles/owner|Project Owner
+projects:
+  allow_duplicates: false
+  items:
+  - variable_name: project_id
+    user_prompt: Choose a project to use for this application
+    set_as_default: true
+  - variable_name: project_id_2
+    user_prompt: Choose a second project to use for this application
+    set_as_default: false
 ```
+
+#### DeployStack Config Settings
+
 
 | Name                   | Type    | Description                                                                          |
 | ---------------        | ------- | ------------------------------------------------------------------------------------ |
@@ -136,15 +157,37 @@ You can also use a yaml file if you are using the .deploystack folder setup.
 | collect_zone           | string  | Whether or not to walk the user through picking a zone                               |
 | hard_settings          |         | Hard Settings are for key value pairs to hardset and not get from the user.          |
 |                        |         | `"basename":"appprefix"`                                                             |
-| custom_settings        |         | Custom Settings are collections of settings that we would like to prompt a user for. |
+| prepend_project        | bool    | Whether or not to prepend the project id to the default value. Useful for resources like buckets that have to have globally unique names.                       |
+| path_terraform         | string  | Path that DeployStack should regard as the terraform folder.   |
+| path_messages          | string  | Path that DeployStack should look for messages, description and success.   |
+| path_scripts           | string  | Path that DeployStack should look for scripts that can be injected into DeployStack routine.  |
+| custom_settings        |         |  **Documentation Below** Custom Settings are collections of settings that we would like to prompt a user for.  |
+| projects               |         |  **Documentation Below** Projects are a list of projects with settings that will surface the project selector interface for.  |
+
+#### Custom Settings Options
+
+| Name                   | Type    | Description                                                                          |
+| ---------------        | ------- | ------------------------------------------------------------------------------------ |
 | name                   | string  | The name of the variable                                                             |
 | description            | string  | The description of the variable to prompt the user with                              |
 | default                | string  | A default value for the variable.                                                    |
 | options                | array   | An array of options to turn this into a custom select interface <br /> **Note** Optionally you can pass a \| to divide an option into a value and a label like so: <br /> `"weirdConfigSetting\|User Readable Label"`                     |
-| prepend_project        | bool    | Whether or not to prepend the project id to the default value. Useful for resources like buckets that have to have globally unique names.                       |
-| path_terraform         | string  | Path that DeployStack should regard as the terraform folder.   |
-| path_messages         | string  | Path that DeployStack should look for messages, description and success.   |
-| path_scripts          | string  | Path that DeployStack should look for scripts that can be injected into DeployStack routine.  |
+
+
+#### Projects Settings Options
+
+| Name                   | Type    | Description                                                                          |
+| ---------------        | ------- | ------------------------------------------------------------------------------------ |
+| allow_duplicates       | bool    | Whether or not a user can use the same project multiple times, defaults to `false`   |
+
+#### Project Settings Options
+
+| Name                   | Type    | Description                                                                          |
+| ---------------        | ------- | ------------------------------------------------------------------------------------ |
+| variable_name          | string  | The name of the variable                                                             |
+| user_prompt            | string  | The description of the variable to prompt the user with                              |
+| set_as_default         | string  | Whether or not to set this as the default project for the user                       |
+
 
 ### UI Controls
 
