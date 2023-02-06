@@ -138,7 +138,7 @@ func ComputeImageList(project, imageproject string) (*compute.ImageList, error) 
 	tmp := []*compute.Image{}
 	for _, v := range results.Items {
 		// fmt.Printf("%v", v.Name)
-		if v.Deprecated == nil {
+		if v.Deprecated == nil || v.Deprecated.State == "" {
 			// fmt.Printf("- not deprecated")
 			tmp = append(tmp, v)
 		}
@@ -171,7 +171,7 @@ func ComputeImageLatestGet(project, imageproject, imagefamily string) (string, e
 	})
 
 	for _, v := range results.Items {
-		if v.Deprecated == nil {
+		if v.Deprecated == nil || v.Deprecated.State == "" {
 			return fmt.Sprintf("%s/%s", imageproject, v.Name), nil
 		}
 	}

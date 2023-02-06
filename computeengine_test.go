@@ -399,11 +399,11 @@ func TestImages(t *testing.T) {
 			// sort.Strings(got)
 
 			if !reflect.DeepEqual(tc.want, got.Items) {
-				fmt.Printf("\n\n\nWant\n")
+				fmt.Printf("\n\nWant\n")
 				for _, v := range tc.want {
 					fmt.Printf("%+v\n", v.Name)
 				}
-				fmt.Printf("\n\n\nGot\n")
+				fmt.Printf("\n\nGot\n")
 				for _, v := range got.Items {
 					fmt.Printf("%+v\n", v.Name)
 				}
