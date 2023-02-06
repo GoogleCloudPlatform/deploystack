@@ -810,6 +810,11 @@ func (s Stack) GetSetting(key string) string {
 	return s.Settings[key]
 }
 
+// DeleteSetting removes a setting value.
+func (s Stack) DeleteSetting(key string) {
+	delete(s.Settings, key)
+}
+
 // Terraform returns all of the settings as a Terraform variables format.
 func (s Stack) Terraform() string {
 	result := strings.Builder{}
