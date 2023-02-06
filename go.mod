@@ -1,27 +1,23 @@
 module github.com/GoogleCloudPlatform/deploystack
 
-go 1.17
+go 1.19
 
 require (
 	cloud.google.com/go/domains v0.7.0
+	cloud.google.com/go/scheduler v1.6.0
+	cloud.google.com/go/storage v1.27.0
 	github.com/kylelemons/godebug v1.1.0
 	github.com/nyaruka/phonenumbers v1.1.1
 	google.golang.org/api v0.100.0
 	google.golang.org/genproto v0.0.0-20221018160656-63c7b68cfc55
+	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	cloud.google.com/go v0.104.0 // indirect
-	cloud.google.com/go/cloudbuild v1.3.0 // indirect
 	cloud.google.com/go/compute v1.10.0 // indirect
 	cloud.google.com/go/iam v0.6.0 // indirect
-	cloud.google.com/go/scheduler v1.6.0 // indirect
-	cloud.google.com/go/secretmanager v1.8.0 // indirect
-	cloud.google.com/go/storage v1.27.0 // indirect
-	github.com/PuerkitoBio/goquery v1.8.0 // indirect
-	github.com/andybalholm/cascadia v1.3.1 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -48,6 +44,5 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
-	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
