@@ -514,7 +514,7 @@ func TestMachineTypeManage(t *testing.T) {
 		want    string
 	}{
 		// TODO: force this to use whatever the console sets as default
-		"Default": {"", projectID, "us-central1-a", "t2d-standard-1"},
+		"Default": {"", projectID, "us-central1-a", "g1-small"},
 	}
 
 	for name, tc := range tests {
