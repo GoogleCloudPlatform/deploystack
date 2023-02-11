@@ -1,8 +1,5 @@
 module github.com/GoogleCloudPlatform/deploystack/tui
 
-replace github.com/GoogleCloudPlatform/deploystack => /Users/tpryan/google/go/src/github.com/tpryan/deploystack
-
-replace github.com/GoogleCloudPlatform/deploystack/gcloud => /Users/tpryan/google/go/src/github.com/tpryan/deploystack/gcloud
 
 go 1.19
 
