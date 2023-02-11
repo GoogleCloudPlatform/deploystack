@@ -50,3 +50,16 @@ func (c *Client) ServiceAccountCreate(project, username, displayName string) (st
 
 	return servicaccount.Email, nil
 }
+
+// ServiceAccountDelete deletes a service account. A little on the nose
+func (c *Client) ServiceAccountDelete(project, email string) error {
+	svc, err := c.getIAMService(project)
+	if err != nil {
+		return err
+	}
+
+	name := fmt.Sprintf("projects/%s/serviceAccounts/%s", project, email)
+	_, err = svc.Projects.ServiceAccounts.Delete(name).Do()
+
+	return err
+}
