@@ -7,7 +7,6 @@ import (
 	domains "cloud.google.com/go/domains/apiv1beta1"
 	scheduler "cloud.google.com/go/scheduler/apiv1beta1"
 	"cloud.google.com/go/storage"
-	"github.com/GoogleCloudPlatform/deploystack"
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudbuild/v1"
 	"google.golang.org/api/cloudfunctions/v1"
@@ -18,28 +17,7 @@ import (
 	"google.golang.org/api/run/v1"
 	"google.golang.org/api/secretmanager/v1"
 	"google.golang.org/api/serviceusage/v1"
-	domainspb "google.golang.org/genproto/googleapis/cloud/domains/v1beta1"
 )
-
-// UIClient interface encapsulates all of the calls to gcloud that one needs to
-// make the TUI work
-type UIClient interface {
-	ProjectIDGet() (string, error)
-	ProjectList() ([]ProjectWithBilling, error)
-	ProjectParentGet(project string) (*cloudresourcemanager.ResourceId, error)
-	ProjectCreate(project, parent, parentType string) error
-	RegionList(project, product string) ([]string, error)
-	ZoneList(project, region string) ([]string, error)
-	DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error)
-	DomainIsVerified(project, domain string) (bool, error)
-	DomainRegister(project string, domaininfo *domainspb.RegisterParameters, contact ContactData) error
-	ImageLatestGet(project, imageproject, imagefamily string) (string, error)
-	MachineTypeList(project, zone string) (*compute.MachineTypeList, error)
-	MachineTypeFamilyList(imgs *compute.MachineTypeList) deploystack.LabeledValues
-	MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) deploystack.LabeledValues
-	ImageList(project, imageproject string) (*compute.ImageList, error)
-	ImageTypeListByFamily(imgs *compute.ImageList, project, family string) deploystack.LabeledValues
-}
 
 // Client is the tool that will handle all of the communication between gcloud
 // and the various product areas

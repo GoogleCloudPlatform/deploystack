@@ -55,13 +55,6 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func interfaceTester() UIClient {
-	var r UIClient
-	c := NewClient(ctx, defaultUserAgent, opts)
-	r = &c
-	return r
-}
-
 func removeFromSlice(slice []string, s string) []string {
 	for i, v := range slice {
 		if v == s {

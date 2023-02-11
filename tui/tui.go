@@ -2,6 +2,14 @@
 // should happen within this package.
 package tui
 
+import (
+	"cloud.google.com/go/domains/apiv1beta1/domainspb"
+	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/gcloud"
+	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/compute/v1"
+)
+
 // TODO: put all the text together in a better format
 var (
 	msgDomainRegisterHeader      = "Manage Domain Registration"
@@ -39,4 +47,24 @@ func (e errMsg) Error() string { return e.err.Error() }
 type successMsg struct {
 	msg   string
 	unset bool
+}
+
+// UIClient interface encapsulates all of the calls to gcloud that one needs to
+// make the TUI work
+type UIClient interface {
+	ProjectIDGet() (string, error)
+	ProjectList() ([]gcloud.ProjectWithBilling, error)
+	ProjectParentGet(project string) (*cloudresourcemanager.ResourceId, error)
+	ProjectCreate(project, parent, parentType string) error
+	RegionList(project, product string) ([]string, error)
+	ZoneList(project, region string) ([]string, error)
+	DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error)
+	DomainIsVerified(project, domain string) (bool, error)
+	DomainRegister(project string, domaininfo *domainspb.RegisterParameters, contact gcloud.ContactData) error
+	ImageLatestGet(project, imageproject, imagefamily string) (string, error)
+	MachineTypeList(project, zone string) (*compute.MachineTypeList, error)
+	MachineTypeFamilyList(imgs *compute.MachineTypeList) deploystack.LabeledValues
+	MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) deploystack.LabeledValues
+	ImageList(project, imageproject string) (*compute.ImageList, error)
+	ImageTypeListByFamily(imgs *compute.ImageList, project, family string) deploystack.LabeledValues
 }

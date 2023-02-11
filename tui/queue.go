@@ -2,7 +2,6 @@ package tui
 
 import (
 	"github.com/GoogleCloudPlatform/deploystack"
-	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -28,11 +27,11 @@ type Queue struct {
 	stack   *deploystack.Stack
 	store   map[string]interface{}
 	index   []string
-	client  gcloud.UIClient
+	client  UIClient
 }
 
 // NewQueue creates a new queue. You should need only one per app
-func NewQueue(s *deploystack.Stack, client gcloud.UIClient) Queue {
+func NewQueue(s *deploystack.Stack, client UIClient) Queue {
 	q := Queue{stack: s, store: map[string]interface{}{}}
 	q.client = client
 	q.index = []string{}
