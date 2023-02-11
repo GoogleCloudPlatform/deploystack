@@ -22,12 +22,16 @@ var (
 	ErrorDomainUserDeny = fmt.Errorf("user said no to buying the domain")
 )
 
-func (c *Client) getDomainsClient() (*domains.Client, error) {
+func (c *Client) getDomainsClient(project string) (*domains.Client, error) {
 	var err error
 	svc := c.services.domainsClient
 
 	if svc != nil {
 		return svc, nil
+	}
+
+	if err := c.ServiceEnable(project, "domains.googleapis.com"); err != nil {
+		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
 	svc, err = domains.NewClient(c.ctx, c.opts)
@@ -146,7 +150,7 @@ func newContactDataFromFile(file string) (ContactData, error) {
 
 // DomainsSearch checks the Cloud Domain api for the input domain
 func (c Client) DomainsSearch(project, domain string) ([]*domainspb.RegisterParameters, error) {
-	svc, err := c.getDomainsClient()
+	svc, err := c.getDomainsClient(project)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +185,7 @@ func (c Client) DomainIsAvailable(project, domain string) (*domainspb.RegisterPa
 
 // DomainIsVerified checks to see if a given domain belongs to this user
 func (c Client) DomainIsVerified(project, domain string) (bool, error) {
-	svc, err := c.getDomainsClient()
+	svc, err := c.getDomainsClient(project)
 	if err != nil {
 		return false, fmt.Errorf("cannot get domains client: %s", err)
 	}
@@ -212,7 +216,7 @@ func (c Client) DomainIsVerified(project, domain string) (bool, error) {
 func (c Client) DomainRegister(project string, domaininfo *domainspb.RegisterParameters, contact ContactData) error {
 	parent := fmt.Sprintf("projects/%s/locations/global", project)
 
-	svc, err := c.getDomainsClient()
+	svc, err := c.getDomainsClient(project)
 	if err != nil {
 		return err
 	}
