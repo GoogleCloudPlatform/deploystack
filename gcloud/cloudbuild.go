@@ -8,7 +8,7 @@ import (
 
 func (c *Client) getCloudBuildService(project string) (*cloudbuild.Service, error) {
 	var err error
-	svc := c.services.cloudBuildService
+	svc := c.services.build
 
 	if svc != nil {
 		return svc, nil
@@ -24,7 +24,7 @@ func (c *Client) getCloudBuildService(project string) (*cloudbuild.Service, erro
 	}
 
 	svc.UserAgent = c.userAgent
-	c.services.cloudBuildService = svc
+	c.services.build = svc
 
 	return svc, nil
 }

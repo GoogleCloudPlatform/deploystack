@@ -31,11 +31,9 @@ var (
 	ErrorProjectDidNotFinish = fmt.Errorf("project creation did not complete in a timely manner")
 )
 
-// var cloudResourceManagerService *cloudresourcemanager.Service
-
 func (c *Client) getCloudResourceManagerService() (*cloudresourcemanager.Service, error) {
 	var err error
-	svc := c.services.cloudResourceManager
+	svc := c.services.resourceManager
 
 	if svc != nil {
 		return svc, nil
@@ -47,7 +45,7 @@ func (c *Client) getCloudResourceManagerService() (*cloudresourcemanager.Service
 	}
 
 	svc.UserAgent = c.userAgent
-	c.services.cloudResourceManager = svc
+	c.services.resourceManager = svc
 
 	return svc, nil
 }

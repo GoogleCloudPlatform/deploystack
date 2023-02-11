@@ -12,7 +12,7 @@ import (
 
 func (c *Client) getStorageService(project string) (*storage.Client, error) {
 	var err error
-	svc := c.services.storageService
+	svc := c.services.storage
 
 	if svc != nil {
 		return svc, nil
@@ -27,7 +27,7 @@ func (c *Client) getStorageService(project string) (*storage.Client, error) {
 		return nil, err
 	}
 
-	c.services.storageService = svc
+	c.services.storage = svc
 
 	return svc, nil
 }

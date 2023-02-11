@@ -10,7 +10,7 @@ import (
 
 func (c *Client) getSchedulerService(project string) (*scheduler.CloudSchedulerClient, error) {
 	var err error
-	svc := c.services.schedulerService
+	svc := c.services.scheduler
 
 	if svc != nil {
 		return svc, nil
@@ -25,7 +25,7 @@ func (c *Client) getSchedulerService(project string) (*scheduler.CloudSchedulerC
 		return nil, fmt.Errorf("could not retrieve service: %w", err)
 	}
 
-	c.services.schedulerService = svc
+	c.services.scheduler = svc
 
 	return svc, nil
 }

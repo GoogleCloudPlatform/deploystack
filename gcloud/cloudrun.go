@@ -9,7 +9,7 @@ import (
 
 func (c *Client) getRunService(project string) (*run.APIService, error) {
 	var err error
-	svc := c.services.runService
+	svc := c.services.run
 
 	if svc != nil {
 		return svc, nil
@@ -25,7 +25,7 @@ func (c *Client) getRunService(project string) (*run.APIService, error) {
 	}
 
 	svc.UserAgent = c.userAgent
-	c.services.runService = svc
+	c.services.run = svc
 
 	return svc, nil
 }

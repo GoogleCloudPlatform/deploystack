@@ -62,18 +62,18 @@ func NewClient(ctx context.Context, ua string, opts option.ClientOption) Client 
 }
 
 type services struct {
-	cloudResourceManager  *cloudresourcemanager.Service
-	cloudbillingService   *cloudbilling.APIService
-	domainsClient         *domains.Client
-	serviceUsageService   *serviceusage.Service
-	computeService        *compute.Service
-	cloudfunctionsService *cloudfunctions.Service
-	runService            *run.APIService
-	cloudBuildService     *cloudbuild.Service
-	iamService            *iam.Service
-	schedulerService      *scheduler.CloudSchedulerClient
-	secretManagerService  *secretmanager.Service
-	storageService        *storage.Client
+	resourceManager *cloudresourcemanager.Service
+	billing         *cloudbilling.APIService
+	domains         *domains.Client
+	serviceUsage    *serviceusage.Service
+	computeService  *compute.Service
+	functions       *cloudfunctions.Service
+	run             *run.APIService
+	build           *cloudbuild.Service
+	iam             *iam.Service
+	scheduler       *scheduler.CloudSchedulerClient
+	secretManager   *secretmanager.Service
+	storage         *storage.Client
 }
 
 // RegionList will return a list of RegionsList depending on product type

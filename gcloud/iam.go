@@ -8,7 +8,7 @@ import (
 
 func (c *Client) getIAMService(project string) (*iam.Service, error) {
 	var err error
-	svc := c.services.iamService
+	svc := c.services.iam
 
 	if svc != nil {
 		return svc, nil
@@ -24,7 +24,7 @@ func (c *Client) getIAMService(project string) (*iam.Service, error) {
 	}
 
 	svc.UserAgent = c.userAgent
-	c.services.iamService = svc
+	c.services.iam = svc
 
 	return svc, nil
 }

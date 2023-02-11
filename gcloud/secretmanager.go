@@ -9,7 +9,7 @@ import (
 
 func (c *Client) getSecretManagerService(project string) (*secretmanager.Service, error) {
 	var err error
-	svc := c.services.secretManagerService
+	svc := c.services.secretManager
 
 	if svc != nil {
 		return svc, nil
@@ -25,7 +25,7 @@ func (c *Client) getSecretManagerService(project string) (*secretmanager.Service
 	}
 
 	svc.UserAgent = c.userAgent
-	c.services.secretManagerService = svc
+	c.services.secretManager = svc
 
 	return svc, nil
 }

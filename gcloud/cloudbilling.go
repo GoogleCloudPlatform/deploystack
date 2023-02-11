@@ -12,11 +12,9 @@ import (
 	"google.golang.org/api/cloudresourcemanager/v1"
 )
 
-var cloudbillingService *cloudbilling.APIService
-
 func (c *Client) getCloudbillingService() (*cloudbilling.APIService, error) {
 	var err error
-	svc := c.services.cloudbillingService
+	svc := c.services.billing
 
 	if svc != nil {
 		return svc, nil
@@ -28,7 +26,7 @@ func (c *Client) getCloudbillingService() (*cloudbilling.APIService, error) {
 	}
 
 	svc.UserAgent = c.userAgent
-	c.services.cloudbillingService = svc
+	c.services.billing = svc
 
 	return svc, nil
 }

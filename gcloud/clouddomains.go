@@ -24,7 +24,7 @@ var (
 
 func (c *Client) getDomainsClient(project string) (*domains.Client, error) {
 	var err error
-	svc := c.services.domainsClient
+	svc := c.services.domains
 
 	if svc != nil {
 		return svc, nil
@@ -39,7 +39,7 @@ func (c *Client) getDomainsClient(project string) (*domains.Client, error) {
 		return nil, fmt.Errorf("could not retrieve service: %w", err)
 	}
 
-	c.services.domainsClient = svc
+	c.services.domains = svc
 
 	return svc, nil
 }

@@ -14,7 +14,7 @@ var ErrorServiceNotExistOrNotAllowed = fmt.Errorf("Not found or permission denie
 
 func (c *Client) getServiceUsageService() (*serviceusage.Service, error) {
 	var err error
-	svc := c.services.serviceUsageService
+	svc := c.services.serviceUsage
 
 	if svc != nil {
 		return svc, nil
@@ -26,7 +26,7 @@ func (c *Client) getServiceUsageService() (*serviceusage.Service, error) {
 	}
 
 	svc.UserAgent = c.userAgent
-	c.services.serviceUsageService = svc
+	c.services.serviceUsage = svc
 
 	return svc, nil
 }
