@@ -6,4 +6,5 @@ use (
 	./dstester
 	./gcloud
 	./gcloudtf
+	./tui
 )

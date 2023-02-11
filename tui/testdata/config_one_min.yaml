@@ -1,0 +1,9 @@
+title: Test Demo
+name: test-demo
+duration: 1
+documentation_link: https://example.com
+description:  | 
+  This process will configure and create the following: 
+  * VM template - Instance Template
+  * Clustering - Managed Instance Group
+  * Load Balancing - Load Balancer

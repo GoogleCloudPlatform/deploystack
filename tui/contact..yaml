@@ -1,0 +1,10 @@
+allContacts:
+  email: ''
+  phoneNumber: ''
+  postalAddress: 
+    regionCode: ''
+    postalCode: ''
+    administrativeArea: ''
+    locality: ''
+    addressLines: ['']
+    recipients: ['']
