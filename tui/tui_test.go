@@ -738,3 +738,7 @@ func (m mock) ImageTypeListByFamily(imgs *compute.ImageList, project, family str
 
 	return lb
 }
+
+func (m mock) ProjectNumberGet(id string) (string, error) {
+	return "123234567755", nil
+}
