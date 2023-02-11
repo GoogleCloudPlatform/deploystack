@@ -38,10 +38,17 @@ steps:
        path: /root/.ssh
    - name: 'gcr.io/cloudshell-images/cloudshell:latest'
      args: [ 'go', 'test', '.', '-v', '-cover' ]
+   - name: 'gcr.io/cloudshell-images/cloudshell:latest'
+     args: [ 'go', 'test', '.', '-v', '-cover' ] 
+     dir: "gcloud"    
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
-     dir: "gcloudtf" 
+     dir: "gcloudtf"
+   - name: 'golang'
+     entrypoint: 'go'
+     args: [ 'test', '.', '-v', '-cover' ] 
+     dir: "tui"   
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
