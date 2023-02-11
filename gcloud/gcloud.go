@@ -5,13 +5,18 @@ import (
 	"fmt"
 
 	domains "cloud.google.com/go/domains/apiv1beta1"
+	scheduler "cloud.google.com/go/scheduler/apiv1beta1"
+	"cloud.google.com/go/storage"
 	"github.com/GoogleCloudPlatform/deploystack"
 	"google.golang.org/api/cloudbilling/v1"
+	"google.golang.org/api/cloudbuild/v1"
 	"google.golang.org/api/cloudfunctions/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/run/v1"
+	"google.golang.org/api/secretmanager/v1"
 	"google.golang.org/api/serviceusage/v1"
 	domainspb "google.golang.org/genproto/googleapis/cloud/domains/v1beta1"
 )
@@ -64,6 +69,11 @@ type services struct {
 	computeService        *compute.Service
 	cloudfunctionsService *cloudfunctions.Service
 	runService            *run.APIService
+	cloudBuildService     *cloudbuild.Service
+	iamService            *iam.Service
+	schedulerService      *scheduler.CloudSchedulerClient
+	secretManagerService  *secretmanager.Service
+	storageService        *storage.Client
 }
 
 // RegionList will return a list of RegionsList depending on product type

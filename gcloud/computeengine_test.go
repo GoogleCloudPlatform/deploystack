@@ -169,7 +169,11 @@ func typefileHelper(file string) (*compute.MachineTypeList, error) {
 			return nil, err
 		}
 
-		mt := compute.MachineType{Name: name, GuestCpus: int64(procs), MemoryMb: int64(mem * 1024)}
+		mt := compute.MachineType{
+			Name:      name,
+			GuestCpus: int64(procs),
+			MemoryMb:  int64(mem * 1024),
+		}
 		result.Items = append(result.Items, &mt)
 	}
 
@@ -198,9 +202,23 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 				},
 			},
 			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{"centos-cloud", "centos-cloud", false},
-				deploystack.LabeledValue{"debian-cloud", "debian-cloud", false},
-				deploystack.LabeledValue{"windows-cloud", "windows-cloud", false},
+				deploystack.LabeledValue{
+					Value:     "centos-cloud",
+					Label:     "centos-cloud",
+					IsDefault: false,
+				},
+
+				deploystack.LabeledValue{
+					Value:     "debian-cloud",
+					Label:     "debian-cloud",
+					IsDefault: false,
+				},
+
+				deploystack.LabeledValue{
+					Value:     "windows-cloud",
+					Label:     "windows-cloud",
+					IsDefault: false,
+				},
 			},
 		},
 	}
@@ -238,10 +256,26 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 			family:  "centos-server-pro",
 			project: "centos-cloud",
 			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{"centos-cloud/centos-server-1", "centos-server-1", false},
-				deploystack.LabeledValue{"centos-cloud/centos-server-2", "centos-server-2", false},
-				deploystack.LabeledValue{"centos-cloud/centos-server-3", "centos-server-3", false},
-				deploystack.LabeledValue{"centos-cloud/centos-server-4", "centos-server-4 (Latest)", true},
+				deploystack.LabeledValue{
+					Value:     "centos-cloud/centos-server-1",
+					Label:     "centos-server-1",
+					IsDefault: false,
+				},
+				deploystack.LabeledValue{
+					Value:     "centos-cloud/centos-server-2",
+					Label:     "centos-server-2",
+					IsDefault: false,
+				},
+				deploystack.LabeledValue{
+					Value:     "centos-cloud/centos-server-3",
+					Label:     "centos-server-3",
+					IsDefault: false,
+				},
+				deploystack.LabeledValue{
+					Value:     "centos-cloud/centos-server-4",
+					Label:     "centos-server-4 (Latest)",
+					IsDefault: true,
+				},
 			},
 		},
 	}
@@ -278,12 +312,36 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 			},
 			family: "n1-standard",
 			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{"n1-standard-1", "n1-standard-1 1 Proc", true},
-				deploystack.LabeledValue{"n1-standard-2", "n1-standard-2 2 Proc", false},
-				deploystack.LabeledValue{"n1-standard-4", "n1-standard-4 4 Proc", false},
-				deploystack.LabeledValue{"n1-standard-8", "n1-standard-8 8 Proc", false},
-				deploystack.LabeledValue{"n1-standard-16", "n1-standard-16 16 Proc", false},
-				deploystack.LabeledValue{"n1-standard-32", "n1-standard-32 32 Proc", false},
+				deploystack.LabeledValue{
+					Value:     "n1-standard-1",
+					Label:     "n1-standard-1 1 Proc",
+					IsDefault: true,
+				},
+				deploystack.LabeledValue{
+					Value:     "n1-standard-2",
+					Label:     "n1-standard-2 2 Proc",
+					IsDefault: false,
+				},
+				deploystack.LabeledValue{
+					Value:     "n1-standard-4",
+					Label:     "n1-standard-4 4 Proc",
+					IsDefault: false,
+				},
+				deploystack.LabeledValue{
+					Value:     "n1-standard-8",
+					Label:     "n1-standard-8 8 Proc",
+					IsDefault: false,
+				},
+				deploystack.LabeledValue{
+					Value:     "n1-standard-16",
+					Label:     "n1-standard-16 16 Proc",
+					IsDefault: false,
+				},
+				deploystack.LabeledValue{
+					Value:     "n1-standard-32",
+					Label:     "n1-standard-32 32 Proc",
+					IsDefault: false,
+				},
 			},
 		},
 	}
@@ -318,9 +376,23 @@ func TestGetListOfMachineTypeFamily(t *testing.T) {
 				},
 			},
 			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{"n1-standard", "n1 standard", false},
-				deploystack.LabeledValue{"n1-highmem", "n1 highmem", false},
-				deploystack.LabeledValue{"a1-highmem", "a1 highmem", false},
+				deploystack.LabeledValue{
+					Value:     "n1-standard",
+					Label:     "n1 standard",
+					IsDefault: false,
+				},
+
+				deploystack.LabeledValue{
+					Value:     "n1-highmem",
+					Label:     "n1 highmem",
+					IsDefault: false,
+				},
+
+				deploystack.LabeledValue{
+					Value:     "a1-highmem",
+					Label:     "a1 highmem",
+					IsDefault: false,
+				},
 			},
 		},
 	}
