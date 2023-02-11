@@ -111,7 +111,7 @@ func TestGetMachineTypes(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := c.ComputeMachineTypeList(tc.project, tc.zone)
+			got, err := c.MachineTypeList(tc.project, tc.zone)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -224,7 +224,7 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := c.ComputeImageFamilyList(tc.input)
+			got := c.ImageFamilyList(tc.input)
 
 			got.Sort()
 
@@ -281,7 +281,7 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := c.ComputeImageTypeListByFamily(tc.input, tc.project, tc.family)
+			got := c.ImageTypeListByFamily(tc.input, tc.project, tc.family)
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
@@ -347,7 +347,7 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := c.ComputeMachineTypeListByFamily(tc.input, tc.family)
+			got := c.MachineTypeListByFamily(tc.input, tc.family)
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
@@ -398,7 +398,7 @@ func TestGetListOfMachineTypeFamily(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := c.ComputeMachineTypeFamilyList(tc.input)
+			got := c.MachineTypeFamilyList(tc.input)
 
 			tc.want.Sort()
 
@@ -470,7 +470,7 @@ func TestImages(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := c.ComputeImageList(tc.project, tc.imageProject)
+			got, err := c.ImageList(tc.project, tc.imageProject)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
@@ -518,7 +518,7 @@ func TestGetLatestImage(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := c.ComputeImageLatestGet(tc.project, tc.imageProject, tc.imageFamily)
+			got, err := c.ImageLatestGet(tc.project, tc.imageProject, tc.imageFamily)
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}

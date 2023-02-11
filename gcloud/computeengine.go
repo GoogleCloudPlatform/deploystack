@@ -99,9 +99,9 @@ func (c *Client) ZoneList(project, region string) ([]string, error) {
 	return resp, nil
 }
 
-// ComputeMachineTypeList retrieves the list of Machine Types available in a
+// MachineTypeList retrieves the list of Machine Types available in a
 // given zone
-func (c *Client) ComputeMachineTypeList(project, zone string) (*compute.MachineTypeList, error) {
+func (c *Client) MachineTypeList(project, zone string) (*compute.MachineTypeList, error) {
 	resp := &compute.MachineTypeList{}
 
 	svc, err := c.getComputeService(project)
@@ -121,9 +121,9 @@ func formatMBToGB(i int64) string {
 	return fmt.Sprintf("%d GB", i/1024)
 }
 
-// ComputeImageList gets the list of disk images available for a given image
+// ImageList gets the list of disk images available for a given image
 // project
-func (c *Client) ComputeImageList(project, imageproject string) (*compute.ImageList, error) {
+func (c *Client) ImageList(project, imageproject string) (*compute.ImageList, error) {
 	resp := &compute.ImageList{}
 
 	svc, err := c.getComputeService(project)
@@ -151,8 +151,8 @@ func (c *Client) ComputeImageList(project, imageproject string) (*compute.ImageL
 	return results, nil
 }
 
-// ComputeImageLatestGet retrieves the latest image from a particular family
-func (c *Client) ComputeImageLatestGet(project, imageproject, imagefamily string) (string, error) {
+// ImageLatestGet retrieves the latest image from a particular family
+func (c *Client) ImageLatestGet(project, imageproject, imagefamily string) (string, error) {
 	resp := ""
 
 	svc, err := c.getComputeService(project)
@@ -179,8 +179,8 @@ func (c *Client) ComputeImageLatestGet(project, imageproject, imagefamily string
 	return "", fmt.Errorf("error: could not find ")
 }
 
-// ComputeMachineTypeFamilyList gets the list of machine type families
-func (c *Client) ComputeMachineTypeFamilyList(imgs *compute.MachineTypeList) deploystack.LabeledValues {
+// MachineTypeFamilyList gets the list of machine type families
+func (c *Client) MachineTypeFamilyList(imgs *compute.MachineTypeList) deploystack.LabeledValues {
 	fam := make(map[string]string)
 	lb := deploystack.LabeledValues{}
 
@@ -206,9 +206,9 @@ func (c *Client) ComputeMachineTypeFamilyList(imgs *compute.MachineTypeList) dep
 	return lb
 }
 
-// ComputeMachineTypeListByFamily retrieves the list of machine types available
+// MachineTypeListByFamily retrieves the list of machine types available
 // for each family
-func (c *Client) ComputeMachineTypeListByFamily(imgs *compute.MachineTypeList, family string) deploystack.LabeledValues {
+func (c *Client) MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) deploystack.LabeledValues {
 	lb := deploystack.LabeledValues{}
 
 	tempTypes := []compute.MachineType{}
@@ -239,8 +239,8 @@ func (c *Client) ComputeMachineTypeListByFamily(imgs *compute.MachineTypeList, f
 	return lb
 }
 
-// ComputeImageFamilyList gets a list of image families
-func (c *Client) ComputeImageFamilyList(imgs *compute.ImageList) deploystack.LabeledValues {
+// ImageFamilyList gets a list of image families
+func (c *Client) ImageFamilyList(imgs *compute.ImageList) deploystack.LabeledValues {
 	fam := make(map[string]bool)
 	lb := deploystack.LabeledValues{}
 
@@ -263,8 +263,8 @@ func (c *Client) ComputeImageFamilyList(imgs *compute.ImageList) deploystack.Lab
 	return lb
 }
 
-// ComputeImageTypeListByFamily retrieves a list of iamge types by the family
-func (c *Client) ComputeImageTypeListByFamily(imgs *compute.ImageList, project, family string) deploystack.LabeledValues {
+// ImageTypeListByFamily retrieves a list of iamge types by the family
+func (c *Client) ImageTypeListByFamily(imgs *compute.ImageList, project, family string) deploystack.LabeledValues {
 	lb := deploystack.LabeledValues{}
 
 	for _, v := range imgs.Items {

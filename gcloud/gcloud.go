@@ -33,12 +33,12 @@ type UIClient interface {
 	DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error)
 	DomainIsVerified(project, domain string) (bool, error)
 	DomainRegister(project string, domaininfo *domainspb.RegisterParameters, contact ContactData) error
-	ComputeImageLatestGet(project, imageproject, imagefamily string) (string, error)
-	ComputeMachineTypeList(project, zone string) (*compute.MachineTypeList, error)
-	ComputeMachineTypeFamilyList(imgs *compute.MachineTypeList) deploystack.LabeledValues
-	ComputeMachineTypeListByFamily(imgs *compute.MachineTypeList, family string) deploystack.LabeledValues
-	ComputeImageList(project, imageproject string) (*compute.ImageList, error)
-	ComputeImageTypeListByFamily(imgs *compute.ImageList, project, family string) deploystack.LabeledValues
+	ImageLatestGet(project, imageproject, imagefamily string) (string, error)
+	MachineTypeList(project, zone string) (*compute.MachineTypeList, error)
+	MachineTypeFamilyList(imgs *compute.MachineTypeList) deploystack.LabeledValues
+	MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) deploystack.LabeledValues
+	ImageList(project, imageproject string) (*compute.ImageList, error)
+	ImageTypeListByFamily(imgs *compute.ImageList, project, family string) deploystack.LabeledValues
 }
 
 // Client is the tool that will handle all of the communication between gcloud
