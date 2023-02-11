@@ -12,7 +12,7 @@ import (
 )
 
 func TestGenerateFunctionSignedURL(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
 		region  string
@@ -40,7 +40,7 @@ func TestGenerateFunctionSignedURL(t *testing.T) {
 }
 
 func TestGetFunctionRegions(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	fRegions, err := regionsListHelper("test_files/gcloudout/regions_functions.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -70,7 +70,7 @@ func TestGetFunctionRegions(t *testing.T) {
 }
 
 func TestCloudFunctionCreate(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project  string
 		region   string

@@ -6,7 +6,7 @@ import (
 )
 
 func TestServiceAccountCreate(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project  string
 		username string

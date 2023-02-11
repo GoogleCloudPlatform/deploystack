@@ -8,7 +8,7 @@ import (
 )
 
 func TestTriggerCreate(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
 		trigger cloudbuild.BuildTrigger

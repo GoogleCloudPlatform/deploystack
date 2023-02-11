@@ -17,7 +17,7 @@ import (
 )
 
 func TestGetComputeRegions(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	cRegions, err := regionsListHelper("test_files/gcloudout/regions_compute.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -47,7 +47,7 @@ func TestGetComputeRegions(t *testing.T) {
 }
 
 func TestZones(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
 		region  string
@@ -96,7 +96,7 @@ func TestFormatMBToGB(t *testing.T) {
 }
 
 func TestGetMachineTypes(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	uscaTypes, err := typefileHelper("test_files/gcloudout/types_uscentral1a.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -185,7 +185,7 @@ func typefileHelper(file string) (*compute.MachineTypeList, error) {
 }
 
 func TestGetListOfDiskFamilies(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input *compute.ImageList
 		want  deploystack.LabeledValues
@@ -236,7 +236,7 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 }
 
 func TestGetListOfImageTypesByFamily(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input           *compute.ImageList
 		family, project string
@@ -291,7 +291,7 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 }
 
 func TestGetListOfMachineeTypesByFamily(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input  *compute.MachineTypeList
 		family string
@@ -357,7 +357,7 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 }
 
 func TestGetListOfMachineTypeFamily(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input *compute.MachineTypeList
 		want  deploystack.LabeledValues
@@ -447,7 +447,7 @@ func getLatestImageByProjectFromFile(imgs []*compute.Image, imageproject, imagef
 }
 
 func TestImages(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	dat, err := os.ReadFile("test_files/gcloudout/images.json")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -494,7 +494,7 @@ func TestImages(t *testing.T) {
 }
 
 func TestGetLatestImage(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	dat, err := os.ReadFile("test_files/gcloudout/images.json")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)

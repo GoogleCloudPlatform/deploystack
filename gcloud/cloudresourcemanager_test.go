@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetProjectNumbers(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 
 	tests := map[string]struct {
 		input string
@@ -33,7 +33,7 @@ func TestGetProjectNumbers(t *testing.T) {
 }
 
 func TestCheckProject(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 
 	tests := map[string]struct {
 		input string
@@ -54,7 +54,7 @@ func TestCheckProject(t *testing.T) {
 }
 
 func TestGetProjectParent(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input string
 		want  *cloudresourcemanager.ResourceId
@@ -82,7 +82,7 @@ func TestGetProjectParent(t *testing.T) {
 }
 
 func TestGetProjects(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		want []string
 	}{
@@ -127,7 +127,7 @@ func TestGetProjects(t *testing.T) {
 }
 
 func TestCreateProject(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input string
 		err   error
@@ -160,7 +160,7 @@ func TestCreateProject(t *testing.T) {
 }
 
 func TestGetProject(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	expected := projectID
 
 	old, err := c.ProjectIDGet()

@@ -101,7 +101,7 @@ func TestDomainRegistrarContactReadYAML(t *testing.T) {
 }
 
 func TestDomainIsAvailable(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		domain    string
 		wantAvail string
@@ -150,7 +150,7 @@ func TestDomainIsAvailable(t *testing.T) {
 }
 
 func TestDomainIsVerified(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		domain  string
 		project string

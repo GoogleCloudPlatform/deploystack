@@ -112,6 +112,7 @@ var (
 	credspath        = ""
 	globalctx        = context.Background()
 	defaultUserAgent = "deploystack"
+	contactfile      = "contact.yaml"
 )
 
 func init() {
@@ -978,4 +979,60 @@ func (s Section) Close() {
 	fmt.Printf("%s\n", Divider)
 	fmt.Printf("%s%s - %sdone%s\n", TERMCYAN, s.Title, TERMCYANB, TERMCLEAR)
 	fmt.Printf("%s\n", Divider)
+}
+
+func NewContactData() ContactData {
+	c := ContactData{}
+	d := DomainRegistrarContact{}
+	d.PostalAddress.AddressLines = []string{}
+	d.PostalAddress.Recipients = []string{}
+	c.AllContacts = d
+	return c
+}
+
+func NewContactDataFromFile(file string) (ContactData, error) {
+	c := NewContactData()
+
+	dat, err := os.ReadFile(file)
+	if err != nil {
+		return c, err
+	}
+
+	err = yaml.Unmarshal(dat, &c)
+	if err != nil {
+		return c, err
+	}
+
+	return c, nil
+}
+
+// CheckForContact checks the local file system for a file containg domain
+// registar contact info
+func CheckForContact() ContactData {
+	contact := ContactData{}
+	if _, err := os.Stat(contactfile); err == nil {
+		contact, err = NewContactDataFromFile(contactfile)
+		if err != nil {
+			log.Printf("domain registrar contact not cached")
+		}
+	}
+	return contact
+}
+
+// CacheContact writes a file containg domain registar contact info to disk
+// if it exists
+func CacheContact(i interface{}) {
+	switch v := i.(type) {
+	case ContactData:
+		if v.AllContacts.Email != "" {
+			yaml, err := v.YAML()
+			if err != nil {
+				log.Printf("could not convert contact to yaml: %s", err)
+			}
+
+			if err := os.WriteFile(contactfile, []byte(yaml), 0o644); err != nil {
+				log.Printf("could not write contact to file: %s", err)
+			}
+		}
+	}
 }

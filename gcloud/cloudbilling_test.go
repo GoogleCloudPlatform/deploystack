@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetBillingAccounts(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	dat, err := os.ReadFile("test_files/gcloudout/billing_accounts.json")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -58,7 +58,7 @@ func TestGetBillingAccounts(t *testing.T) {
 }
 
 func TestLinkProjectToBillingAccount(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
 		account string

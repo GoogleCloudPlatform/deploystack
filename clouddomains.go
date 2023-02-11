@@ -13,7 +13,6 @@ import (
 	"google.golang.org/api/iterator"
 	domainspb "google.golang.org/genproto/googleapis/cloud/domains/v1beta1"
 	"google.golang.org/genproto/googleapis/type/postaladdress"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -143,31 +142,6 @@ func (c ContactData) DomainContact() (domainspb.ContactSettings, error) {
 	return dc, nil
 }
 
-func newContactData() ContactData {
-	c := ContactData{}
-	d := DomainRegistrarContact{}
-	d.PostalAddress.AddressLines = []string{}
-	d.PostalAddress.Recipients = []string{}
-	c.AllContacts = d
-	return c
-}
-
-func newContactDataFromFile(file string) (ContactData, error) {
-	c := newContactData()
-
-	dat, err := os.ReadFile(file)
-	if err != nil {
-		return c, err
-	}
-
-	err = yaml.Unmarshal(dat, &c)
-	if err != nil {
-		return c, err
-	}
-
-	return c, nil
-}
-
 // DomainManage walks a user through the porocess of collecting contact info and
 // registering a domain.
 func DomainManage(s *Stack) (string, error) {
@@ -227,7 +201,7 @@ func DomainManage(s *Stack) (string, error) {
 			return "", fmt.Errorf("error getting contact data %s", err)
 		}
 	} else {
-		contact, err = newContactDataFromFile(contactfile)
+		contact, err = NewContactDataFromFile(contactfile)
 		if err != nil {
 			contact, err = RegistrarContactManage(contactfile)
 			if err != nil {
@@ -265,7 +239,7 @@ func DomainManage(s *Stack) (string, error) {
 // RegistrarContactManage manages collecting domain registraton information
 // from the user
 func RegistrarContactManage(file string) (ContactData, error) {
-	d := newContactData()
+	d := NewContactData()
 
 	fmt.Println(Divider)
 	fmt.Printf(msgDomainRegisterContactExplanation)

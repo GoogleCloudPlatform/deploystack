@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetRunRegions(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	rRegions, err := regionsListHelper("test_files/gcloudout/regions_run.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)

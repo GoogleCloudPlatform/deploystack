@@ -30,11 +30,11 @@ type Client struct {
 }
 
 // NewClient initiates a new gcloud Client
-func NewClient(ctx context.Context, ua string, opts option.ClientOption) Client {
+func NewClient(ctx context.Context, ua string) Client {
 	c := Client{}
 	c.ctx = ctx
 	c.userAgent = ua
-	c.opts = opts
+	c.opts = option.WithCredentialsFile("")
 	c.enabledServices = make(map[string]bool)
 	return c
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func TestScheduleJob(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
 		region  string
