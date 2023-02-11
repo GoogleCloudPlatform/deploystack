@@ -6,7 +6,6 @@ go 1.19
 require (
 	cloud.google.com/go/domains v0.8.0
 	github.com/GoogleCloudPlatform/deploystack v0.0.0-20230206180924-5f4fcbb883fe
-	github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-00010101000000-000000000000
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.6.0
