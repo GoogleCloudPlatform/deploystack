@@ -29,3 +29,4 @@ test_files/computenames_repos/deploystack-gcs-to-bq-with-least-privileges/
 test_files/computenames_repos/deploystack-single-vm/
 deploystack-gcs-to-bq-with-least-privileges/
 deploystack-single-vm/
+tui/contact.yaml

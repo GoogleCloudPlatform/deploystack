@@ -1,0 +1,8 @@
+
+Setting                            Value                                                  
+                                                                                          
+[1;mStack Name[0m                         test-stack-value                                       
+[1;mProject Name[0m                       test-project                                           
+[1;mProject ID[0m                         test-id                                                
+[1;mProject Number[0m                     123344567                                              
+[1;mTestkey[0m                            testvalue                                              

@@ -1,0 +1,24 @@
+     [1;mDeployStack[0m                                                                                         
+     [3;mtest[0m                                                                                                
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   
+                                                                                                         
+     [1;mSelecte a project to use[0m                                                                            
+                                                                                                         
+     87 items                                                                                            
+                                                                                                         
+     [;m>  1. Create New Project[0m                                                                            
+        2. aiab-test-project                                                                             
+        3. bucketsite-test                                                                               
+        4. cloud-logging                                                                                 
+        5. cloudicons                                                                                    
+        6. coldfusion-demo                                                                               
+        7. coldfusion-demo-2                                                                             
+        8. coltsays                                                                                      
+        9. cost-sentry-experiments                                                                       
+       10. deploy-terraform                                                                              
+       11. deploystack-terraform                                                                         
+                                                                                                         
+       1/8                                                                                               
+                                                                                                         
+       ↑/k up • ↓/j down • / filter • q quit • ? more                                                    
+                                                                                                         

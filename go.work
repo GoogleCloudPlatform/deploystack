@@ -1,0 +1,10 @@
+go 1.19
+
+use (
+	.
+	./dsgithub
+	./dstester
+	./gcloud
+	./gcloudtf
+	./tui
+)

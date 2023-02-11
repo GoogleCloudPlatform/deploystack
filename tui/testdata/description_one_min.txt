@@ -1,0 +1,13 @@
+This process will create the following:
+                                                        
+                                                        
+[1;mVM template[0m             Instance Template               
+[1;mClustering[0m              Managed Instance Group          
+[1;mLoad Balancing[0m          Load Balancer                   
+
+This process will configure and create the following: 
+
+It's going to take around 1 minute.
+
+If you would like more information about this stack, please read the documentation at: [4;;4mh[0m[4;;4mt[0m[4;;4mt[0m[4;;4mp[0m[4;;4ms[0m[4;;4m:[0m[4;;4m/[0m[4;;4m/[0m[4;;4me[0m[4;;4mx[0m[4;;4ma[0m[4;;4mm[0m[4;;4mp[0m[4;;4ml[0m[4;;4me[0m[4;;4m.[0m[4;;4mc[0m[4;;4mo[0m[4;;4mm[0m
+

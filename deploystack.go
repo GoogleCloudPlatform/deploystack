@@ -66,6 +66,17 @@ const (
 	DefaultImageProject = "debian-cloud"
 	// DefaultImageFamily is the default project for images used in compute calls.
 	DefaultImageFamily = "debian-11"
+	// DefaultDiskSize is the default size for making disks for Compute Engine
+	DefaultDiskSize = "200"
+	// DefaultDiskType is the default style of disk
+	DefaultDiskType = "pd-standard"
+	// DefaultInstanceType is the default machine type of compute engine
+	DefaultInstanceType = "n1-standard-1"
+	// HTTPServerTags are the instance tags to open up the instance to be a
+	// http server
+	HTTPServerTags = "[http-server,https-server]"
+	// DefaultZone is the default zone used in compute calls.
+	DefaultZone = "us-central1-a"
 )
 
 // ClearScreen will clear out a terminal screen.
