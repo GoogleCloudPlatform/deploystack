@@ -56,6 +56,7 @@ type UIClient interface {
 	ProjectList() ([]gcloud.ProjectWithBilling, error)
 	ProjectParentGet(project string) (*cloudresourcemanager.ResourceId, error)
 	ProjectCreate(project, parent, parentType string) error
+	ProjectNumberGet(id string) (string, error)
 	RegionList(project, product string) ([]string, error)
 	ZoneList(project, region string) ([]string, error)
 	DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error)

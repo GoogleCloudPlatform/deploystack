@@ -208,12 +208,12 @@ func (q *Queue) ProcessConfig() error {
 
 	if s.Config.ProjectNumber {
 
-		proj, err := deploystack.ProjectIDGet()
+		proj, err := q.client.ProjectIDGet()
 		if err != nil {
 			return err
 		}
 
-		projectnumber, err = deploystack.ProjectNumberGet(proj)
+		projectnumber, err = q.client.ProjectNumberGet(proj)
 		if err != nil {
 			return err
 		}
