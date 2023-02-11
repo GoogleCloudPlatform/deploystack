@@ -1,6 +1,9 @@
 package gcloud
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestServiceAccountCreate(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent, opts)
@@ -18,9 +21,12 @@ func TestServiceAccountCreate(t *testing.T) {
 			if err != tc.err {
 				t.Fatalf("create: expected: %+v, got: %+v", tc.err, err)
 			}
+			// Immediately deleting caused intermittent failures
+			time.Sleep(time.Second * 2)
 
 			err = c.ServiceAccountDelete(tc.project, email)
 			if err != tc.err {
+				t.Logf("delete: trying to delete: %s", email)
 				t.Fatalf("delete: expected: no error got: %+v", err)
 			}
 		})
