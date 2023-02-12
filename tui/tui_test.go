@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
-	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
@@ -323,25 +322,25 @@ func (m mock) ProjectParentGet(project string) (*cloudresourcemanager.ResourceId
 func (m mock) ProjectCreate(project, parent, parentType string) error {
 	m.delay()
 	if len(project) > 32 {
-		return deploystack.ErrorProjectCreateTooLong
+		return gcloud.ErrorProjectCreateTooLong
 	}
 
 	if len(project) < 6 {
-		return deploystack.ErrorProjectCreateTooLong
+		return gcloud.ErrorProjectCreateTooLong
 	}
 
 	if strings.Contains(project, "!") {
-		return deploystack.ErrorProjectInvalidCharacters
+		return gcloud.ErrorProjectInvalidCharacters
 	}
 
 	list, _ := m.ProjectList()
 
 	for _, v := range list {
 		if v.ID == project {
-			return deploystack.ErrorProjectAlreadyExists
+			return gcloud.ErrorProjectAlreadyExists
 		}
 		if v.Name == project {
-			return deploystack.ErrorProjectAlreadyExists
+			return gcloud.ErrorProjectAlreadyExists
 		}
 	}
 

@@ -1,10 +1,10 @@
 test:
-	go test ./tui/.
-	go test ./gcloudtf/. 
-	go test ./dsgithub/. 
-	go test ./dstester/. 
-	go test .
-	go test ./gcloud/. 
-	
+	go clean -testcache
+	go test ./tui/. -cover
+	go test ./gcloudtf/.  -cover
+	go test ./dsgithub/.  -cover
+	go test ./dstester/.  -cover
+	go test .  -cover
+	go test ./gcloud/.  -cover
 	
  

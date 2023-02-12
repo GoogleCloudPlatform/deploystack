@@ -129,7 +129,7 @@ func TestMassagePhoneNumber(t *testing.T) {
 	}{
 		"Good":  {"800 555 1234", "+1.8005551234", nil},
 		"Weird": {"d746fd83843", "+1.74683843", nil},
-		"BAD":   {"dghdhdfuejfhfhfhrghfhfhdhgreh", "", errorCustomNotValidPhoneNumber},
+		"BAD":   {"dghdhdfuejfhfhfhrghfhfhdhgreh", "", ErrorCustomNotValidPhoneNumber},
 	}
 
 	for name, tc := range tests {

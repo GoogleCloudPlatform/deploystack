@@ -11,26 +11,6 @@ import (
 	"google.golang.org/api/cloudresourcemanager/v1"
 )
 
-var (
-	// ErrorBillingInvalidAccount is the error you get if you pass in a bad
-	// Billing Account ID
-	ErrorBillingInvalidAccount = fmt.Errorf("not a valid billing account")
-	// ErrorBillingNoPermission is the error you get if the user lacks billing
-	// related permissions
-	ErrorBillingNoPermission = fmt.Errorf("user lacks permission")
-	// ErrorProjectCreateTooLong is an error when you try to create a project
-	// wuth more than 30 characters
-	ErrorProjectCreateTooLong = fmt.Errorf("project_id contains too many characters, limit 30")
-	// ErrorProjectInvalidCharacters is an error when you try and pass bad
-	// characters into a CreateProjectCall
-	ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
-	// ErrorProjectAlreadyExists is an error when you try and create a project
-	// That already exists
-	ErrorProjectAlreadyExists = fmt.Errorf("project_id already exists")
-	// ErrorProjectDidNotFinish is an error we cannot confirm that project completion actually occured
-	ErrorProjectDidNotFinish = fmt.Errorf("project creation did not complete in a timely manner")
-)
-
 func (c *Client) getCloudResourceManagerService() (*cloudresourcemanager.Service, error) {
 	var err error
 	svc := c.services.resourceManager

@@ -3,6 +3,8 @@
 package tui
 
 import (
+	"fmt"
+
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -23,16 +25,17 @@ var (
 )
 
 const (
-	explainText = "DeployStack will walk you through setting some options for the stack this solutions installs. Most questions have a default that you can choose by hitting the Enter key."
-	appTitle    = "DeployStack"
-	contactfile = "contact.yaml.tmp"
-)
-
-const (
+	explainText           = "DeployStack will walk you through setting some options for the stack this solutions installs. Most questions have a default that you can choose by hitting the Enter key."
+	appTitle              = "DeployStack"
+	contactfile           = "contact.yaml.tmp"
 	validationPhoneNumber = "phonenumber"
 	validationYesOrNo     = "yesorno"
 	validationInteger     = "integer"
 )
+
+// ErrorCustomNotValidPhoneNumber is the error you get when you fail phone
+// number validation.
+var ErrorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
 
 type errMsg struct {
 	err     error

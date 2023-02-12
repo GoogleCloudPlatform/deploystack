@@ -212,14 +212,10 @@ func validatePhoneNumber(input string, q *Queue) tea.Cmd {
 	}
 }
 
-// errorCustomNotValidPhoneNumber is the error you get when you fail phone
-// number validation.
-var errorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
-
 func massagePhoneNumber(s string) (string, error) {
 	num, err := phonenumbers.Parse(s, "US")
 	if err != nil {
-		return "", errorCustomNotValidPhoneNumber
+		return "", ErrorCustomNotValidPhoneNumber
 	}
 	result := phonenumbers.Format(num, phonenumbers.INTERNATIONAL)
 	result = strings.Replace(result, " ", ".", 1)

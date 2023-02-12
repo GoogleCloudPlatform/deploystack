@@ -25,66 +25,37 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
-	"github.com/nyaruka/phonenumbers"
 	"google.golang.org/api/option"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	// TERMCYAN is the terminal code for cyan text
-	TERMCYAN = "\033[0;36m"
-	// TERMCYANB is the terminal code for bold cyan text
-	TERMCYANB = "\033[1;36m"
-	// TERMCYANREV is the terminal code for black on cyan text
-	TERMCYANREV = "\u001b[46m"
-	// TERMRED is the terminal code for red text
-	TERMRED = "\033[0;31m"
-	// TERMREDB is the terminal code for bold red text
-	TERMREDB = "\033[1;31m"
-	// TERMREDREV is the terminal code for black on red text
-	TERMREDREV = "\033[41m"
-	// TERMCLEAR is the terminal code for the clear out color text
-	TERMCLEAR = "\033[0m"
-	// TERMCLEARSCREEN is the terminal code for clearning the whole screen.
-	TERMCLEARSCREEN = "\033[2J"
-	// TERMGREY is the terminal code for grey text
-	TERMGREY = "\033[1;30m"
-)
-
-// ClearScreen will clear out a terminal screen.
-func ClearScreen() {
-	fmt.Println(TERMCLEARSCREEN)
-}
-
 var (
-	// ErrorCustomNotValidPhoneNumber is the error you get when you fail phone
-	// number validation.
-	ErrorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
-	// ErrorBillingInvalidAccount is the error you get if you pass in a bad
-	// Billing Account ID
-	ErrorBillingInvalidAccount = fmt.Errorf("not a valid billing account")
-	// ErrorBillingNoPermission is the error you get if the user lacks billing
-	// related permissions
-	ErrorBillingNoPermission = fmt.Errorf("user lacks permission")
-	// ErrorProjectCreateTooLong is an error when you try to create a project
-	// wuth more than 30 characters
-	ErrorProjectCreateTooLong = fmt.Errorf("project_id contains too many characters, limit 30")
-	// ErrorProjectInvalidCharacters is an error when you try and pass bad
-	// characters into a CreateProjectCall
-	ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
-	// ErrorProjectAlreadyExists is an error when you try and create a project
-	// That already exists
-	ErrorProjectAlreadyExists = fmt.Errorf("project_id already exists")
-	// ErrorProjectDidNotFinish is an error we cannot confirm that project completion actually occured
-	ErrorProjectDidNotFinish = fmt.Errorf("project creation did not complete in a timely manner")
+	// // ErrorCustomNotValidPhoneNumber is the error you get when you fail phone
+	// // number validation.
+	// ErrorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
+	// // ErrorBillingInvalidAccount is the error you get if you pass in a bad
+	// // Billing Account ID
+	// ErrorBillingInvalidAccount = fmt.Errorf("not a valid billing account")
+	// // ErrorBillingNoPermission is the error you get if the user lacks billing
+	// // related permissions
+	// ErrorBillingNoPermission = fmt.Errorf("user lacks permission")
+	// // ErrorProjectCreateTooLong is an error when you try to create a project
+	// // wuth more than 30 characters
+	// ErrorProjectCreateTooLong = fmt.Errorf("project_id contains too many characters, limit 30")
+	// // ErrorProjectInvalidCharacters is an error when you try and pass bad
+	// // characters into a CreateProjectCall
+	// ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
+	// // ErrorProjectAlreadyExists is an error when you try and create a project
+	// // That already exists
+	// ErrorProjectAlreadyExists = fmt.Errorf("project_id already exists")
+	// // ErrorProjectDidNotFinish is an error we cannot confirm that project completion actually occured
+	// ErrorProjectDidNotFinish = fmt.Errorf("project creation did not complete in a timely manner")
 
 	// Divider is a text element that draws a horizontal line
 	Divider          = ""
@@ -94,44 +65,6 @@ var (
 	defaultUserAgent = "deploystack"
 	contactfile      = "contact.yaml"
 )
-
-func init() {
-	var err error
-	Divider, err = BuildDivider(0)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// BuildDivider captures the size of the terminal screen to build a horizontal
-// divider.
-func BuildDivider(width int) (string, error) {
-	de := 80
-	if width == 0 {
-		cmd := exec.Command("stty", "size")
-		cmd.Stdin = os.Stdin
-		out, err := cmd.Output()
-		if err != nil {
-			width = de
-		}
-
-		sl := strings.Split(string(out), " ")
-
-		if len(sl) > 1 {
-			width, err = strconv.Atoi(strings.TrimSpace(sl[1]))
-			if err != nil {
-				width = de
-			}
-		}
-	}
-
-	var sb strings.Builder
-
-	for i := 0; i < width; i++ {
-		sb.WriteString("*")
-	}
-	return sb.String(), nil
-}
 
 // Config represents the settings this app will collect from a user. It should
 // be in a json file. The idea is minimal programming has to be done to setup
@@ -184,19 +117,6 @@ type Custom struct {
 	PrependProject bool     `json:"prepend_project"  yaml:"prepend_project"`
 	Validation     string   `json:"validation,omitempty"  yaml:"validation,omitempty"`
 	project        string
-}
-
-func massagePhoneNumber(s string) (string, error) {
-	num, err := phonenumbers.Parse(s, "US")
-	if err != nil {
-		return "", ErrorCustomNotValidPhoneNumber
-	}
-	result := phonenumbers.Format(num, phonenumbers.INTERNATIONAL)
-	result = strings.Replace(result, " ", ".", 1)
-	result = strings.ReplaceAll(result, "-", "")
-	result = strings.ReplaceAll(result, " ", "")
-
-	return result, nil
 }
 
 // Customs are a slice of Custom variables.
@@ -252,28 +172,28 @@ func (c *Config) ComputeName() error {
 	return nil
 }
 
-func handleProcessError(err error) {
-	fmt.Printf("\n\n%sThere was an issue collecting the information it takes to run this application.                             %s\n\n", TERMREDREV, TERMCLEAR)
-	fmt.Printf("%sYou can try again by typing %sdeploystack install%s at the command prompt  %s\n\n", TERMREDB, TERMREDREV, TERMCLEAR+TERMREDB, TERMCLEAR)
-	fmt.Printf("%sIf the issue persists, please report at https://github.com/GoogleCloudPlatform/deploystack/issues %s\n\n", TERMREDB, TERMCLEAR)
+// func handleProcessError(err error) {
+// 	fmt.Printf("\n\n%sThere was an issue collecting the information it takes to run this application.                             %s\n\n", TERMREDREV, TERMCLEAR)
+// 	fmt.Printf("%sYou can try again by typing %sdeploystack install%s at the command prompt  %s\n\n", TERMREDB, TERMREDREV, TERMCLEAR+TERMREDB, TERMCLEAR)
+// 	fmt.Printf("%sIf the issue persists, please report at https://github.com/GoogleCloudPlatform/deploystack/issues %s\n\n", TERMREDB, TERMCLEAR)
 
-	fmt.Printf("Extra diagnostic information:\n")
+// 	fmt.Printf("Extra diagnostic information:\n")
 
-	if strings.Contains(err.Error(), "invalid token JSON from metadata") {
-		fmt.Printf("timed out waiting for API activation, you must authorize API use to continue \n")
-	}
+// 	if strings.Contains(err.Error(), "invalid token JSON from metadata") {
+// 		fmt.Printf("timed out waiting for API activation, you must authorize API use to continue \n")
+// 	}
 
-	fmt.Println(err)
-	os.Exit(1)
-}
+// 	fmt.Println(err)
+// 	os.Exit(1)
+// }
 
-func handleEarlyShutdown(err error) {
-	fmt.Printf("\n\n%sYou've chosen to stop moving forward through Deploystack.                             %s\n\n", TERMCYANB, TERMCLEAR)
-	fmt.Printf("If this was an error, you can try again by typing %sdeploystack install%s at the command prompt. \n\n", TERMCYANB, TERMCLEAR)
+// func handleEarlyShutdown(err error) {
+// 	fmt.Printf("\n\n%sYou've chosen to stop moving forward through Deploystack.                             %s\n\n", TERMCYANB, TERMCLEAR)
+// 	fmt.Printf("If this was an error, you can try again by typing %sdeploystack install%s at the command prompt. \n\n", TERMCYANB, TERMCLEAR)
 
-	fmt.Printf("Reason: %s\n", err)
-	os.Exit(1)
-}
+// 	fmt.Printf("Reason: %s\n", err)
+// 	os.Exit(1)
+// }
 
 // NewConfigJSON returns a Config object from a file read.
 func NewConfigJSON(content []byte) (Config, error) {
