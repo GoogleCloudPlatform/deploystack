@@ -84,39 +84,39 @@ func TestGetProjectParent(t *testing.T) {
 func TestGetProjects(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
-		want []string
+		filepath string
 	}{
-		"1": {want: []string{
-			creds["project_id"],
-		}},
+		"1": {filepath: "../test_files/gcloudout/projects.txt"},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got, err := c.ProjectList()
 
+			raw := readTestFile(tc.filepath)
+			want := strings.Split(strings.TrimSpace(raw), "\n")
+
 			gotfiltered := []string{}
 
 			for _, v := range got {
-				if !strings.Contains(v.Name, "zprojectnamedelete") {
-					gotfiltered = append(gotfiltered, v.Name)
-				}
+				gotfiltered = append(gotfiltered, v.Name)
 			}
 
-			sort.Strings(tc.want)
+			sort.Strings(want)
 			sort.Strings(gotfiltered)
 
-			pass := false
-			for _, v := range gotfiltered {
-				if v == tc.want[0] {
-					pass = true
+			failures := 0
+			for i, v := range gotfiltered {
+				if v != want[i] {
+					failures++
+					t.Logf("failing pair %s:%s ", v, want[i])
 				}
 			}
 
-			if !pass {
-				t.Logf("Expected:%s\n", tc.want)
+			if failures > 0 {
+				t.Logf("Expected:%s\n", want)
 				t.Logf("Got     :%s", gotfiltered)
-				t.Fatalf("expected: %v got: %v", len(tc.want), len(gotfiltered))
+				t.Fatalf("expected: %v got: %v", len(want), len(gotfiltered))
 			}
 
 			if err != nil {

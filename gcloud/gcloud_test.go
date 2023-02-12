@@ -44,6 +44,15 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func readTestFile(file string) string {
+	dat, err := os.ReadFile(file)
+	if err != nil {
+		return "Couldn't read test file"
+	}
+
+	return string(dat)
+}
+
 func randSeq(n int) string {
 	rand.Seed(time.Now().Unix())
 
