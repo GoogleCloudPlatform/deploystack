@@ -12,7 +12,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/deploystack"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -188,7 +187,7 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input *compute.ImageList
-		want  deploystack.LabeledValues
+		want  LabeledValues
 	}{
 		"DiskFamilies": {
 			input: &compute.ImageList{
@@ -201,20 +200,20 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 					{Family: "debian-cloud"},
 				},
 			},
-			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{
+			want: LabeledValues{
+				LabeledValue{
 					Value:     "centos-cloud",
 					Label:     "centos-cloud",
 					IsDefault: false,
 				},
 
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "debian-cloud",
 					Label:     "debian-cloud",
 					IsDefault: false,
 				},
 
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "windows-cloud",
 					Label:     "windows-cloud",
 					IsDefault: false,
@@ -240,7 +239,7 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 	tests := map[string]struct {
 		input           *compute.ImageList
 		family, project string
-		want            deploystack.LabeledValues
+		want            LabeledValues
 	}{
 		"DiskFamilies": {
 			input: &compute.ImageList{
@@ -255,23 +254,23 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 			},
 			family:  "centos-server-pro",
 			project: "centos-cloud",
-			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{
+			want: LabeledValues{
+				LabeledValue{
 					Value:     "centos-cloud/centos-server-1",
 					Label:     "centos-server-1",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "centos-cloud/centos-server-2",
 					Label:     "centos-server-2",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "centos-cloud/centos-server-3",
 					Label:     "centos-server-3",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "centos-cloud/centos-server-4",
 					Label:     "centos-server-4 (Latest)",
 					IsDefault: true,
@@ -295,7 +294,7 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 	tests := map[string]struct {
 		input  *compute.MachineTypeList
 		family string
-		want   deploystack.LabeledValues
+		want   LabeledValues
 	}{
 		"DiskFamilies": {
 			input: &compute.MachineTypeList{
@@ -311,33 +310,33 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 				},
 			},
 			family: "n1-standard",
-			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{
+			want: LabeledValues{
+				LabeledValue{
 					Value:     "n1-standard-1",
 					Label:     "n1-standard-1 1 Proc",
 					IsDefault: true,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-2",
 					Label:     "n1-standard-2 2 Proc",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-4",
 					Label:     "n1-standard-4 4 Proc",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-8",
 					Label:     "n1-standard-8 8 Proc",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-16",
 					Label:     "n1-standard-16 16 Proc",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-32",
 					Label:     "n1-standard-32 32 Proc",
 					IsDefault: false,
@@ -360,7 +359,7 @@ func TestGetListOfMachineTypeFamily(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input *compute.MachineTypeList
-		want  deploystack.LabeledValues
+		want  LabeledValues
 	}{
 		"DiskFamilies": {
 			input: &compute.MachineTypeList{
@@ -375,20 +374,20 @@ func TestGetListOfMachineTypeFamily(t *testing.T) {
 					{Name: "a1-highmem-32", Description: "32 Proc"},
 				},
 			},
-			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{
+			want: LabeledValues{
+				LabeledValue{
 					Value:     "n1-standard",
 					Label:     "n1 standard",
 					IsDefault: false,
 				},
 
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-highmem",
 					Label:     "n1 highmem",
 					IsDefault: false,
 				},
 
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "a1-highmem",
 					Label:     "a1 highmem",
 					IsDefault: false,

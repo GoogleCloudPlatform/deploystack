@@ -4,7 +4,6 @@ package tui
 
 import (
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
-	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
@@ -64,8 +63,9 @@ type UIClient interface {
 	DomainRegister(project string, domaininfo *domainspb.RegisterParameters, contact gcloud.ContactData) error
 	ImageLatestGet(project, imageproject, imagefamily string) (string, error)
 	MachineTypeList(project, zone string) (*compute.MachineTypeList, error)
-	MachineTypeFamilyList(imgs *compute.MachineTypeList) deploystack.LabeledValues
-	MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) deploystack.LabeledValues
+	MachineTypeFamilyList(imgs *compute.MachineTypeList) gcloud.LabeledValues
+	MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) gcloud.LabeledValues
 	ImageList(project, imageproject string) (*compute.ImageList, error)
-	ImageTypeListByFamily(imgs *compute.ImageList, project, family string) deploystack.LabeledValues
+	ImageTypeListByFamily(imgs *compute.ImageList, project, family string) gcloud.LabeledValues
+	ImageFamilyList(imgs *compute.ImageList) gcloud.LabeledValues
 }

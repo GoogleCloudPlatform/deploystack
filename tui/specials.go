@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
 	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -68,7 +69,7 @@ func newCustom(c deploystack.Custom) QueueModel {
 }
 
 func newDomain(q *Queue) {
-	contact := deploystack.ContactData{}
+	contact := gcloud.ContactData{}
 
 	t := newTextInput(
 		"Enter a domain you wish to purchase and use for this application",
@@ -137,10 +138,10 @@ func newDomain(q *Queue) {
 
 	tmp := q.Get("contact")
 	switch v := tmp.(type) {
-	case deploystack.ContactData:
+	case gcloud.ContactData:
 		contact = v
 	default:
-		contact = deploystack.ContactData{}
+		contact = gcloud.ContactData{}
 	}
 
 	if contact.AllContacts.Email == "" {

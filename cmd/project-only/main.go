@@ -29,7 +29,7 @@ func main() {
 		log.Fatalf("could not read config file: %s", err)
 	}
 
-	if err := s.Process("terraform.tfvars"); err != nil {
-		log.Fatalf("problemn collecting the configurations: %s", err)
-	}
+	// if err := s.Process("terraform.tfvars"); err != nil {
+	// 	log.Fatalf("problemn collecting the configurations: %s", err)
+	// }
 }

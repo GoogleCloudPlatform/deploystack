@@ -17,7 +17,6 @@
 package deploystack
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -32,6 +31,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/nyaruka/phonenumbers"
 	"google.golang.org/api/option"
 	"gopkg.in/src-d/go-git.v4"
@@ -57,26 +57,6 @@ const (
 	TERMCLEARSCREEN = "\033[2J"
 	// TERMGREY is the terminal code for grey text
 	TERMGREY = "\033[1;30m"
-
-	// DefaultRegion is the default compute region used in compute calls.
-	DefaultRegion = "us-central1"
-	// DefaultMachineType is the default compute machine type used in compute calls.
-	DefaultMachineType = "n1-standard"
-	// DefaultImageProject is the default project for images used in compute calls.
-	DefaultImageProject = "debian-cloud"
-	// DefaultImageFamily is the default project for images used in compute calls.
-	DefaultImageFamily = "debian-11"
-	// DefaultDiskSize is the default size for making disks for Compute Engine
-	DefaultDiskSize = "200"
-	// DefaultDiskType is the default style of disk
-	DefaultDiskType = "pd-standard"
-	// DefaultInstanceType is the default machine type of compute engine
-	DefaultInstanceType = "n1-standard-1"
-	// HTTPServerTags are the instance tags to open up the instance to be a
-	// http server
-	HTTPServerTags = "[http-server,https-server]"
-	// DefaultZone is the default zone used in compute calls.
-	DefaultZone = "us-central1-a"
 )
 
 // ClearScreen will clear out a terminal screen.
@@ -193,85 +173,6 @@ type Projects struct {
 	AllowDuplicates bool      `json:"allow_duplicates"  yaml:"allow_duplicates"`
 }
 
-// func removeProject(slice []ProjectWithBilling, s int) []ProjectWithBilling {
-// 	return append(slice[:s], slice[s+1:]...)
-// }
-
-func removeProject(s []ProjectWithBilling, index int) []ProjectWithBilling {
-	ret := make([]ProjectWithBilling, 0)
-	ret = append(ret, s[:index]...)
-	return append(ret, s[index+1:]...)
-}
-
-// Collect calls the collect method of all of the Projects in the
-// collection in the order in which they were placed there.
-func (p *Projects) Collect(projects []ProjectWithBilling, defaultProject string) error {
-	for i, v := range p.Items {
-		if err := v.Collect(projects, defaultProject); err != nil {
-			return fmt.Errorf("error getting project (%s) from user:  %s", v.Name, err)
-		}
-		p.Items[i] = v
-
-		if v.SetAsDefault {
-			if err := ProjectIDSet(v.value); err != nil {
-				return fmt.Errorf("error: unable to set project (%s) in environment: %s", defaultProject, err)
-			}
-		}
-
-		if !p.AllowDuplicates {
-			for i, p := range projects {
-				if p.ID == v.value {
-					projects = removeProject(projects, i)
-					break
-				}
-			}
-		}
-
-	}
-
-	return nil
-}
-
-// Collect will collect either an exisitng project or create a new one
-func (p *Project) Collect(projects []ProjectWithBilling, defaultProject string) error {
-	var err error
-	createString := "CREATE NEW PROJECT"
-
-	lvs := LabeledValues{}
-
-	for _, v := range projects {
-		lv := LabeledValue{Label: v.Name, Value: v.ID}
-
-		if !v.BillingEnabled {
-			lv.Label = fmt.Sprintf("%s%s (Billing Disabled)%s", TERMGREY, v.Name, TERMCLEAR)
-		}
-
-		lvs = append(lvs, lv)
-	}
-
-	lvs = append([]LabeledValue{{createString, createString, false}}, lvs...)
-	lvs.SetDefault(defaultProject)
-
-	fmt.Printf("\n%s%s%s\n\n", TERMCYANB, p.UserPrompt, TERMCLEAR)
-	fmt.Printf("%sNOTE:%s This app will make changes to the project. %s\n", TERMCYANREV, TERMCYAN, TERMCLEAR)
-	fmt.Printf("While those changes are reverseable, it would be better to put it in a fresh new project. \n")
-
-	lv := lvs.SelectUI()
-	project := lv.Value
-
-	if project == createString {
-		project, err = projectPrompt(defaultProject)
-		if err != nil {
-			return err
-		}
-		lv = LabeledValue{project, project, false}
-	}
-
-	p.value = project
-
-	return nil
-}
-
 // Custom represents a custom setting that we would like to collect from a user
 // We will collect these settings from the user before continuing.
 type Custom struct {
@@ -283,93 +184,6 @@ type Custom struct {
 	PrependProject bool     `json:"prepend_project"  yaml:"prepend_project"`
 	Validation     string   `json:"validation,omitempty"  yaml:"validation,omitempty"`
 	project        string
-}
-
-// Collect will collect a value for a Custom from a user
-func (c *Custom) Collect() error {
-	fmt.Printf("%s%s: %s\n", TERMCYANB, c.Description, TERMCLEAR)
-
-	defaultValue := c.Default
-
-	if c.PrependProject {
-		defaultValue = fmt.Sprintf("%s-%s", c.project, c.Default)
-	}
-
-	if len(c.Options) > 0 {
-		list := NewLabeledValues(c.Options, defaultValue)
-		c.Value = list.SelectUI().Value
-		return nil
-	}
-
-	result := ""
-
-	if len(c.Default) > 0 {
-		fmt.Printf("Enter value, or just [enter] for %s%s%s\n", TERMCYANB, c.Default, TERMCLEAR)
-	} else {
-		fmt.Printf("Enter value: \n")
-	}
-
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Print("> ")
-		text, err := reader.ReadString('\n')
-		if err != nil && err.Error() != "EOF" {
-			return err
-		}
-		text = strings.Replace(text, "\n", "", -1)
-		result = text
-
-		if len(text) == 0 {
-			text = defaultValue
-		}
-
-		switch c.Validation {
-
-		case "phonenumber":
-			num, err := massagePhoneNumber(text)
-			if err != nil {
-				fmt.Printf("%sThat's not a valid phone number. Please try again.%s\n", TERMRED, TERMCLEAR)
-				continue
-			}
-			result = num
-		case "integer":
-			_, err := strconv.Atoi(text)
-			if err != nil {
-				fmt.Printf("%sYour answer '%s' not a valid integer. Please try again.%s\n", TERMRED, text, TERMCLEAR)
-				continue
-			}
-			result = text
-		case "yesorno":
-			text = strings.TrimSpace(strings.ToLower(text))
-			yesList := " yes y "
-			noList := " no n "
-
-			if !strings.Contains(yesList+noList, text) {
-				fmt.Printf("%sYour answer '%s' is neither 'yes' nor 'no'. Please try again.%s\n", TERMRED, text, TERMCLEAR)
-				continue
-			}
-
-			if strings.Contains(yesList, text) {
-				result = "yes"
-			}
-
-			if strings.Contains(noList, text) {
-				result = "no"
-			}
-
-		default:
-			result = text
-		}
-
-		c.Value = result
-		if len(result) > 0 {
-			break
-		}
-
-	}
-
-	return nil
 }
 
 func massagePhoneNumber(s string) (string, error) {
@@ -397,195 +211,6 @@ func (cs Customs) Get(name string) Custom {
 	}
 
 	return Custom{}
-}
-
-// Collect calls the collect method of all of the Custom variables in the
-// collection in the order in which they were placed there.
-func (cs *Customs) Collect() error {
-	for i, v := range *(cs) {
-		if err := v.Collect(); err != nil {
-			return fmt.Errorf("error getting custom value (%s) from user:  %s", v.Name, err)
-		}
-		(*cs)[i] = v
-	}
-
-	return nil
-}
-
-// PrintHeader prints out the header for a DeployStack
-func (c Config) PrintHeader() {
-	fmt.Printf("%s\n", Divider)
-	fmt.Printf("%s%s%s\n", TERMCYANB, c.Title, TERMCLEAR)
-	fmt.Printf("%s\n", c.Description)
-
-	timestring := "minute"
-	if c.Duration > 1 {
-		timestring = "minutes"
-	}
-
-	fmt.Printf("It's going to take around %s%d %s%s\n", TERMCYAN, c.Duration, timestring, TERMCLEAR)
-
-	if c.DocumentationLink != "" {
-		fmt.Printf("\nIf you would like more information about this stack, please read the \n")
-		fmt.Printf("documentation at: \n%s%s%s \n", TERMCYANB, c.DocumentationLink, TERMCLEAR)
-	}
-
-	fmt.Printf("%s\n", Divider)
-}
-
-// Process runs through all of the options in a config and collects all of the
-// necessary data from users.
-func (c Config) Process(s *Stack, output string) error {
-	Start()
-	c.PrintHeader()
-	var project, region, zone, projectnumber, billingaccount, name string
-	var err error
-
-	for i, v := range c.HardSet {
-		s.AddSetting(i, v)
-	}
-
-	project = s.GetSetting("project_id")
-	region = s.GetSetting("region")
-	zone = s.GetSetting("zone")
-	name = s.Config.Name
-
-	if name == "" {
-		err = s.Config.ComputeName()
-		if err != nil {
-			handleProcessError(fmt.Errorf("could not determine stack name: %s", err))
-		}
-	}
-	s.AddSetting("stack_name", s.Config.Name)
-
-	defaultUserAgent = fmt.Sprintf("deploystack/%s", s.Config.Name)
-
-	if c.Project && len(project) == 0 {
-		c.Projects = Projects{
-			Items: []Project{
-				{
-					Name:       "project_id",
-					UserPrompt: "Choose a project to use for this application.",
-				},
-			},
-		}
-	}
-
-	if len(c.Projects.Items) > 0 {
-
-		defaultProject, err := ProjectIDGet()
-		if err != nil {
-			// TODO: make sure to edit these errors
-			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
-		}
-
-		projects, err := ProjectList()
-		if err != nil {
-			// TODO: make sure to edit these errors
-			handleProcessError(fmt.Errorf("error managing project settings: %s", err))
-		}
-
-		if err := c.Projects.Collect(projects, defaultProject); err != nil {
-			handleProcessError(fmt.Errorf("error collecting project settings: %s", err))
-		}
-
-		for _, v := range c.Projects.Items {
-			s.AddSetting(v.Name, v.value)
-		}
-
-	}
-
-	if c.ConfigureGCEInstance {
-		basename := s.GetSetting("basename")
-		config, err := GCEInstanceManage(project, basename)
-		if err != nil {
-			handleProcessError(fmt.Errorf("error managing compute instance settings: %s", err))
-		}
-
-		for i, v := range config {
-			s.AddSetting(i, v)
-		}
-
-	}
-
-	region = s.GetSetting("region")
-	zone = s.GetSetting("zone")
-
-	if c.Region && len(region) == 0 {
-		region, err = RegionManage(project, c.RegionType, c.RegionDefault)
-		if err != nil {
-			handleProcessError(fmt.Errorf("error managing region settings: %s", err))
-		}
-		s.AddSetting("Region", region)
-	}
-
-	if c.Zone && len(zone) == 0 {
-
-		if !c.Region {
-			region, err = RegionManage(project, "compute", DefaultRegion)
-			if err != nil {
-				handleProcessError(fmt.Errorf("error managing region settings: %s", err))
-			}
-		}
-
-		zone, err = ZoneManage(project, region)
-		if err != nil {
-			handleProcessError(fmt.Errorf("error managing zone settings: %s", err))
-		}
-		s.AddSetting("zone", zone)
-	}
-
-	if c.ProjectNumber {
-		projectnumber, err = ProjectNumberGet(project)
-		if err != nil {
-			handleProcessError(fmt.Errorf("error managing project number settings: %s", err))
-		}
-		s.AddSetting("project_number", projectnumber)
-	}
-
-	if c.Domain {
-		domain, err := DomainManage(s)
-		if err != nil {
-			if err != nil {
-
-				if err == ErrorDomainUserDeny {
-					handleEarlyShutdown(ErrorDomainUserDeny)
-				}
-
-				handleProcessError(fmt.Errorf("error handling domain registration: %s", err))
-			}
-		}
-		s.AddSetting("domain", domain)
-	}
-
-	if c.BillingAccount {
-
-		ba, err := BillingAccountManage()
-		if err != nil {
-			handleProcessError(fmt.Errorf("error managing billing settings: %s", err))
-		}
-		billingaccount = ba
-		s.AddSetting("billing_account", billingaccount)
-	}
-
-	for _, v := range c.CustomSettings {
-		temp := s.GetSetting(v.Name)
-
-		if len(temp) < 1 {
-
-			v.project = project
-
-			if err := v.Collect(); err != nil {
-				handleProcessError(fmt.Errorf("error getting custom value from user: %s", err))
-			}
-			s.AddSetting(v.Name, v.Value)
-		}
-
-	}
-
-	s.PrintSettings()
-	s.TerraformFile(output)
-	return nil
 }
 
 // ComputeName uses the git repo in the working directory to compute the
@@ -806,11 +431,6 @@ func (s *Stack) FindAndReadRequired() error {
 	return nil
 }
 
-// Process passes through a process call to the underlying config.
-func (s *Stack) Process(output string) error {
-	return s.Config.Process(s, output)
-}
-
 // AddSetting stores a setting key/value pair.
 func (s Stack) AddSetting(key, value string) {
 	k := strings.ToLower(key)
@@ -901,96 +521,16 @@ func (s Stack) TerraformFile(filename string) error {
 	return nil
 }
 
-// PrintSettings prints the settings to the screen
-func (s Stack) PrintSettings() {
-	keys := []string{}
-	for i := range s.Settings {
-		keys = append(keys, i)
-	}
-
-	list := NewLabeledValues(keys, "")
-	longest := list.LongestLen()
-
-	fmt.Printf("\n%sProject Details %s \n", TERMCYANREV, TERMCLEAR)
-
-	if s, ok := s.Settings["stack_name"]; ok && len(s) > 0 {
-		printSetting("stack_name", s, longest)
-	}
-
-	if s, ok := s.Settings["project_name"]; ok && len(s) > 0 {
-		printSetting("project_name", s, longest)
-	}
-
-	if s, ok := s.Settings["project_id"]; ok && len(s) > 0 {
-		printSetting("project_id", s, longest)
-	}
-
-	if s, ok := s.Settings["project_number"]; ok {
-		printSetting("project_number", s, longest)
-	}
-
-	ordered := []string{}
-	for i, v := range s.Settings {
-		if i == "project_id" ||
-			i == "project_number" ||
-			i == "project_name" ||
-			i == "stack_name" {
-			continue
-		}
-		if len(v) < 1 {
-			continue
-		}
-
-		ordered = append(ordered, i)
-	}
-	sort.Strings(ordered)
-
-	for i := range ordered {
-		key := ordered[i]
-		printSetting(key, s.Settings[key], longest)
-	}
-}
-
-func printSetting(name, value string, longest int) {
-	formatted := strings.Title(strings.ReplaceAll(name, "_", " "))
-	formatted = fmt.Sprintf("%s:", formatted)
-	fmt.Printf("%-*s %s%s%s\n", longest+1, formatted, TERMCYANB, value, TERMCLEAR)
-}
-
-// Section allows for division of tasks in a DeployStack
-type Section struct {
-	Title string
-}
-
-// NewSection creates an initialized section
-func NewSection(title string) Section {
-	return Section{Title: title}
-}
-
-// Open prints out the header for a Section.
-func (s Section) Open() {
-	fmt.Printf("%s\n", Divider)
-	fmt.Printf("%s%s%s\n", TERMCYAN, s.Title, TERMCLEAR)
-	fmt.Printf("%s\n", Divider)
-}
-
-// Close prints out the footer for a Section.
-func (s Section) Close() {
-	fmt.Printf("%s\n", Divider)
-	fmt.Printf("%s%s - %sdone%s\n", TERMCYAN, s.Title, TERMCYANB, TERMCLEAR)
-	fmt.Printf("%s\n", Divider)
-}
-
-func NewContactData() ContactData {
-	c := ContactData{}
-	d := DomainRegistrarContact{}
+func NewContactData() gcloud.ContactData {
+	c := gcloud.ContactData{}
+	d := gcloud.DomainRegistrarContact{}
 	d.PostalAddress.AddressLines = []string{}
 	d.PostalAddress.Recipients = []string{}
 	c.AllContacts = d
 	return c
 }
 
-func NewContactDataFromFile(file string) (ContactData, error) {
+func NewContactDataFromFile(file string) (gcloud.ContactData, error) {
 	c := NewContactData()
 
 	dat, err := os.ReadFile(file)
@@ -1008,8 +548,8 @@ func NewContactDataFromFile(file string) (ContactData, error) {
 
 // CheckForContact checks the local file system for a file containg domain
 // registar contact info
-func CheckForContact() ContactData {
-	contact := ContactData{}
+func CheckForContact() gcloud.ContactData {
+	contact := gcloud.ContactData{}
 	if _, err := os.Stat(contactfile); err == nil {
 		contact, err = NewContactDataFromFile(contactfile)
 		if err != nil {
@@ -1023,7 +563,7 @@ func CheckForContact() ContactData {
 // if it exists
 func CacheContact(i interface{}) {
 	switch v := i.(type) {
-	case ContactData:
+	case gcloud.ContactData:
 		if v.AllContacts.Email != "" {
 			yaml, err := v.YAML()
 			if err != nil {

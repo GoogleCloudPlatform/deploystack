@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
-	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/nyaruka/phonenumbers"
@@ -237,20 +236,20 @@ func validateGCEDefault(input string, q *Queue) tea.Cmd {
 		project := q.stack.GetSetting("project-id")
 		basename := q.stack.GetSetting("basename")
 
-		defaultImage, err := q.client.ImageLatestGet(project, deploystack.DefaultImageProject, deploystack.DefaultImageFamily)
+		defaultImage, err := q.client.ImageLatestGet(project, gcloud.DefaultImageProject, gcloud.DefaultImageFamily)
 		if err != nil {
 			return errMsg{err: fmt.Errorf("validateGCEDefault: could not get DefaultImage deafult")}
 		}
 
-		defaultConfig := deploystack.GCEInstanceConfig{
+		defaultConfig := map[string]string{
 			"instance-image":        defaultImage,
-			"instance-disksize":     deploystack.DefaultDiskSize,
-			"instance-disktype":     deploystack.DefaultDiskType,
-			"instance-tags":         deploystack.HTTPServerTags,
+			"instance-disksize":     gcloud.DefaultDiskSize,
+			"instance-disktype":     gcloud.DefaultDiskType,
+			"instance-tags":         gcloud.HTTPServerTags,
 			"instance-name":         fmt.Sprintf("%s-instance", basename),
-			"region":                deploystack.DefaultRegion,
-			"zone":                  deploystack.DefaultZone,
-			"instance-machine-type": deploystack.DefaultInstanceType,
+			"region":                gcloud.DefaultRegion,
+			"zone":                  gcloud.DefaultZone,
+			"instance-machine-type": gcloud.DefaultInstanceType,
 		}
 
 		for i, v := range defaultConfig {
@@ -280,7 +279,7 @@ func validateGCEConfiguration(input string, q *Queue) tea.Cmd {
 		instanceWebserver := q.stack.GetSetting("instance-webserver")
 
 		if instanceWebserver == "y" || input == "y" {
-			q.stack.AddSetting("instance-tags", deploystack.HTTPServerTags)
+			q.stack.AddSetting("instance-tags", gcloud.HTTPServerTags)
 		}
 		q.stack.DeleteSetting("gce-use-defaults")
 		q.stack.DeleteSetting("instance-webserver")

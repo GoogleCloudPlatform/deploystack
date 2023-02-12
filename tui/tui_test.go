@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -575,12 +576,15 @@ func (m mock) MachineTypeList(project, zone string) (*compute.MachineTypeList, e
 	return &r, nil
 }
 
-func (m mock) MachineTypeFamilyList(imgs *compute.MachineTypeList) deploystack.LabeledValues {
-	return deploystack.ComputeMachineTypeFamilyList(imgs)
+func (m mock) MachineTypeFamilyList(imgs *compute.MachineTypeList) gcloud.LabeledValues {
+	client := gcloud.NewClient(context.Background(), "deploystack/test")
+
+	return client.MachineTypeFamilyList(imgs)
 }
 
-func (m mock) MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) deploystack.LabeledValues {
-	return deploystack.ComputeMachineTypeListByFamily(imgs, family)
+func (m mock) MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) gcloud.LabeledValues {
+	client := gcloud.NewClient(context.Background(), "deploystack/test")
+	return client.MachineTypeListByFamily(imgs, family)
 }
 
 func (m mock) ImageList(project, imageproject string) (*compute.ImageList, error) {
@@ -720,13 +724,13 @@ func (m mock) ImageList(project, imageproject string) (*compute.ImageList, error
 	return resp, nil
 }
 
-func (m mock) ImageTypeListByFamily(imgs *compute.ImageList, project, family string) deploystack.LabeledValues {
-	lb := deploystack.LabeledValues{}
+func (m mock) ImageTypeListByFamily(imgs *compute.ImageList, project, family string) gcloud.LabeledValues {
+	lb := gcloud.LabeledValues{}
 
 	for _, v := range imgs.Items {
 		if v.Family == family {
 			value := fmt.Sprintf("%s/%s", project, v.Name)
-			lb = append(lb, deploystack.LabeledValue{Value: value, Label: v.Name, IsDefault: false})
+			lb = append(lb, gcloud.LabeledValue{Value: value, Label: v.Name, IsDefault: false})
 		}
 	}
 
@@ -741,4 +745,27 @@ func (m mock) ImageTypeListByFamily(imgs *compute.ImageList, project, family str
 
 func (m mock) ProjectNumberGet(id string) (string, error) {
 	return "123234567755", nil
+}
+
+func (m mock) ImageFamilyList(imgs *compute.ImageList) gcloud.LabeledValues {
+	fam := make(map[string]bool)
+	lb := gcloud.LabeledValues{}
+
+	for _, v := range imgs.Items {
+		fam[v.Family] = false
+	}
+
+	for i := range fam {
+		if i == "" {
+			continue
+		}
+		lb = append(lb, gcloud.LabeledValue{
+			Value:     i,
+			Label:     i,
+			IsDefault: false,
+		})
+	}
+	lb.SetDefault(gcloud.DefaultImageFamily)
+	lb.Sort()
+	return lb
 }

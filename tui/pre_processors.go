@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -134,7 +134,7 @@ func getMachineTypes(q *Queue) tea.Cmd {
 
 func getDiskProjects(q *Queue) tea.Cmd {
 	return func() tea.Msg {
-		diskImages := deploystack.DiskProjects
+		diskImages := gcloud.DiskProjects
 
 		items := []list.Item{}
 		for _, v := range diskImages {
@@ -159,7 +159,7 @@ func getImageFamilies(q *Queue) tea.Cmd {
 			return errMsg{err: err}
 		}
 
-		families := deploystack.ComputeImageFamilyList(images)
+		families := q.client.ImageFamilyList(images)
 
 		items := []list.Item{}
 		for _, v := range families {

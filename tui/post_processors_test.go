@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -379,7 +379,7 @@ func TestValidateGCEConfiguration(t *testing.T) {
 		value string
 	}{
 		// "nowebserver":  {in: "n", msg: successMsg{unset: true}, value: ""},
-		"yeswebserver": {in: "y", msg: successMsg{unset: true}, value: deploystack.HTTPServerTags},
+		"yeswebserver": {in: "y", msg: successMsg{unset: true}, value: gcloud.HTTPServerTags},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
