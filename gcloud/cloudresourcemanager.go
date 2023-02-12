@@ -67,6 +67,12 @@ func (c *Client) ProjectParentGet(id string) (*cloudresourcemanager.ResourceId, 
 func (c *Client) ProjectList() ([]ProjectWithBilling, error) {
 	resp := []ProjectWithBilling{}
 
+	i := c.get("ProjectList")
+	switch val := i.(type) {
+	case []ProjectWithBilling:
+		return val, nil
+	}
+
 	svc, err := c.getCloudResourceManagerService()
 	if err != nil {
 		return resp, err
@@ -85,6 +91,8 @@ func (c *Client) ProjectList() ([]ProjectWithBilling, error) {
 	sort.Slice(pwb, func(i, j int) bool {
 		return strings.ToLower(pwb[i].Name) < strings.ToLower(pwb[j].Name)
 	})
+
+	c.save("ProjectList", pwb)
 
 	return pwb, nil
 }

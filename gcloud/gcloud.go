@@ -69,6 +69,7 @@ type Client struct {
 	userAgent       string
 	opts            option.ClientOption
 	enabledServices map[string]bool
+	cache           map[string]interface{}
 }
 
 // NewClient initiates a new gcloud Client
@@ -78,7 +79,16 @@ func NewClient(ctx context.Context, ua string) Client {
 	c.userAgent = ua
 	c.opts = option.WithCredentialsFile("")
 	c.enabledServices = make(map[string]bool)
+	c.cache = map[string]interface{}{}
 	return c
+}
+
+func (c *Client) save(key string, value interface{}) {
+	c.cache[key] = value
+}
+
+func (c *Client) get(key string) interface{} {
+	return c.cache[key]
 }
 
 type services struct {
