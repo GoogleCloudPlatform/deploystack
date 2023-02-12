@@ -126,7 +126,14 @@ func (p textInput) View() string {
 	for _, v := range p.content {
 		inst.WriteString(v.render())
 	}
-	doc.WriteString(instructionStyle.Width(width).Render(inst.String()))
+
+	height := (len(inst.String()) / hardWidthLimit) + 1
+
+	content := instructionStyle.
+		Width(hardWidthLimit).
+		Height(height).
+		Render(inst.String())
+	doc.WriteString(content)
 
 	doc.WriteString("\n")
 	doc.WriteString(inputText.Render(p.ti.View()))
