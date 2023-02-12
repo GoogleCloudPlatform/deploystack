@@ -139,8 +139,8 @@ func TestQueueProcess(t *testing.T) {
 			keys: []string{
 				"project_id",
 				"project_id_2",
-				"project_id_new",
-				"project_id_2_new",
+				"project_id" + projNewSuffix,
+				"project_id_2" + projNewSuffix,
 				"gce-use-defaults",
 				"instance-name",
 				"region",

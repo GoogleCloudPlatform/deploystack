@@ -31,3 +31,4 @@ deploystack-gcs-to-bq-with-least-privileges/
 deploystack-single-vm/
 tui/contact.yaml
 gcloud/test_files/gcloudout/billing_accounts_local.json
+cmd/new-ui/debug.log

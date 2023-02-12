@@ -11,7 +11,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func newProjectCreator(key string) QueueModel {
+var projNewSuffix = "_new_project_creator"
+
+func newProjectCreator(key string) textInput {
 	r := newTextInput("Create New Project",
 		"",
 		key,
@@ -25,13 +27,14 @@ func newProjectCreator(key string) QueueModel {
 	r.addContent("Project IDs must be between 6 and 30 characters. ")
 	r.addContent("\n\n")
 	r.addContent(textInputDefaultStyle.Render("Please enter a new project name to create:"))
-	return &r
+	return r
 }
 
 func newProjectSelector(key, listLabel string, preProcessor tea.Cmd) picker {
 	result := newPicker(listLabel, "Retrieving Projects", key, preProcessor)
 	create := item{"Create New Project", ""}
 	result.list.InsertItem(0, create)
+	result.addPostProcessor(cleanupProjectScreen)
 	return result
 }
 

@@ -22,7 +22,7 @@ func TestNewProjectCreator(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			q := getTestQueue(appTitle, "test")
 			out := newProjectCreator(tc.key)
-			q.add(out)
+			q.add(&out)
 
 			got := out.View()
 			want := readTestFile(tc.outputFile)
@@ -94,6 +94,50 @@ func TestNewProjectSelector(t *testing.T) {
 			if want != got {
 				writeDebugFile(got, tc.outputFile)
 				t.Fatalf("text wasn't the same")
+			}
+		})
+	}
+}
+
+func TestNewProjectFlow(t *testing.T) {
+	tests := map[string]struct {
+		want             string
+		createNewProject bool
+	}{
+		"createProject": {
+			want:             "project_id" + projNewSuffix,
+			createNewProject: true,
+		},
+		"doNotCreateProject": {
+			want:             "dummy",
+			createNewProject: false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			key := "project_id"
+
+			q := getTestQueue(appTitle, "test")
+			p1 := newProjectSelector(key, "", getProjects(&q))
+			p2 := newProjectCreator(key + projNewSuffix)
+			p3 := newPage("dummy", []component{})
+			q.add(&p1, &p2, &p3)
+
+			p := q.Start()
+			if !tc.createNewProject {
+				q.stack.AddSetting(key, "nonnilvalue")
+				p2.value = "nonnilvalue"
+				p2.Update(tea.KeyMsg(tea.Key{Type: tea.KeyEnter}))
+			}
+
+			tmp, _ := q.next()
+			p = tmp.(QueueModel)
+
+			got := p.getKey()
+
+			if tc.want != got {
+				t.Fatalf("want '%s' got '%s'", tc.want, got)
 			}
 		})
 	}

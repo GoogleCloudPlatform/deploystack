@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -47,8 +46,11 @@ func (p textInput) Init() tea.Cmd {
 func (p textInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
-	if p.queue.stack.GetSetting(p.key) != "" {
-		log.Printf("confirmed, this is happening")
+	keyTarget := strings.ReplaceAll(p.key, projNewSuffix, "")
+
+	// if the intended key for this setting is already set, skip
+	if p.queue.stack.GetSetting(p.key) != "" ||
+		p.queue.stack.GetSetting(keyTarget) != "" {
 		return p.queue.next()
 	}
 
@@ -58,7 +60,6 @@ func (p textInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return p, tea.Quit
 		case "enter":
-
 			val := p.ti.Value()
 			if val == "" {
 				val = p.ti.Placeholder
@@ -97,7 +98,10 @@ func (p textInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		p.spinner, cmdSpin = p.spinner.Update(msg)
 		return p, cmdSpin
 	case successMsg:
-		p.queue.stack.AddSetting(p.key, p.value)
+		// Filter project creation screens screeens
+		newKey := strings.ReplaceAll(p.key, projNewSuffix, "")
+
+		p.queue.stack.AddSetting(newKey, p.value)
 		return p.queue.next()
 
 	}

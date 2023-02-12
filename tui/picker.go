@@ -80,6 +80,7 @@ func (p picker) Init() tea.Cmd {
 func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case []list.Item:
+
 		p.state = "displaying"
 		items := []list.Item(msg)
 

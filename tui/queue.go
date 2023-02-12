@@ -186,8 +186,8 @@ func (q *Queue) ProcessConfig() error {
 			)
 			q.add(&projectsPage)
 
-			projectCreator := newProjectCreator(v.Name + "_new")
-			q.add(projectCreator)
+			projectCreator := newProjectCreator(v.Name + projNewSuffix)
+			q.add(&projectCreator)
 
 		}
 	}

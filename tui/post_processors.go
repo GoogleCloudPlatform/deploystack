@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -12,18 +13,32 @@ import (
 )
 
 // TODO: make this dynamic
-var currentProject = "ds-tester-singlevm"
+var currentProject = ""
 
 func cleanUp(input string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
-		for i, v := range q.stack.Settings {
-			if strings.Contains(i, "_new") {
-				short := strings.ReplaceAll(i, "_new", "")
-				q.stack.AddSetting(short, v)
-				q.stack.DeleteSetting(i)
-			}
-		}
 		q.stack.DeleteSetting("domain_consent")
+
+		return successMsg{}
+	}
+}
+
+func cleanupProjectScreen(key string, q *Queue) tea.Cmd {
+	return func() tea.Msg {
+		// This makes sure that project creation screens for new projects
+		// are removed if we just picked one from the list
+		log.Printf("cleanupProjectScreen")
+		log.Printf("current %s", q.currentKey())
+		log.Printf("next %s", q.nextKey())
+
+		if q.stack.GetSetting(q.currentKey()) != "" {
+			// q.removeModel(q.currentKey() + projNewSuffix)
+			return successMsg{}
+		}
+
+		log.Printf("do notremove next")
+
+		// q.removeModel(q.currentKey() + projNewSuffix)
 
 		return successMsg{}
 	}
@@ -47,12 +62,6 @@ func createProject(project string, q *Queue) tea.Cmd {
 
 		if err := q.client.ProjectCreate(project, parent.Id, parent.Type); err != nil {
 			return errMsg{err: fmt.Errorf("createProject: could not create project: %w", err)}
-		}
-
-		// This makes sure that project creation screens for new projects
-		// are removed if we just picked one from the list
-		if q.nextKey() == q.currentKey()+"_new" {
-			q.removeModel(q.nextKey())
 		}
 
 		return successMsg{}
