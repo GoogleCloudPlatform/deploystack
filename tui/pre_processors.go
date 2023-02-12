@@ -33,6 +33,38 @@ func getProjects(q *Queue) tea.Cmd {
 	}
 }
 
+func getBillingAccounts(q *Queue) tea.Cmd {
+	return func() tea.Msg {
+		p, err := q.client.BillingAccountList()
+		if err != nil {
+			return errMsg{err: err}
+		}
+
+		items := []list.Item{}
+		for _, v := range p {
+			items = append(items, item{
+				value: strings.TrimSpace(v.Name),
+				label: strings.TrimSpace(v.DisplayName),
+			})
+		}
+
+		// If there is only 1 billing account, don't bother the user with
+		// setting it up.
+		if len(items) == 1 {
+			ba := strings.ReplaceAll(p[0].Name, "billingAccounts/", "")
+
+			key := strings.ReplaceAll(q.currentKey(), billNewSuffix, "")
+			project := q.stack.GetSetting(key)
+			if err := q.client.BillingAccountAttach(project, ba); err != nil {
+				return errMsg{err: fmt.Errorf("attachBilling: could not attach billing to project: %w", err)}
+			}
+			return successMsg{}
+		}
+
+		return items
+	}
+}
+
 func getRegions(q *Queue) tea.Cmd {
 	return func() tea.Msg {
 		s := q.stack

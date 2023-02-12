@@ -11,6 +11,7 @@ import (
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
+	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/genproto/googleapis/type/money"
@@ -34,7 +35,8 @@ func writeDebugFile(content string, target string) {
 }
 
 type mock struct {
-	d int
+	d        int
+	forceErr bool
 }
 
 func (m mock) delay() {
@@ -43,10 +45,17 @@ func (m mock) delay() {
 }
 
 func (m mock) ProjectIDGet() (string, error) {
+	if m.forceErr {
+		return "", errForced
+	}
 	return "ds-tester-singlevm", nil
 }
 
 func (m mock) ProjectList() ([]gcloud.ProjectWithBilling, error) {
+	m.delay()
+	if m.forceErr {
+		return nil, errForced
+	}
 	r := []gcloud.ProjectWithBilling{
 		{ID: "ds-test-ms-ua2jjt3u", Name: "ds-test-ms-ua2jjt3u", BillingEnabled: true},
 		{ID: "ds-test-ms-bpbfnumc", Name: "ds-test-ms-bpbfnumc", BillingEnabled: true},
@@ -140,12 +149,14 @@ func (m mock) ProjectList() ([]gcloud.ProjectWithBilling, error) {
 		return strings.ToLower(r[i].Name) < strings.ToLower(r[j].Name)
 	})
 
-	m.delay()
-
 	return r, nil
 }
 
 func (m mock) RegionList(project, product string) ([]string, error) {
+	m.delay()
+	if m.forceErr {
+		return nil, errForced
+	}
 	r := []string{
 		"asia-east1",
 		"asia-east2",
@@ -184,11 +195,14 @@ func (m mock) RegionList(project, product string) ([]string, error) {
 		"us-west4",
 	}
 
-	m.delay()
 	return r, nil
 }
 
 func (m mock) ZoneList(project, region string) ([]string, error) {
+	m.delay()
+	if m.forceErr {
+		return nil, errForced
+	}
 	z := []string{
 		"us-east1-b",
 		"us-east1-c",
@@ -306,11 +320,14 @@ func (m mock) ZoneList(project, region string) ([]string, error) {
 		}
 	}
 
-	m.delay()
 	return r, nil
 }
 
 func (m mock) ProjectParentGet(project string) (*cloudresourcemanager.ResourceId, error) {
+	m.delay()
+	if m.forceErr {
+		return nil, errForced
+	}
 	r := &cloudresourcemanager.ResourceId{}
 
 	r.Id = "298490623289"
@@ -321,6 +338,9 @@ func (m mock) ProjectParentGet(project string) (*cloudresourcemanager.ResourceId
 
 func (m mock) ProjectCreate(project, parent, parentType string) error {
 	m.delay()
+	if m.forceErr {
+		return errForced
+	}
 	if len(project) > 32 {
 		return gcloud.ErrorProjectCreateTooLong
 	}
@@ -349,6 +369,9 @@ func (m mock) ProjectCreate(project, parent, parentType string) error {
 
 func (m mock) DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error) {
 	m.delay()
+	if m.forceErr {
+		return nil, errForced
+	}
 	r := &domainspb.RegisterParameters{}
 
 	if domain == "example.com" {
@@ -373,6 +396,9 @@ func (m mock) DomainIsAvailable(project, domain string) (*domainspb.RegisterPara
 
 func (m mock) DomainIsVerified(project, domain string) (bool, error) {
 	m.delay()
+	if m.forceErr {
+		return false, errForced
+	}
 	if domain == "example2.com" {
 		return false, nil
 	}
@@ -385,6 +411,9 @@ func (m mock) DomainIsVerified(project, domain string) (bool, error) {
 
 func (m mock) DomainRegister(project string, domaininfo *domainspb.RegisterParameters, contact gcloud.ContactData) error {
 	m.delay()
+	if m.forceErr {
+		return errForced
+	}
 	if domaininfo.DomainName == "example3.com" {
 		return fmt.Errorf("domain is cursed and cannot be obtained by mortals")
 	}
@@ -399,10 +428,16 @@ func (m mock) DomainRegister(project string, domaininfo *domainspb.RegisterParam
 }
 
 func (m mock) ImageLatestGet(project, imageproject, imagefamily string) (string, error) {
+	if m.forceErr {
+		return "", errForced
+	}
 	return "debian-cloud/debian-11-bullseye-v20230202", nil
 }
 
 func (m mock) MachineTypeList(project, zone string) (*compute.MachineTypeList, error) {
+	if m.forceErr {
+		return nil, errForced
+	}
 	r := *&compute.MachineTypeList{
 		Items: []*compute.MachineType{
 			{GuestCpus: 12, MemoryMb: 87040, Name: "a2-highgpu-1g"},
@@ -587,6 +622,9 @@ func (m mock) MachineTypeListByFamily(imgs *compute.MachineTypeList, family stri
 }
 
 func (m mock) ImageList(project, imageproject string) (*compute.ImageList, error) {
+	if m.forceErr {
+		return nil, errForced
+	}
 	imageList := &compute.ImageList{
 		Items: []*compute.Image{
 			{Name: "centos-7-v20230203 ", Kind: "centos-cloud", Family: "centos-7"},
@@ -743,6 +781,9 @@ func (m mock) ImageTypeListByFamily(imgs *compute.ImageList, project, family str
 }
 
 func (m mock) ProjectNumberGet(id string) (string, error) {
+	if m.forceErr {
+		return "", errForced
+	}
 	return "123234567755", nil
 }
 
@@ -767,4 +808,31 @@ func (m mock) ImageFamilyList(imgs *compute.ImageList) gcloud.LabeledValues {
 	lb.SetDefault(gcloud.DefaultImageFamily)
 	lb.Sort()
 	return lb
+}
+
+func (m mock) BillingAccountList() ([]*cloudbilling.BillingAccount, error) {
+	if m.forceErr {
+		return nil, errForced
+	}
+	result := []*cloudbilling.BillingAccount{
+		{
+			DisplayName: "Very Limted Funds",
+			Name:        "billingAccounts/000000-000000-00000Y",
+		},
+		{
+			DisplayName: "Unlimted Funds",
+			Name:        "billingAccounts/000000-000000-00000X",
+		},
+	}
+
+	return result, nil
+}
+
+var errForced = fmt.Errorf("this is a forced error for mocking")
+
+func (m mock) BillingAccountAttach(project, account string) error {
+	if m.forceErr {
+		return errForced
+	}
+	return nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
+	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 )
@@ -71,4 +72,6 @@ type UIClient interface {
 	ImageList(project, imageproject string) (*compute.ImageList, error)
 	ImageTypeListByFamily(imgs *compute.ImageList, project, family string) gcloud.LabeledValues
 	ImageFamilyList(imgs *compute.ImageList) gcloud.LabeledValues
+	BillingAccountList() ([]*cloudbilling.BillingAccount, error)
+	BillingAccountAttach(project, account string) error
 }

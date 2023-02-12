@@ -178,17 +178,10 @@ func (q *Queue) ProcessConfig() error {
 
 	if len(s.Config.Projects.Items) > 0 {
 		for _, v := range s.Config.Projects.Items {
-
-			projectsPage := newProjectSelector(
-				v.Name,
-				v.UserPrompt,
-				getProjects(q),
-			)
-			q.add(&projectsPage)
-
-			projectCreator := newProjectCreator(v.Name + projNewSuffix)
-			q.add(&projectCreator)
-
+			s := newProjectSelector(v.Name, v.UserPrompt, getProjects(q))
+			c := newProjectCreator(v.Name + projNewSuffix)
+			b := newBillingSelector(v.Name+billNewSuffix, getBillingAccounts(q))
+			q.add(&s, &c, &b)
 		}
 	}
 

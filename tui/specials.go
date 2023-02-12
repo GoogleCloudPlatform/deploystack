@@ -11,7 +11,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-var projNewSuffix = "_new_project_creator"
+var (
+	projNewSuffix = "_new_project_creator"
+	billNewSuffix = "_new_billing_selector"
+)
 
 func newProjectCreator(key string) textInput {
 	r := newTextInput("Create New Project",
@@ -35,6 +38,11 @@ func newProjectSelector(key, listLabel string, preProcessor tea.Cmd) picker {
 	create := item{"Create New Project", ""}
 	result.list.InsertItem(0, create)
 	result.addPostProcessor(cleanupProjectScreen)
+	return result
+}
+
+func newBillingSelector(key string, preProcessor tea.Cmd) picker {
+	result := newPicker("Choose a billing account to use for this project", "Retrieving Billing Accounts", key, preProcessor)
 	return result
 }
 

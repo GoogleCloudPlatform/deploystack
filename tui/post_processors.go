@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -25,20 +24,15 @@ func cleanUp(input string, q *Queue) tea.Cmd {
 
 func cleanupProjectScreen(key string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
-		// This makes sure that project creation screens for new projects
-		// are removed if we just picked one from the list
-		log.Printf("cleanupProjectScreen")
-		log.Printf("current %s", q.currentKey())
-		log.Printf("next %s", q.nextKey())
+		if key != "" {
+			creator := q.currentKey() + projNewSuffix
+			billing := q.currentKey() + billNewSuffix
 
-		if q.stack.GetSetting(q.currentKey()) != "" {
-			// q.removeModel(q.currentKey() + projNewSuffix)
+			q.removeModel(creator)
+			q.removeModel(billing)
+
 			return successMsg{}
 		}
-
-		log.Printf("do notremove next")
-
-		// q.removeModel(q.currentKey() + projNewSuffix)
 
 		return successMsg{}
 	}
@@ -62,6 +56,20 @@ func createProject(project string, q *Queue) tea.Cmd {
 
 		if err := q.client.ProjectCreate(project, parent.Id, parent.Type); err != nil {
 			return errMsg{err: fmt.Errorf("createProject: could not create project: %w", err)}
+		}
+
+		return successMsg{}
+	}
+}
+
+func attachBilling(ba string, q *Queue) tea.Cmd {
+	return func() tea.Msg {
+		baclean := strings.ReplaceAll(ba, "billingAccounts/", "")
+		key := strings.ReplaceAll(q.currentKey(), billNewSuffix, "")
+		project := q.stack.GetSetting(key)
+
+		if err := q.client.BillingAccountAttach(project, baclean); err != nil {
+			return errMsg{err: fmt.Errorf("attachBilling: could not attach billing to project: %w", err)}
 		}
 
 		return successMsg{}
