@@ -125,22 +125,21 @@ func TestQueueRemoveModel(t *testing.T) {
 func TestQueueProcess(t *testing.T) {
 	tests := map[string]struct {
 		config string
-		count  int
 		keys   []string
 	}{
 		"basic": {
 			config: "testdata/config_basic.yaml",
-			count:  0,
 			keys:   []string{},
 		},
 		"complex": {
 			config: "testdata/config_complex.yaml",
-			count:  27,
 			keys: []string{
 				"project_id",
 				"project_id_2",
 				"project_id" + projNewSuffix,
 				"project_id_2" + projNewSuffix,
+				"project_id" + billNewSuffix,
+				"project_id_2" + billNewSuffix,
 				"gce-use-defaults",
 				"instance-name",
 				"region",
@@ -183,13 +182,13 @@ func TestQueueProcess(t *testing.T) {
 				t.Fatalf("expected no error, got %s", err)
 			}
 
-			if tc.count != len(q.models) {
+			if len(tc.keys) != len(q.models) {
 				t.Logf("Models")
 				for i, v := range q.models {
 					t.Logf("%d:%s", i, v.getKey())
 				}
 
-				t.Fatalf("count - want '%d' got '%d'", tc.count, len(q.models))
+				t.Fatalf("count - want '%d' got '%d'", len(tc.keys), len(q.models))
 			}
 
 			for _, v := range tc.keys {
