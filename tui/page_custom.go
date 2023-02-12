@@ -28,7 +28,7 @@ func newTextInput(label, defaultValue, key, spinnerLabel string) textInput {
 	ti.Placeholder = defaultValue
 	ti.Focus()
 	ti.CharLimit = 156
-	ti.Width = 20
+	ti.Width = hardWidthLimit
 	t.ti = ti
 
 	s := spinner.New()
