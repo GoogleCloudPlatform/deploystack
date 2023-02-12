@@ -2,6 +2,7 @@ package gcloud
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"reflect"
 	"sort"
@@ -12,7 +13,20 @@ import (
 
 func TestGetBillingAccounts(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
-	dat, err := os.ReadFile("test_files/gcloudout/billing_accounts.json")
+
+	buildtestfile := "test_files/gcloudout/billing_accounts.json"
+	localtestfile := "test_files/gcloudout/billing_accounts_local.json"
+	testfile := localtestfile
+
+	if _, err := os.Stat(localtestfile); errors.Is(err, os.ErrNotExist) {
+		testfile = buildtestfile
+	}
+
+	if os.Getenv("BUILD") != "" {
+		testfile = "test_files/gcloudout/billing_accounts.json"
+	}
+
+	dat, err := os.ReadFile(testfile)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
@@ -49,10 +63,6 @@ func TestGetBillingAccounts(t *testing.T) {
 					t.Fatalf("expected: %v, got: %v", tc.want[i].DisplayName, v.DisplayName)
 				}
 			}
-
-			// if !reflect.DeepEqual(tc.want, got) {
-			// 	t.Fatalf("expected: %v, got: %v", tc.want, got)
-			// }
 		})
 	}
 }
