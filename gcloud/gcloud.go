@@ -189,3 +189,13 @@ func NewLabeledValues(sl []string, defaultValue string) LabeledValues {
 	}
 	return r
 }
+
+// NewContactData returns a properly initialized ContactData
+func NewContactData() ContactData {
+	c := ContactData{}
+	d := DomainRegistrarContact{}
+	d.PostalAddress.AddressLines = []string{}
+	d.PostalAddress.Recipients = []string{}
+	c.AllContacts = d
+	return c
+}

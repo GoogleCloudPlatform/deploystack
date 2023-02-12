@@ -17,7 +17,6 @@
 package deploystack
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -36,32 +35,8 @@ import (
 )
 
 var (
-	// // ErrorCustomNotValidPhoneNumber is the error you get when you fail phone
-	// // number validation.
-	// ErrorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
-	// // ErrorBillingInvalidAccount is the error you get if you pass in a bad
-	// // Billing Account ID
-	// ErrorBillingInvalidAccount = fmt.Errorf("not a valid billing account")
-	// // ErrorBillingNoPermission is the error you get if the user lacks billing
-	// // related permissions
-	// ErrorBillingNoPermission = fmt.Errorf("user lacks permission")
-	// // ErrorProjectCreateTooLong is an error when you try to create a project
-	// // wuth more than 30 characters
-	// ErrorProjectCreateTooLong = fmt.Errorf("project_id contains too many characters, limit 30")
-	// // ErrorProjectInvalidCharacters is an error when you try and pass bad
-	// // characters into a CreateProjectCall
-	// ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
-	// // ErrorProjectAlreadyExists is an error when you try and create a project
-	// // That already exists
-	// ErrorProjectAlreadyExists = fmt.Errorf("project_id already exists")
-	// // ErrorProjectDidNotFinish is an error we cannot confirm that project completion actually occured
-	// ErrorProjectDidNotFinish = fmt.Errorf("project creation did not complete in a timely manner")
-
-	// Divider is a text element that draws a horizontal line
-	Divider          = ""
 	opts             = option.WithCredentialsFile("")
 	credspath        = ""
-	globalctx        = context.Background()
 	defaultUserAgent = "deploystack"
 	contactfile      = "contact.yaml"
 )
@@ -441,17 +416,9 @@ func (s Stack) TerraformFile(filename string) error {
 	return nil
 }
 
-func NewContactData() gcloud.ContactData {
-	c := gcloud.ContactData{}
-	d := gcloud.DomainRegistrarContact{}
-	d.PostalAddress.AddressLines = []string{}
-	d.PostalAddress.Recipients = []string{}
-	c.AllContacts = d
-	return c
-}
-
+// NewContactDataFromFile generates a new ContactData from a cached yaml file
 func NewContactDataFromFile(file string) (gcloud.ContactData, error) {
-	c := NewContactData()
+	c := gcloud.NewContactData()
 
 	dat, err := os.ReadFile(file)
 	if err != nil {
