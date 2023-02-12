@@ -132,7 +132,7 @@ func (q *Queue) InitializeUI() {
 		newTextBlock(titleStyle.Render("Project Settings")),
 		newSettingsTable(q.stack),
 	})
-	endpage.addPostProcessor(cleanUp)
+	endpage.addPreProcessor(cleanUp(q))
 
 	q.header = appHeader
 	q.add(&firstPage)

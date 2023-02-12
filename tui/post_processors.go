@@ -14,14 +14,6 @@ import (
 // TODO: make this dynamic
 var currentProject = ""
 
-func cleanUp(input string, q *Queue) tea.Cmd {
-	return func() tea.Msg {
-		q.stack.DeleteSetting("domain_consent")
-
-		return successMsg{}
-	}
-}
-
 func cleanupProjectScreen(key string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
 		if key != "" {
@@ -70,6 +62,12 @@ func attachBilling(ba string, q *Queue) tea.Cmd {
 
 		if err := q.client.BillingAccountAttach(project, baclean); err != nil {
 			return errMsg{err: fmt.Errorf("attachBilling: could not attach billing to project: %w", err)}
+		}
+
+		// If this is one of those billing for project form, let's skip
+		// adding it to the stack settings
+		if strings.Contains(q.currentKey(), billNewSuffix) {
+			return successMsg{unset: true}
 		}
 
 		return successMsg{}

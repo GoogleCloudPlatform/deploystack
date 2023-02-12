@@ -43,6 +43,7 @@ func newProjectSelector(key, listLabel string, preProcessor tea.Cmd) picker {
 
 func newBillingSelector(key string, preProcessor tea.Cmd) picker {
 	result := newPicker("Choose a billing account to use for this project", "Retrieving Billing Accounts", key, preProcessor)
+	result.addPostProcessor(attachBilling)
 	return result
 }
 

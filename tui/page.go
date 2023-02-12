@@ -37,6 +37,10 @@ func (p *dynamicPage) addPostProcessor(f func(string, *Queue) tea.Cmd) {
 	p.postProcessor = f
 }
 
+func (p *dynamicPage) addPreProcessor(f tea.Cmd) {
+	p.preProcessor = f
+}
+
 func (p *dynamicPage) addQueue(q *Queue) {
 	p.queue = q
 }
@@ -63,7 +67,7 @@ func newPage(key string, content []component) page {
 }
 
 func (p page) Init() tea.Cmd {
-	return nil
+	return p.preProcessor
 }
 
 func (p page) View() string {
