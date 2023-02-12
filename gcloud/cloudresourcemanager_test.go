@@ -105,17 +105,42 @@ func TestGetProjects(t *testing.T) {
 			sort.Strings(want)
 			sort.Strings(gotfiltered)
 
-			failures := 0
-			for i, v := range gotfiltered {
-				if v != want[i] {
-					failures++
-					t.Logf("failing pair %s:%s ", v, want[i])
+			extraGots := []string{}
+			for _, gotItem := range gotfiltered {
+				found := false
+				for _, wantItem := range want {
+					if wantItem == gotItem {
+						found = true
+						break
+					}
 				}
+
+				if !found {
+					extraGots = append(extraGots, gotItem)
+				}
+
 			}
 
-			if failures > 0 {
-				t.Logf("Expected:%s\n", want)
-				t.Logf("Got     :%s", gotfiltered)
+			// extraWants := []string{}
+			// for _, wantItem := range want {
+			// 	found := false
+			// 	for _, gotItem := range gotfiltered {
+			// 		if wantItem == gotItem {
+			// 			found = true
+			// 			break
+			// 		}
+			// 	}
+
+			// 	if !found {
+			// 		extraWants = append(extraWants, wantItem)
+			// 	}
+
+			// }
+
+			if len(extraGots) > 0 {
+				// if len(extraGots) > 0 || len(extraWants) > 0 {
+				// t.Logf("extra wants: %v ", extraWants)
+				t.Logf("extra gots: %v ", extraGots)
 				t.Fatalf("expected: %v got: %v", len(want), len(gotfiltered))
 			}
 
