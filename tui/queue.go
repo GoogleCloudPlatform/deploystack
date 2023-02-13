@@ -110,15 +110,6 @@ func (q *Queue) currentKey() string {
 	return r
 }
 
-func (q *Queue) nextKey() string {
-	i := q.current + 1
-	if i >= len(q.models) {
-		return ""
-	}
-	r := q.models[i].getKey()
-	return r
-}
-
 // InitializeUI spins up everything we need to have a working queue in the
 // hosting application
 func (q *Queue) InitializeUI() {

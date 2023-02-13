@@ -2,9 +2,11 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/deploystack"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func getTestQueue(title, subtitle string) Queue {
@@ -249,6 +251,119 @@ func TestQueueInitialize(t *testing.T) {
 
 				t.Fatalf("key check - want '%d' got '%d'", 0, len(q.models))
 
+			}
+		})
+	}
+}
+
+func TestQueueGoToModel(t *testing.T) {
+	firstPage := newPage("firstpage", []component{newTextBlock("A 1st page")})
+	secondPage := newPage("secondpage", []component{newTextBlock("A 2nd page")})
+	thirdPage := newPage("thirdpage", []component{newTextBlock("A 3rd page")})
+	fourthPage := newPage("fourthpage", []component{newTextBlock("A last page")})
+
+	tests := map[string]struct {
+		models   []QueueModel
+		target   string
+		want     string
+		wanttype string
+	}{
+		"one": {
+			models:   []QueueModel{&firstPage},
+			target:   "firstpage",
+			want:     "A 1st page",
+			wanttype: "nil",
+		},
+		"two": {
+			models:   []QueueModel{&firstPage, &secondPage},
+			target:   "firstpage",
+			want:     "A 1st page",
+			wanttype: "nil",
+		},
+		"four": {
+			models:   []QueueModel{&firstPage, &secondPage, &thirdPage, &fourthPage},
+			target:   "thirdpage",
+			want:     "A 3rd page",
+			wanttype: "nil",
+		},
+
+		"quit": {
+			models:   []QueueModel{&firstPage, &secondPage, &thirdPage, &fourthPage},
+			target:   "quit",
+			want:     "A 3rd page",
+			wanttype: "quitMsg",
+		},
+		"invalidkey": {
+			models:   []QueueModel{&firstPage, &secondPage, &thirdPage, &fourthPage},
+			target:   "aninvalidkey",
+			want:     "A 1st page",
+			wanttype: "nil",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+			q.add(tc.models...)
+
+			got, cmd := q.goToModel(tc.target)
+
+			if tc.wanttype == "nil" && cmd != nil {
+				t.Fatalf("wanted '%s' to be nil got '%+v'", tc.want, cmd)
+
+				if !strings.Contains(got.View(), tc.want) {
+					t.Fatalf("wanted '%s' to be contained in got '%s'", tc.want, got.View())
+				}
+			}
+
+			if tc.wanttype != "nil" {
+				gotmsg := cmd()
+				wantmsg := tea.Quit()
+
+				if gotmsg != wantmsg {
+					t.Fatalf("wanted '%+v' got '%+v'", wantmsg, gotmsg)
+				}
+
+			}
+		})
+	}
+}
+
+func TestQueueClear(t *testing.T) {
+	firstPage := newPage("firstpage", []component{newTextBlock("A 1st page")})
+
+	tests := map[string]struct {
+		model page
+		key   string
+		value string
+		want  string
+	}{
+		"one": {
+			model: firstPage,
+			key:   "firstpage",
+			value: "A value",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+			q.stack.AddSetting(tc.key, tc.value)
+			tc.model.value = tc.value
+			q.add(&tc.model)
+
+			if q.stack.GetSetting(tc.key) != tc.value {
+				t.Fatalf("stack setting did not happen properly")
+			}
+
+			q.clear(tc.key)
+
+			if q.stack.GetSetting(tc.key) != "" {
+				t.Fatalf("stack clear did not happen properly")
+			}
+
+			if tc.model.value != "" {
+				t.Fatalf("model clear did not happen properly")
 			}
 		})
 	}
