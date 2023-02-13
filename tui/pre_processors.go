@@ -42,8 +42,9 @@ func getBillingAccounts(q *Queue) tea.Cmd {
 
 		items := []list.Item{}
 		for _, v := range p {
+			id := strings.ReplaceAll(v.Name, "billingAccounts/", "")
 			items = append(items, item{
-				value: strings.TrimSpace(v.Name),
+				value: strings.TrimSpace(id),
 				label: strings.TrimSpace(v.DisplayName),
 			})
 		}

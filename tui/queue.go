@@ -180,9 +180,14 @@ func (q *Queue) ProcessConfig() error {
 		for _, v := range s.Config.Projects.Items {
 			s := newProjectSelector(v.Name, v.UserPrompt, getProjects(q))
 			c := newProjectCreator(v.Name + projNewSuffix)
-			b := newBillingSelector(v.Name+billNewSuffix, getBillingAccounts(q))
+			b := newBillingSelector(v.Name+billNewSuffix, getBillingAccounts(q), attachBilling)
 			q.add(&s, &c, &b)
 		}
+	}
+
+	if s.Config.BillingAccount {
+		b := newBillingSelector("billing_account", getBillingAccounts(q), nil)
+		q.add(&b)
 	}
 
 	if s.Config.ConfigureGCEInstance {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/deploystack"
 	tea "github.com/charmbracelet/bubbletea"
+	"google.golang.org/api/cloudbilling/v1"
 )
 
 func TestNewProjectCreator(t *testing.T) {
@@ -82,6 +83,102 @@ func TestNewProjectSelector(t *testing.T) {
 						var tmp tea.Model
 						tmp, cmd = out.Update(v)
 						out = tmp.(picker)
+					}
+
+				}
+
+			}
+
+			got := out.View()
+			want := readTestFile(tc.outputFile)
+
+			if want != got {
+				writeDebugFile(got, tc.outputFile)
+				t.Fatalf("text wasn't the same")
+			}
+		})
+	}
+}
+
+func TestNewBillingSelector(t *testing.T) {
+	tests := map[string]struct {
+		key        string
+		outputFile string
+		state      string
+		single     bool
+	}{
+		"basic": {
+			key:        "billing_account",
+			outputFile: "testdata/billing_selector_basic.txt",
+			state:      "idle",
+		},
+		"displaying": {
+			key:        "project_id",
+			outputFile: "testdata/project_selector_displaying.txt",
+			state:      "displaying",
+		},
+		"displaying_single": {
+			key:        "project_id",
+			outputFile: "testdata/project_selector_displaying_single.txt",
+			state:      "displaying",
+			single:     true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+
+			out := newBillingSelector(tc.key, getBillingAccounts(&q), nil)
+			q.add(&out)
+			p := newBillingSelector("dummy", getBillingAccounts(&q), nil)
+			p.spinnerLabel = "dummy"
+			q.add(&p)
+
+			if tc.single {
+				m := mock{}
+				baList := []*cloudbilling.BillingAccount{
+					{
+						DisplayName: "Very Limted Funds",
+						Name:        "billingAccounts/000000-000000-00000Y",
+					},
+				}
+				m.save("BillingAccountList", baList)
+
+				q.client = m
+			}
+
+			if tc.state == "displaying" {
+				cmd := out.Init()
+				for i := 0; i < 2; i++ {
+
+					msg := cmd()
+
+					switch v := msg.(type) {
+					case tea.BatchMsg:
+						msgs := msg.(tea.BatchMsg)
+
+						for _, v2 := range msgs {
+							var tmp tea.Model
+							tmp, cmd = out.Update(v2())
+
+							switch p := tmp.(type) {
+							case picker:
+								out = p
+							case *picker:
+								out = *p
+							}
+
+						}
+					default:
+						var tmp tea.Model
+						tmp, cmd = out.Update(v)
+						switch p := tmp.(type) {
+						case picker:
+							out = p
+						case *picker:
+							out = *p
+						}
 					}
 
 				}

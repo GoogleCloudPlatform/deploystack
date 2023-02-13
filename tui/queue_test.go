@@ -140,6 +140,7 @@ func TestQueueProcess(t *testing.T) {
 				"project_id_2" + projNewSuffix,
 				"project_id" + billNewSuffix,
 				"project_id_2" + billNewSuffix,
+				"billing_account",
 				"gce-use-defaults",
 				"instance-name",
 				"region",

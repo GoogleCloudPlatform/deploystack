@@ -6,7 +6,7 @@ collect_project: true
 collect_project_number: true
 register_domain: true
 collect_region: true
-collect_billing_account: false
+collect_billing_account: true
 region_type: compute
 region_default: us-central1
 collect_zone: true

@@ -37,6 +37,7 @@ func writeDebugFile(content string, target string) {
 type mock struct {
 	d        int
 	forceErr bool
+	cache    map[string]interface{}
 }
 
 func (m mock) delay() {
@@ -810,10 +811,23 @@ func (m mock) ImageFamilyList(imgs *compute.ImageList) gcloud.LabeledValues {
 	return lb
 }
 
+func (m *mock) save(key string, value interface{}) {
+	if m.cache == nil {
+		m.cache = make(map[string]interface{})
+	}
+
+	m.cache[key] = value
+}
+
+func (m *mock) get(key string) interface{} {
+	return m.cache[key]
+}
+
 func (m mock) BillingAccountList() ([]*cloudbilling.BillingAccount, error) {
 	if m.forceErr {
 		return nil, errForced
 	}
+
 	result := []*cloudbilling.BillingAccount{
 		{
 			DisplayName: "Very Limted Funds",
@@ -823,6 +837,12 @@ func (m mock) BillingAccountList() ([]*cloudbilling.BillingAccount, error) {
 			DisplayName: "Unlimted Funds",
 			Name:        "billingAccounts/000000-000000-00000X",
 		},
+	}
+
+	i := m.get("BillingAccountList")
+	switch val := i.(type) {
+	case []*cloudbilling.BillingAccount:
+		return val, nil
 	}
 
 	return result, nil
