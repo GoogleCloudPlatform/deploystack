@@ -34,6 +34,13 @@ func (c *Client) getCloudbillingService() (*cloudbilling.APIService, error) {
 // BillingAccountList gets a list of the billing accounts a user has access to
 func (c *Client) BillingAccountList() ([]*cloudbilling.BillingAccount, error) {
 	resp := []*cloudbilling.BillingAccount{}
+
+	i := c.get("BillingAccountList")
+	switch val := i.(type) {
+	case []*cloudbilling.BillingAccount:
+		return val, nil
+	}
+
 	svc, err := c.getCloudbillingService()
 	if err != nil {
 		return resp, err
@@ -43,6 +50,8 @@ func (c *Client) BillingAccountList() ([]*cloudbilling.BillingAccount, error) {
 	if err != nil {
 		return resp, err
 	}
+
+	c.save("ProjectList", results.BillingAccounts)
 
 	return results.BillingAccounts, nil
 }

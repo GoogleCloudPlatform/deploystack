@@ -173,6 +173,10 @@ func TestGetRegions(t *testing.T) {
 			}
 
 			if err != tc.err {
+				if tc.err == nil {
+					t.Fatalf("expected: no error, got: %v", err)
+				}
+
 				if err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error (%v), got: %v", tc.err, err)
 				}

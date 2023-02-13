@@ -121,25 +121,7 @@ func TestGetProjects(t *testing.T) {
 
 			}
 
-			// extraWants := []string{}
-			// for _, wantItem := range want {
-			// 	found := false
-			// 	for _, gotItem := range gotfiltered {
-			// 		if wantItem == gotItem {
-			// 			found = true
-			// 			break
-			// 		}
-			// 	}
-
-			// 	if !found {
-			// 		extraWants = append(extraWants, wantItem)
-			// 	}
-
-			// }
-
 			if len(extraGots) > 0 {
-				// if len(extraGots) > 0 || len(extraWants) > 0 {
-				// t.Logf("extra wants: %v ", extraWants)
 				t.Logf("extra gots: %v ", extraGots)
 				t.Fatalf("expected: %v got: %v", len(want), len(gotfiltered))
 			}
@@ -154,8 +136,9 @@ func TestGetProjects(t *testing.T) {
 func TestCreateProject(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
-		input string
-		err   error
+		input   string
+		err     error
+		noRando bool
 	}{
 		"Too long": {
 			input: "zprojectnamedeletethisprojectnamehastoomanycharacters",
@@ -169,14 +152,36 @@ func TestCreateProject(t *testing.T) {
 			input: "spaces in name",
 			err:   ErrorProjectInvalidCharacters,
 		},
-		// "Duplicate": {input: projectID, err: ErrorProjectAlreadyExists},
+		"Duplicate": {
+			input:   projectID,
+			err:     ErrorProjectAlreadyExists,
+			noRando: true,
+		},
+		"Too short": {
+			input: "",
+			err:   ErrorProjectCreateTooShort,
+		},
+		"Should work": {
+			input: "ds-unittest",
+			err:   nil,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			name := tc.input + randSeq(5)
-			err := c.ProjectCreate(name, "", "")
-			c.ProjectDelete(name)
+			if tc.noRando {
+				name = tc.input
+			}
+
+			err := c.ProjectCreate(name, creds["parent"], creds["parent_type"])
+
+			// Don't accidently delete the project that you are using to run
+			// these tests. Yes I found out the hard way
+			if name != projectID {
+				c.ProjectDelete(name)
+			}
+
 			if err != tc.err {
 				t.Fatalf("expected: %v, got: %v project: %s", tc.err, err, name)
 			}

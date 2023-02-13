@@ -129,10 +129,13 @@ func (c *Client) ProjectCreate(project, parent, parentType string) error {
 		if strings.Contains(err.Error(), "project_id must be at most 30 characters long") {
 			return ErrorProjectCreateTooLong
 		}
+		if strings.Contains(err.Error(), "must be at least 6 characters long") {
+			return ErrorProjectCreateTooShort
+		}
 		if strings.Contains(err.Error(), "project_id contains invalid characters") {
 			return ErrorProjectInvalidCharacters
 		}
-		if strings.Contains(err.Error(), "requested entity already exists") {
+		if strings.Contains(err.Error(), "entity already exists") {
 			return ErrorProjectAlreadyExists
 		}
 

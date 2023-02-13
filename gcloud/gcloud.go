@@ -51,6 +51,9 @@ var (
 	// ErrorProjectCreateTooLong is an error when you try to create a project
 	// wuth more than 30 characters
 	ErrorProjectCreateTooLong = fmt.Errorf("project_id contains too many characters, limit 30")
+	// ErrorProjectCreateTooShort is an error when you try to create a project
+	// wuth less than 6 characters
+	ErrorProjectCreateTooShort = fmt.Errorf("project_id contains too few characters, minimum 6")
 	// ErrorProjectInvalidCharacters is an error when you try and pass bad
 	// characters into a CreateProjectCall
 	ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
