@@ -15,16 +15,12 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/GoogleCloudPlatform/deploystack"
-	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 const (
@@ -37,10 +33,9 @@ func main() {
 
 	flag.Parse()
 
-	s := deploystack.NewStack()
-
-	if err := s.FindAndReadRequired(); err != nil {
-		log.Fatalf("could not read config file: %s", err)
+	s, err := deploystack.Init()
+	if err != nil {
+		log.Fatalf("could not read initialize deploystack: %s", err)
 	}
 
 	if *verify {
@@ -49,38 +44,9 @@ func main() {
 	}
 
 	if *name {
-		if err := s.Config.ComputeName(); err != nil {
-			log.Fatalf("could retrieve name of stack: %s", err)
-		}
-
 		fmt.Printf("%s\n", s.Config.Name)
 		return
 	}
 
-	s.AddSetting("stack_name", s.Config.Name)
-
-	if len(os.Getenv("DEBUG")) > 0 {
-		f, err := tea.LogToFile("debug.log", "debug")
-		if err != nil {
-			fmt.Println("fatal:", err)
-			os.Exit(1)
-		}
-		defer f.Close()
-	}
-
-	defaultUserAgent := fmt.Sprintf("deploystack/%s", s.Config.Name)
-	client := gcloud.NewClient(context.Background(), defaultUserAgent)
-
-	q := tui.NewQueue(&s, &client)
-	q.Save("contact", deploystack.CheckForContact())
-	q.InitializeUI()
-
-	p := tea.NewProgram(q.Start(), tea.WithAltScreen())
-	if err := p.Start(); err != nil {
-		log.Fatalf(err.Error())
-	}
-
-	s.TerraformFile("terraform.tfvars")
-
-	deploystack.CacheContact(q.Get("contact"))
+	tui.Start(s)
 }

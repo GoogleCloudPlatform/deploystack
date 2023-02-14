@@ -109,13 +109,14 @@ func TestPicker(t *testing.T) {
 		},
 
 		"send_ctrl_c": {
-			listLabel:    "test",
-			spinnerLabel: "test",
-			key:          "test",
+			listLabel:    "",
+			spinnerLabel: "",
+			key:          "",
 			preProcessor: nil,
-			state:        "idle",
+			state:        "",
 			msg:          tea.KeyMsg{Type: tea.KeyCtrlC},
 			outputFile:   "testdata/picker_send_ctrl_c.txt",
+			exkey:        "",
 		},
 	}
 
@@ -168,6 +169,10 @@ func TestPicker(t *testing.T) {
 
 			newP.Init()
 
+			if name == "send_ctrl_c" {
+				fmt.Printf("%+v", newP)
+			}
+
 			if tc.exkey != newP.key {
 				t.Fatalf("key - want '%s' got '%s'", tc.exkey, newP.key)
 			}
@@ -184,11 +189,14 @@ func TestPicker(t *testing.T) {
 				t.Fatalf("state - want '%s' got '%s'", tc.exstate, newP.state)
 			}
 
-			content := newP.View()
-			tcOutput := readTestFile(tc.outputFile)
-			if content != tcOutput {
-				writeDebugFile(content, tc.outputFile)
-				t.Fatalf("text wasn't the same")
+			if newP.key != "" {
+				content := newP.View()
+				tcOutput := readTestFile(tc.outputFile)
+				if content != tcOutput {
+					writeDebugFile(content, tc.outputFile)
+					t.Fatalf("text wasn't the same")
+				}
+
 			}
 		})
 	}

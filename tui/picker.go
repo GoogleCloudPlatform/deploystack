@@ -108,7 +108,7 @@ func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
-			return p, tea.Quit
+			return p.queue.exitPage()
 		case "enter":
 			if p.state == "displaying" {
 				i, ok := p.list.SelectedItem().(item)

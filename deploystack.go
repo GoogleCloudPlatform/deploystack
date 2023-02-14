@@ -17,6 +17,7 @@
 package deploystack
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -31,6 +32,24 @@ var (
 	defaultUserAgent = "deploystack"
 	contactfile      = "contact.yaml"
 )
+
+// Init initializes a Deploystack stack by looking on teh local file system
+func Init() (*Stack, error) {
+	s := NewStack()
+
+	if err := s.FindAndReadRequired(); err != nil {
+		return &s, fmt.Errorf("could not read config file: %s", err)
+	}
+
+	if s.Config.Name == "" {
+		if err := s.Config.ComputeName(); err != nil {
+			return &s, fmt.Errorf("could retrieve name of stack: %s", err)
+		}
+		s.AddSetting("stack_name", s.Config.Name)
+	}
+
+	return &s, nil
+}
 
 // func handleProcessError(err error) {
 // 	fmt.Printf("\n\n%sThere was an issue collecting the information it takes to run this application.                             %s\n\n", TERMREDREV, TERMCLEAR)

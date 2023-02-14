@@ -96,7 +96,7 @@ func (p page) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.(tea.KeyMsg).String() {
 		case "ctrl+c", "q":
-			return p, tea.Quit
+			return p.queue.exitPage()
 		case "enter":
 			if p.postProcessor != nil {
 				if p.state != "querying" {

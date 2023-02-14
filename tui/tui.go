@@ -3,10 +3,14 @@
 package tui
 
 import (
+	"context"
 	"fmt"
+	"os"
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
+	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
+	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
@@ -74,4 +78,63 @@ type UIClient interface {
 	ImageFamilyList(imgs *compute.ImageList) gcloud.LabeledValues
 	BillingAccountList() ([]*cloudbilling.BillingAccount, error)
 	BillingAccountAttach(project, account string) error
+}
+
+// Start takes a deploystack configuration and walks someone through all of the
+// input needed to run the eventual terraform
+func Start(s *deploystack.Stack) {
+	if len(os.Getenv("DEBUG")) > 0 {
+		f, err := tea.LogToFile("debug.log", "debug")
+		if err != nil {
+			fmt.Println("fatal:", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+	}
+
+	defaultUserAgent := fmt.Sprintf("deploystack/%s", s.Config.Name)
+	client := gcloud.NewClient(context.Background(), defaultUserAgent)
+
+	q := NewQueue(s, &client)
+	q.Save("contact", deploystack.CheckForContact())
+	q.InitializeUI()
+
+	p := tea.NewProgram(q.Start(), tea.WithAltScreen())
+	if err := p.Start(); err != nil {
+		Fatal(err)
+		os.Exit(1)
+	}
+
+	s.TerraformFile("terraform.tfvars")
+
+	deploystack.CacheContact(q.Get("contact"))
+
+	fmt.Printf("\n\n")
+	fmt.Printf(titleStyle.Render("Deploystack"))
+	fmt.Printf("\n")
+	fmt.Printf(subTitleStyle.Render(s.Config.Title))
+	fmt.Printf("\n")
+	fmt.Printf(strong.Render("Installation will proceed with these settings"))
+	fmt.Printf(q.getSettings())
+}
+
+func Fatal(err error) {
+	content := `There was an issue collecting the information it takes to run this application.
+You can try again by typing 'deploystack install' at the command prompt 
+If the issue persists, please report at: 
+https://github.com/GoogleCloudPlatform/deploystack/issues
+`
+
+	errmsg := errMsg{
+		err:     err,
+		usermsg: content,
+		quit:    true,
+	}
+
+	msg := errorAlert{errmsg}
+	fmt.Printf("\n\n")
+	fmt.Printf(titleStyle.Render("DeployStack"))
+	fmt.Printf("\n")
+	fmt.Println(msg.Render())
+	os.Exit(1)
 }

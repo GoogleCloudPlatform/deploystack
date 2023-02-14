@@ -2,7 +2,7 @@ title: NOSQL CLIENT SERVER
 name: nosql-client-server
 duration: 5
 documentation_link: https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/nosql-client-server
-collect_billing_account: true
+# collect_billing_account: true
 # collect_project: true
 # collect_project_number: true
 # collect_region: true
@@ -11,12 +11,12 @@ collect_billing_account: true
 # collect_zone: true
 hard_settings:
   basename: nosql-client-server
-projects:
-  allow_duplicates: false
-  items:
-  - variable_name: project_id
-    user_prompt: Choose a project to use for this application
-    set_as_default: true
-  - variable_name: project_id_2
-    user_prompt: Choose a second project to use for this application
-    set_as_default: false
+# projects:
+#   allow_duplicates: false
+#   items:
+#   - variable_name: project_id
+#     user_prompt: Choose a project to use for this application
+#     set_as_default: true
+  # - variable_name: project_id_2
+  #   user_prompt: Choose a second project to use for this application
+  #   set_as_default: false

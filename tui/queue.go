@@ -132,6 +132,28 @@ func (q *Queue) InitializeUI() {
 	q.add(&endpage)
 }
 
+func (q *Queue) getSettings() string {
+	r := newSettingsTable(q.stack)
+
+	return r.render()
+}
+
+func (q *Queue) exitPage() (tea.Model, tea.Cmd) {
+	page := newPage("exit", []component{
+		newTextBlock("You've chosen to stop moving forward through DeployStack. \n"),
+		newTextBlock("If this was an error, you can try again by typing 'deploystack install' at the command prompt \n"),
+	})
+	q.add(&page)
+
+	quit := func(string, *Queue) tea.Cmd {
+		return tea.Quit
+	}
+
+	page.addPostProcessor(quit)
+
+	return page, nil
+}
+
 // ProcessConfig does the work of turning a DeployStack config file to a set
 // of tui screens. It's separate from Initialize in case we want to be able
 // to populate setting and variables with other information before running

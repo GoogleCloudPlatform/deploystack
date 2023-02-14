@@ -165,8 +165,10 @@ func (e errorAlert) Render() string {
 	sb.WriteString("\n")
 	sb.WriteString("\n")
 
-	sb.WriteString("You can exit the program by typing ")
-	sb.WriteString(cmd.Render("ctr+c."))
+	if !e.err.quit {
+		sb.WriteString("You can exit the program by typing ")
+		sb.WriteString(cmd.Render("ctr+c."))
+	}
 
 	if e.err.target != "" {
 		text := " Press the Enter Key to go back and change choice "
