@@ -108,11 +108,11 @@ func TestComputeNames(t *testing.T) {
 		want  string
 		err   error
 	}{
-		// "http": {
-		// 	"test_files/computenames_repos/deploystack-single-vm",
-		// 	"single-vm",
-		// 	nil,
-		// },
+		"http": {
+			"test_files/computenames_repos/deploystack-single-vm",
+			"single-vm",
+			nil,
+		},
 		"ssh": {
 			"test_files/computenames_repos/deploystack-gcs-to-bq-with-least-privileges",
 			"gcs-to-bq-with-least-privileges",
