@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -211,11 +210,9 @@ func (h header) render() string {
 }
 
 func drawProgress(complete, total int) string {
-
 	if total == 1 {
 		return ""
 	}
-	log.Printf("complete %d total %d", complete, total)
 
 	sb := strings.Builder{}
 
