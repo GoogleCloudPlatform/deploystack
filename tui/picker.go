@@ -111,7 +111,7 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 	if defaultItem.value != "" {
 		defaultAdded++
 		text := defaultItem.label + " (Default Value)"
-		defaultItemStyle := lipgloss.NewStyle().Foreground(attention)
+		defaultItemStyle := lipgloss.NewStyle().Bold(true)
 		defaultItem.label = defaultItemStyle.Render(text)
 
 		returnItems = append(returnItems, defaultItem)
