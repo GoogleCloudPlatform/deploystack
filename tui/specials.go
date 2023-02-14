@@ -34,7 +34,7 @@ func newProjectCreator(key string) textInput {
 }
 
 func newProjectSelector(key, listLabel string, preProcessor tea.Cmd) picker {
-	result := newPicker(listLabel, "Retrieving Projects", key, preProcessor)
+	result := newPicker(listLabel, "Retrieving Projects", key, currentProject, preProcessor)
 	create := item{"Create New Project", ""}
 	result.list.InsertItem(0, create)
 	result.addPostProcessor(cleanupProjectScreen)
@@ -42,12 +42,12 @@ func newProjectSelector(key, listLabel string, preProcessor tea.Cmd) picker {
 }
 
 func newBillingSelector(key string, preProcessor tea.Cmd, postProccessor func(string, *Queue) tea.Cmd) picker {
-	result := newPicker("Choose a billing account to use for this project", "Retrieving Billing Accounts", key, preProcessor)
+	result := newPicker("Choose a billing account to use for this project", "Retrieving Billing Accounts", key, "", preProcessor)
 	return result
 }
 
 func newYesOrNo(q *Queue, listLabel, key string, defaultNo bool, postProcessor func(string, *Queue) tea.Cmd) picker {
-	p := newPicker(listLabel, "", key, getYesOrNo(q))
+	p := newPicker(listLabel, "", key, "", getYesOrNo(q))
 	p.list.SetShowStatusBar(false)
 	p.list.SetShowFilter(false)
 	p.list.SetShowHelp(false)
@@ -221,7 +221,7 @@ func newCustomPages(q *Queue) {
 				}
 			}
 
-			pickerPage := newPicker(v.Description, "", v.Name, f(items))
+			pickerPage := newPicker(v.Description, "", v.Name, v.Default, f(items))
 			q.add(&pickerPage)
 			continue
 		}
@@ -235,7 +235,7 @@ func newCustomPages(q *Queue) {
 }
 
 func newGCEInstance(q *Queue) {
-	r := newPicker("Do you want to accept the default configuration? (Yes or No)", "", "gce-use-defaults", getYesOrNo(q))
+	r := newPicker("Do you want to accept the default configuration? (Yes or No)", "", "gce-use-defaults", "", getYesOrNo(q))
 	r.list.SetShowFilter(false)
 	r.list.SetShowHelp(false)
 	r.list.SetShowStatusBar(false)
@@ -272,7 +272,7 @@ trying out most use cases, or hand configure key settings.
 	ds.addPostProcessor(validateInteger)
 	q.add(&ds)
 
-	dt := newPicker("Pick the type of the boot disk you want", "", "instance-disktype", getDiskTypes(q))
+	dt := newPicker("Pick the type of the boot disk you want", "", "instance-disktype", gcloud.DefaultDiskType, getDiskTypes(q))
 	q.add(&dt)
 
 	dy := newYesOrNo(
@@ -286,17 +286,17 @@ trying out most use cases, or hand configure key settings.
 }
 
 func newRegion(q *Queue) {
-	r := newPicker("Pick a region", "Retrieving regions", "region", getRegions(q))
+	r := newPicker("Pick a region", "Retrieving regions", "region", q.stack.Config.RegionDefault, getRegions(q))
 	q.add(&r)
 }
 
 func newZone(q *Queue) {
-	z := newPicker("Pick a zone", "Retrieving zones", "zone", getZones(q))
+	z := newPicker("Pick a zone", "Retrieving zones", "zone", gcloud.DefaultZone, getZones(q))
 	q.add(&z)
 }
 
 func newMachineTypeManager(q *Queue) {
-	p := newPicker("Pick a Machine Type Family", "Retrieving machine type familes", "instance-machine-type-family", getMachineTypeFamilies(q))
+	p := newPicker("Pick a Machine Type Family", "Retrieving machine type familes", "instance-machine-type-family", gcloud.DefaultMachineFamily, getMachineTypeFamilies(q))
 	p.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p.addContent("\n\n")
 	p.addContent("There are a large number of machine types to choose from. For more information \n")
@@ -304,7 +304,7 @@ func newMachineTypeManager(q *Queue) {
 	p.addContent(url.Render("https://cloud.google.com/compute/docs/machine-types"))
 	q.add(&p)
 
-	p2 := newPicker("Pick a Machine Type", "Retrieving machine types", "instance-machine-type", getMachineTypes(q))
+	p2 := newPicker("Pick a Machine Type", "Retrieving machine types", "instance-machine-type", gcloud.DefaultMachineType, getMachineTypes(q))
 	p2.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p2.addContent("\n\n")
 	p2.addContent("There are a large number of machine types to choose from. For more information \n")
@@ -314,7 +314,7 @@ func newMachineTypeManager(q *Queue) {
 }
 
 func newDiskImageManager(q *Queue) {
-	p := newPicker("Pick an operating system", "Retrieving operating systems", "instance-image-project", getDiskProjects(q))
+	p := newPicker("Pick an operating system", "Retrieving operating systems", "instance-image-project", gcloud.DefaultImageProject, getDiskProjects(q))
 	p.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p.addContent("\n\n")
 	p.addContent("There are a large number of machine images to choose from. For more information \n")
@@ -322,7 +322,7 @@ func newDiskImageManager(q *Queue) {
 	p.addContent(url.Render("https://cloud.google.com/compute/docs/images"))
 	q.add(&p)
 
-	p2 := newPicker("Pick a disk family", "Retrieving disk family", "instance-image-family", getImageFamilies(q))
+	p2 := newPicker("Pick a disk family", "Retrieving disk family", "instance-image-family", gcloud.DefaultImageFamily, getImageFamilies(q))
 	p2.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p2.addContent("\n\n")
 	p2.addContent("There are a large number of machine images to choose from. For more information \n")
@@ -330,7 +330,7 @@ func newDiskImageManager(q *Queue) {
 	p2.addContent(url.Render("https://cloud.google.com/compute/docs/images"))
 	q.add(&p2)
 
-	p3 := newPicker("Pick a disk image", "Retrieving disk image", "instance-image", getImageDisks(q))
+	p3 := newPicker("Pick a disk image", "Retrieving disk image", "instance-image", "", getImageDisks(q))
 	p3.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p3.addContent("\n\n")
 	p3.addContent("There are a large number of machine images to choose from. For more information \n")

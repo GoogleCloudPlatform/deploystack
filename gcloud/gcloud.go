@@ -26,6 +26,8 @@ var (
 	DefaultRegion = "us-central1"
 	// DefaultMachineType is the default compute machine type used in compute calls.
 	DefaultMachineType = "n1-standard"
+	// DefaultMachineFamily is the default compute machine type used in compute calls.
+	DefaultMachineFamily = "n1"
 	// DefaultImageProject is the default project for images used in compute calls.
 	DefaultImageProject = "debian-cloud"
 	// DefaultImageFamily is the default project for images used in compute calls.

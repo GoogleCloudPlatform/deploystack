@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type itemDelegate struct{}
@@ -42,11 +43,12 @@ func (i item) FilterValue() string { return i.value }
 type picker struct {
 	dynamicPage
 
-	list   list.Model
-	target string
+	list         list.Model
+	target       string
+	defaultValue string
 }
 
-func newPicker(listLabel, spinnerLabel, key string, preProcessor tea.Cmd) picker {
+func newPicker(listLabel, spinnerLabel, key, defaultValue string, preProcessor tea.Cmd) picker {
 	p := picker{}
 
 	l := list.New([]list.Item{}, itemDelegate{}, 0, 20)
@@ -56,6 +58,7 @@ func newPicker(listLabel, spinnerLabel, key string, preProcessor tea.Cmd) picker
 	l.Styles.HelpStyle = helpStyle
 	p.list = l
 
+	p.defaultValue = defaultValue
 	p.preProcessor = preProcessor
 	p.key = key
 	p.state = "idle"
@@ -71,6 +74,53 @@ func newPicker(listLabel, spinnerLabel, key string, preProcessor tea.Cmd) picker
 	p.spinner = s
 
 	return p
+}
+
+func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) {
+	selectedIndex := 0
+	if defaultValue == "" {
+		return items, selectedIndex
+	}
+
+	newItems := []list.Item{}
+	defaultItem := item{}
+	createItem := item{}
+	returnItems := []list.Item{}
+
+	for _, v := range items {
+		item := v.(item)
+		if item.value == defaultValue {
+			defaultItem = item
+			continue
+		}
+		if strings.Contains(item.label, "Create New Project") {
+			createItem = item
+			continue
+		}
+		newItems = append(newItems, item)
+	}
+
+	createAdded := 0
+	if createItem.label != "" {
+		createAdded++
+		returnItems = append(returnItems, createItem)
+	}
+
+	defaultAdded := 0
+	if defaultItem.value != "" {
+		defaultAdded++
+		text := defaultItem.label + " (Default Value)"
+		defaultItemStyle := lipgloss.NewStyle().Foreground(attention)
+		defaultItem.label = defaultItemStyle.Render(text)
+
+		returnItems = append(returnItems, defaultItem)
+	}
+
+	selectedIndex = (createAdded + defaultAdded) - 1
+
+	returnItems = append(returnItems, newItems...)
+
+	return returnItems, selectedIndex
 }
 
 func (p picker) Init() tea.Cmd {
@@ -89,6 +139,12 @@ func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		for i, v := range items {
 			p.list.InsertItem(i+offset, v)
 		}
+
+		tmp, selectedIndex := positionDefault(p.list.Items(), p.defaultValue)
+		p.list.SetItems(tmp)
+
+		p.list.Select(selectedIndex)
+
 		return p, p.spinner.Tick
 	case errMsg:
 		p.state = "idle"

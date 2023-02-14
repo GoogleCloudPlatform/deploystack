@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -117,7 +116,6 @@ func TestQueueRemoveModel(t *testing.T) {
 
 			got := len(q.models)
 			if tc.want != got {
-				fmt.Printf("%+v", q.models)
 				t.Fatalf("want '%d' got '%d'", tc.want, got)
 			}
 		})

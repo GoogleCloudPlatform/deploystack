@@ -6,8 +6,8 @@
                                                                                                          
      87 items                                                                                            
                                                                                                          
-     [;m>  1. Create New Project[0m                                                                            
-        2. aiab-test-project                                                                             
+        1. Create New Project                                                                            
+     [;m>  2. aiab-test-project (Default Value)[0m                                                             
         3. bucketsite-test                                                                               
         4. cloud-logging                                                                                 
         5. cloudicons                                                                                    

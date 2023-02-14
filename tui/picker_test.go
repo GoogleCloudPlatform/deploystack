@@ -13,6 +13,7 @@ func TestPicker(t *testing.T) {
 		listLabel      string
 		spinnerLabel   string
 		key            string
+		defaultValue   string
 		preProcessor   tea.Cmd
 		state          string
 		outputFile     string
@@ -123,7 +124,7 @@ func TestPicker(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			q := getTestQueue(appTitle, "test")
-			dummyPicker := newPicker("dummy", "dummy", "dummy", nil)
+			dummyPicker := newPicker("dummy", "dummy", "dummy", "", nil)
 
 			if tc.exkey == "" {
 				tc.exkey = tc.key
@@ -141,7 +142,7 @@ func TestPicker(t *testing.T) {
 				tc.exspinnerLabel = tc.spinnerLabel
 			}
 
-			ptmp := newPicker(tc.listLabel, tc.spinnerLabel, tc.key, tc.preProcessor)
+			ptmp := newPicker(tc.listLabel, tc.spinnerLabel, tc.key, tc.defaultValue, tc.preProcessor)
 
 			if tc.content != "" {
 				ptmp.addContent(tc.content)
@@ -168,10 +169,6 @@ func TestPicker(t *testing.T) {
 			}
 
 			newP.Init()
-
-			if name == "send_ctrl_c" {
-				fmt.Printf("%+v", newP)
-			}
 
 			if tc.exkey != newP.key {
 				t.Fatalf("key - want '%s' got '%s'", tc.exkey, newP.key)
