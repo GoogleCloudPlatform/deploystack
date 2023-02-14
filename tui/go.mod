@@ -12,6 +12,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0
 	github.com/nyaruka/phonenumbers v1.1.5
 	golang.org/x/term v0.5.0
+	golang.org/x/text v0.7.0
 	google.golang.org/api v0.109.0
 	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc
 )
@@ -58,7 +59,6 @@ require (
 	golang.org/x/oauth2 v0.5.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

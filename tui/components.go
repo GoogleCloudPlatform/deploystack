@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -9,6 +8,8 @@ import (
 	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type component interface {
@@ -52,11 +53,11 @@ func (d *description) parse() (productList, []string) {
 	sl := strings.Split(d.stack.Config.Description, "\n")
 
 	for _, v := range sl {
-		if strings.Index(v, "*") > -1 {
+		if strings.Contains(v, "*") {
 			val := strings.TrimSpace(v)
 			val = strings.ReplaceAll(val, "*", "")
 			psl := strings.Split(val, "-")
-			if psl != nil && len(psl) > 1 {
+			if len(psl) > 1 {
 				tmp := struct{ item, product string }{}
 				tmp.item = strings.TrimSpace(psl[0])
 				tmp.product = strings.TrimSpace(psl[1])
@@ -156,7 +157,7 @@ func (e errorAlert) Render() string {
 	sb.WriteString(b.Render("There was an error!"))
 	sb.WriteString("\n")
 	if e.err.usermsg != "" {
-		sb.WriteString(fmt.Sprintf("%s", e.err.usermsg))
+		sb.WriteString(e.err.usermsg)
 		sb.WriteString("\n")
 	}
 	sb.WriteString("\n")
@@ -314,9 +315,9 @@ func (s settingsTable) render() string {
 		}
 
 		settingRaw := strings.TrimSpace(setting)
-		settingRaw = strings.ReplaceAll(setting, "_", " ")
-		settingRaw = strings.ReplaceAll(setting, "-", " ")
-		formatted := strings.Title(strings.ReplaceAll(settingRaw, "_", " "))
+		settingRaw = strings.ReplaceAll(settingRaw, "_", " ")
+		settingRaw = strings.ReplaceAll(settingRaw, "-", " ")
+		formatted := cases.Title(language.English).String(settingRaw)
 		rows = append(rows, table.Row{titleStyle.Render(formatted), value})
 
 	}
