@@ -58,6 +58,7 @@ func newPicker(listLabel, spinnerLabel, key, defaultValue string, preProcessor t
 	l.Styles.HelpStyle = helpStyle
 	p.list = l
 
+	p.showProgress = true
 	p.defaultValue = defaultValue
 	p.preProcessor = preProcessor
 	p.key = key
@@ -224,6 +225,10 @@ func (p picker) View() string {
 	}
 	doc := strings.Builder{}
 	doc.WriteString(p.queue.header.render())
+
+	if p.showProgress {
+		doc.WriteString(drawProgress(p.queue.current, len(p.queue.models)))
+	}
 
 	if p.err != nil {
 		doc.WriteString(errorAlert{p.err.(errMsg)}.Render())

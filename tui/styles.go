@@ -20,6 +20,8 @@ var (
 	basicText      = lipgloss.AdaptiveColor{Light: "0", Dark: "15"}
 	alert          = lipgloss.AdaptiveColor{Light: "1", Dark: "9"}
 	attention      = lipgloss.AdaptiveColor{Light: "5", Dark: "13"}
+	completeColor  = lipgloss.AdaptiveColor{Light: "8", Dark: "8"}
+	pendingColor   = lipgloss.AdaptiveColor{Light: "6", Dark: "6"}
 
 	strong = lipgloss.NewStyle().
 		Foreground(highlight)

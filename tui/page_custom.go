@@ -35,6 +35,7 @@ func newTextInput(label, defaultValue, key, spinnerLabel string) textInput {
 	s.Spinner = spinner.Dot
 	s.Style = spinnerStyle
 	t.spinner = s
+	t.showProgress = true
 
 	return t
 }
@@ -118,6 +119,10 @@ func (p textInput) View() string {
 
 	doc := strings.Builder{}
 	doc.WriteString(p.queue.header.render())
+
+	if p.showProgress {
+		doc.WriteString(drawProgress(p.queue.current, len(p.queue.models)))
+	}
 
 	doc.WriteString(bodyStyle.Render(titleStyle.Render(fmt.Sprintf("%s: ", p.label))))
 	doc.WriteString("\n")

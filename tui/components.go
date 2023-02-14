@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -204,8 +205,45 @@ func (h header) render() string {
 	)
 
 	doc.WriteString(headerStyle.Render(content))
+
 	doc.WriteString("\n\n")
 	return doc.String()
+}
+
+func drawProgress(complete, total int) string {
+
+	if total == 1 {
+		return ""
+	}
+	log.Printf("complete %d total %d", complete, total)
+
+	sb := strings.Builder{}
+
+	label := "   Progress "
+	sb.WriteString(label)
+
+	totalWidth := hardWidthLimit - len(label)
+	completeLength := (totalWidth * complete) / (total - 1)
+	pendingLength := totalWidth - completeLength
+
+	comp := strings.Builder{}
+	for i := 0; i < completeLength; i++ {
+		comp.WriteString("█")
+	}
+
+	pend := strings.Builder{}
+	for i := 0; i < pendingLength; i++ {
+		pend.WriteString("░")
+	}
+
+	completeStyle := lipgloss.NewStyle().Foreground(completeColor).Bold(true)
+	sb.WriteString(completeStyle.Render(comp.String()))
+
+	pendingStyle := lipgloss.NewStyle().Foreground(pendingColor)
+	sb.WriteString(pendingStyle.Render(pend.String()))
+
+	sb.WriteString("\n\n")
+	return sb.String()
 }
 
 type settingsTable struct {

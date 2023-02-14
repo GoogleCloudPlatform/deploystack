@@ -19,6 +19,7 @@ type dynamicPage struct {
 	preProcessor  tea.Cmd
 	postProcessor func(string, *Queue) tea.Cmd
 	preViewFunc   func(*Queue)
+	showProgress  bool
 }
 
 func (p *dynamicPage) getKey() string {
@@ -63,6 +64,7 @@ func newPage(key string, content []component) page {
 	p := page{}
 	p.key = key
 	p.content = content
+	p.showProgress = true
 	return p
 }
 
@@ -76,6 +78,9 @@ func (p page) View() string {
 	}
 	doc := strings.Builder{}
 	doc.WriteString(p.queue.header.render())
+	if p.showProgress {
+		doc.WriteString(drawProgress(p.queue.current, len(p.queue.models)))
+	}
 
 	for _, v := range p.content {
 		doc.WriteString(bodyStyle.Render(v.render()))

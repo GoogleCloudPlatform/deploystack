@@ -119,6 +119,9 @@ func (q *Queue) InitializeUI() {
 	firstPage := newPage("firstpage", []component{newTextBlock(explainText)})
 	descPage := newPage("descpage", []component{desc})
 
+	firstPage.showProgress = false
+	descPage.showProgress = false
+
 	endpage := newPage("endpage", []component{
 		newTextBlock(titleStyle.Render("Project Settings")),
 		newSettingsTable(q.stack),
