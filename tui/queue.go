@@ -157,6 +157,45 @@ func (q *Queue) exitPage() (tea.Model, tea.Cmd) {
 	return page, nil
 }
 
+func (q *Queue) countTotalSteps() int {
+	total := len(q.models)
+
+	for _, v := range q.models {
+		if v.getKey() == "firstpage" {
+			total--
+		}
+
+		if v.getKey() == "descpage" {
+			total--
+		}
+
+		if v.getKey() == "endpage" {
+			total--
+		}
+	}
+	return total
+}
+
+func (q *Queue) calcPercent() int {
+
+	if q.current == 2 {
+		return 0
+	}
+
+	if q.current == len(q.models)-1 {
+		return 100
+	}
+	total := q.countTotalSteps()
+	current := q.current + 1 - 2
+	percentage := int((float32(current) / float32(total)) * 100)
+
+	if percentage >= 100 && q.current != len(q.models)-1 {
+		return 90
+	}
+
+	return percentage
+}
+
 // ProcessConfig does the work of turning a DeployStack config file to a set
 // of tui screens. It's separate from Initialize in case we want to be able
 // to populate setting and variables with other information before running
@@ -262,6 +301,16 @@ func (q *Queue) add(m ...QueueModel) {
 		q.models = append(q.models, v)
 		q.index = append(q.index, v.getKey())
 	}
+}
+
+// method only used for testing
+func (q *Queue) insert(m ...QueueModel) {
+	tmp := q.models[:len(q.models)-1]
+	tmp = append(tmp, m...)
+	tmp = append(tmp, q.models[len(q.models)-1])
+
+	q.models = tmp
+
 }
 
 // Start returns the first model to the hosting application so that it can

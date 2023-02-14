@@ -209,10 +209,7 @@ func (h header) render() string {
 	return doc.String()
 }
 
-func drawProgress(complete, total int) string {
-	if total == 1 {
-		return ""
-	}
+func drawProgress(percent int) string {
 
 	sb := strings.Builder{}
 
@@ -220,7 +217,7 @@ func drawProgress(complete, total int) string {
 	sb.WriteString(label)
 
 	totalWidth := hardWidthLimit - len(label)
-	completeLength := (totalWidth * complete) / (total - 1)
+	completeLength := int(float32(totalWidth) * (float32(percent) / float32(100)))
 	pendingLength := totalWidth - completeLength
 
 	comp := strings.Builder{}
@@ -233,13 +230,12 @@ func drawProgress(complete, total int) string {
 		pend.WriteString("░")
 	}
 
-	completeStyle := lipgloss.NewStyle().Foreground(completeColor).Bold(true)
+	completeStyle := lipgloss.NewStyle().Foreground(pendingColor).Bold(true)
 	sb.WriteString(completeStyle.Render(comp.String()))
 
-	pendingStyle := lipgloss.NewStyle().Foreground(pendingColor)
+	pendingStyle := lipgloss.NewStyle().Foreground(completeColor)
 	sb.WriteString(pendingStyle.Render(pend.String()))
 
-	sb.WriteString("\n\n")
 	return sb.String()
 }
 

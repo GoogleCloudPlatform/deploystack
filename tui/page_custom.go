@@ -121,7 +121,8 @@ func (p textInput) View() string {
 	doc.WriteString(p.queue.header.render())
 
 	if p.showProgress {
-		doc.WriteString(drawProgress(p.queue.current, len(p.queue.models)))
+		doc.WriteString(drawProgress(p.queue.calcPercent()))
+		doc.WriteString("\n")
 	}
 
 	doc.WriteString(bodyStyle.Render(titleStyle.Render(fmt.Sprintf("%s: ", p.label))))

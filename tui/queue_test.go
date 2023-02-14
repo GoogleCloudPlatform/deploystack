@@ -79,6 +79,8 @@ func TestQueueStart(t *testing.T) {
 	}
 }
 
+func TestQueueCalculateProgress(t *testing.T) {}
+
 func TestQueueRemoveModel(t *testing.T) {
 	firstPage := newPage("firstpage", []component{newTextBlock(explainText)})
 	secondPage := newPage("secondpage", []component{newTextBlock(explainText)})
@@ -251,6 +253,45 @@ func TestQueueInitialize(t *testing.T) {
 
 			}
 		})
+	}
+}
+
+func TestQueueCalcPercent(t *testing.T) {
+
+	p1 := newPage("1stpage", []component{newTextBlock(explainText)})
+	p2 := newPage("2ndpage", []component{newTextBlock(explainText)})
+	p3 := newPage("3rdpage", []component{newTextBlock(explainText)})
+	p4 := newPage("4thpage", []component{newTextBlock(explainText)})
+	tests := map[string]struct {
+		in   int
+		want int
+	}{
+		"50%": {
+			in:   3,
+			want: 50,
+		},
+		"75%": {
+			in:   4,
+			want: 75,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+
+			q.InitializeUI()
+			q.insert(&p1, &p2, &p3, &p4)
+			q.current = tc.in
+
+			got := q.calcPercent()
+
+			if tc.want != got {
+				t.Fatalf("want '%d' got '%d'", tc.want, got)
+			}
+
+		})
+
 	}
 }
 
