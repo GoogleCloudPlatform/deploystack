@@ -82,7 +82,7 @@ type UIClient interface {
 
 // Start takes a deploystack configuration and walks someone through all of the
 // input needed to run the eventual terraform
-func Start(s *deploystack.Stack) {
+func Start(s *deploystack.Stack, useMock bool) {
 	if len(os.Getenv("DEBUG")) > 0 {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {
@@ -93,29 +93,33 @@ func Start(s *deploystack.Stack) {
 	}
 
 	defaultUserAgent := fmt.Sprintf("deploystack/%s", s.Config.Name)
-	client := gcloud.NewClient(context.Background(), defaultUserAgent)
 
+	client := gcloud.NewClient(context.Background(), defaultUserAgent)
 	q := NewQueue(s, &client)
+
+	if useMock {
+		q = NewQueue(s, GetMock(1))
+	}
+
 	q.Save("contact", deploystack.CheckForContact())
 	q.InitializeUI()
 
 	p := tea.NewProgram(q.Start(), tea.WithAltScreen())
-	if err := p.Start(); err != nil {
+	if _, err := p.Run(); err != nil {
 		Fatal(err)
-		os.Exit(1)
 	}
 
 	s.TerraformFile("terraform.tfvars")
 
 	deploystack.CacheContact(q.Get("contact"))
 
-	fmt.Printf("\n\n")
-	fmt.Printf(titleStyle.Render("Deploystack"))
-	fmt.Printf("\n")
-	fmt.Printf(subTitleStyle.Render(s.Config.Title))
-	fmt.Printf("\n")
-	fmt.Printf(strong.Render("Installation will proceed with these settings"))
-	fmt.Printf(q.getSettings())
+	fmt.Print("\n\n")
+	fmt.Print(titleStyle.Render("Deploystack"))
+	fmt.Print("\n")
+	fmt.Print(subTitleStyle.Render(s.Config.Title))
+	fmt.Print("\n")
+	fmt.Print(strong.Render("Installation will proceed with these settings"))
+	fmt.Print(q.getSettings())
 }
 
 func Fatal(err error) {
