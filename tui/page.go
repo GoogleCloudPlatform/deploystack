@@ -94,7 +94,7 @@ func (p page) View() string {
 	doc.WriteString(p.queue.header.render())
 	if p.showProgress {
 		doc.WriteString(drawProgress(p.queue.calcPercent()))
-		doc.WriteString("\n")
+		doc.WriteString("\n\n")
 	}
 
 	for _, v := range p.content {

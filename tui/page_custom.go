@@ -136,7 +136,7 @@ func (p textInput) View() string {
 
 	if p.showProgress {
 		doc.WriteString(drawProgress(p.queue.calcPercent()))
-		doc.WriteString("\n")
+		doc.WriteString("\n\n")
 	}
 
 	doc.WriteString(bodyStyle.Render(titleStyle.Render(fmt.Sprintf("%s: ", p.label))))

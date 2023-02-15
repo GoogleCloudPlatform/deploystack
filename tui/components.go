@@ -107,8 +107,6 @@ func (d description) render() string {
 
 	if len(list) > 0 {
 		doc.WriteString("This process will create the following:")
-		doc.WriteString("\n")
-
 		doc.WriteString(t.View())
 		doc.WriteString("\n\n")
 	}

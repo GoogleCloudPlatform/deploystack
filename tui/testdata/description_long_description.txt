@@ -1,5 +1,4 @@
-This process will create the following:
-                                                                              
+This process will create the following:                                                                              
                                                                               
 [1;mVM template[0m                   Instance Template                               
 [1;mClustering[0m                    Managed Instance Group                          

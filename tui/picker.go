@@ -245,7 +245,7 @@ func (p picker) View() string {
 
 	if p.showProgress && p.err == nil {
 		doc.WriteString(drawProgress(p.queue.calcPercent()))
-		doc.WriteString("\n")
+		doc.WriteString("\n\n")
 	}
 
 	if p.err != nil {
