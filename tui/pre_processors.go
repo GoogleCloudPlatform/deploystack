@@ -107,7 +107,7 @@ func getZones(q *Queue) tea.Cmd {
 	return func() tea.Msg {
 		s := q.stack
 		project := s.GetSetting("project_id")
-		region := s.Settings["region"]
+		region := s.GetSetting("region")
 
 		p, err := q.client.ZoneList(project, region)
 		if err != nil {

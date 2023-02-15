@@ -132,6 +132,9 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 	}
 
 	selectedIndex = (createAdded + defaultAdded) - 1
+	if selectedIndex < 0 {
+		selectedIndex = 0
+	}
 
 	returnItems = append(returnItems, newItems...)
 
