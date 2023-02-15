@@ -9,8 +9,6 @@ This process will create the following:
 [1;mSecret Management[0m             Secret Manager                                  
 [1;mContainer Management[0m          Artifact Registry + Container Registry          
 
-This process will configure and create the following:
-
 
 
 It's going to take around 15 minutes.

@@ -243,7 +243,7 @@ func (p picker) View() string {
 	doc := strings.Builder{}
 	doc.WriteString(p.queue.header.render())
 
-	if p.showProgress {
+	if p.showProgress && p.err == nil {
 		doc.WriteString(drawProgress(p.queue.calcPercent()))
 		doc.WriteString("\n")
 	}

@@ -160,6 +160,7 @@ func (q *Queue) exitPage() (tea.Model, tea.Cmd) {
 		newTextBlock("You've chosen to stop moving forward through DeployStack. \n"),
 		newTextBlock("If this was an error, you can try again by typing 'deploystack install' at the command prompt \n"),
 	})
+	page.showProgress = false
 	q.add(&page)
 
 	quit := func(string, *Queue) tea.Cmd {

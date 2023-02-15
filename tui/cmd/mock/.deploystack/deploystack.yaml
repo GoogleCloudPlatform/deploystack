@@ -37,4 +37,14 @@ custom_settings:
   - name : "roles"
     description: "Please enter the number of nodes"
     default : "3"
-
+products :
+  - info: "VM template" 
+    product: "Instance Template"   
+  - info: "Clustering" 
+    product: "Managed Instance Group"   
+  - info: "Load Balancing" 
+    product: "Load Balancer"       
+description:  | 
+  This is additional stuff that will go here and be formatted. 
+  * You can add a bullet list
+  * That's totally cool

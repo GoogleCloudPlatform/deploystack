@@ -61,30 +61,20 @@ func newDescription(stack *deploystack.Stack) description {
 }
 
 func (d *description) parse() (productList, []string) {
-	content := []string{}
 	p := productList{}
 
-	sl := strings.Split(d.stack.Config.Description, "\n")
+	if len(d.stack.Config.Products) > 0 {
 
-	for _, v := range sl {
-		if strings.Contains(v, "*") {
-			val := strings.TrimSpace(v)
-			val = strings.ReplaceAll(val, "*", "")
-			psl := strings.Split(val, "-")
-			if len(psl) > 1 {
-				tmp := struct{ item, product string }{}
-				tmp.item = strings.TrimSpace(psl[0])
-				tmp.product = strings.TrimSpace(psl[1])
-
-				p = append(p, tmp)
-			}
-
-			continue
+		for _, v := range d.stack.Config.Products {
+			tmp := struct{ item, product string }{}
+			tmp.item = strings.TrimSpace(v.Info)
+			tmp.product = strings.TrimSpace(v.Product)
+			p = append(p, tmp)
 		}
-		content = append(content, v)
+
 	}
 
-	return p, content
+	return p, []string{d.stack.Config.Description}
 }
 
 func (d description) render() string {

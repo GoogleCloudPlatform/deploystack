@@ -49,6 +49,10 @@ type Config struct {
 	PathMessages         string            `json:"path_messages" yaml:"path_messages"`
 	PathScripts          string            `json:"path_scripts" yaml:"path_scripts"`
 	Projects             Projects          `json:"projects" yaml:"projects"`
+	Products             []struct {
+		Info    string `json:"info" yaml:"info"`
+		Product string `json:"product" yaml:"product"`
+	} `json:"products" yaml:"products"`
 }
 
 // ComputeName uses the git repo in the working directory to compute the

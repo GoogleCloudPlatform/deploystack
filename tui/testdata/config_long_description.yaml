@@ -16,12 +16,18 @@ title: Test Demo
 name: test-demo
 duration: 15
 documentation_link: https://example.com
-description:  | 
-  This process will configure and create the following:
-  * VM template - Instance Template
-  * Clustering - Managed Instance Group
-  * Load Balancing - Load Balancer
-  * Caching - Cloud Memorystore
-  * Database Storage - Cloud SQL
-  * Secret Management - Secret Manager
-  * Container Management - Artifact Registry + Container Registry
+products :
+  - info: "VM template" 
+    product: "Instance Template"   
+  - info: "Clustering" 
+    product: "Managed Instance Group"   
+  - info: "Load Balancing" 
+    product: "Load Balancer" 
+  - info: "Caching" 
+    product: "Cloud Memorystore"   
+  - info: "Database Storage" 
+    product: "Cloud SQL"   
+  - info: "Secret Management" 
+    product: "Secret Manager" 
+  - info: "Container Management" 
+    product: "Artifact Registry + Container Registry"         
