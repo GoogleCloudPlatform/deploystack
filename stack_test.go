@@ -55,7 +55,7 @@ func TestFindAndReadConfig(t *testing.T) {
 		},
 		"ErrorBadFile": {
 			pwd: "errorbadfile",
-			err: errors.New("unable to parse config file: unable to convert content to Config: yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `Look at...` into deploystack.Config"),
+			err: errors.New("unable to parse config file: unable to convert content to Config: yaml: unmarshal errors:\n  line 15: cannot unmarshal !!str `Look at...` into deploystack.Config"),
 		},
 	}
 	wd, err := os.Getwd()
