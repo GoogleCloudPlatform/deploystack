@@ -187,7 +187,7 @@ func newDomain(q *Queue) {
 
 	dy := newYesOrNo(
 		q,
-		msgDomainPurchase,
+		"Buying a domain is not reversable, saying 'y' will incur a charge.",
 		"domain_consent",
 		false,
 		nil,

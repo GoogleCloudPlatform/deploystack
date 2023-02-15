@@ -41,8 +41,8 @@ func TestDrawProgress(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := drawProgress(tc.in)
 
-			got = strings.ReplaceAll(got, "[1;m", "")
-			got = strings.ReplaceAll(got, "[0m", "")
+			got = strings.ReplaceAll(got, "\x1b[1;m", "")
+			got = strings.ReplaceAll(got, "\x1b[0m", "")
 
 			if tc.want != got {
 				t.Fatalf("want \n%s\n got\n%s\n", tc.want, got)

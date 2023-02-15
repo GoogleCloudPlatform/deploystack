@@ -442,7 +442,7 @@ func TestCustomPages(t *testing.T) {
 				q.removeModel(v)
 			}
 
-			if 0 != len(q.models) {
+			if len(q.models) != 0 {
 				t.Logf("Models remain")
 				for _, v := range q.models {
 					t.Logf("%s", v.getKey())

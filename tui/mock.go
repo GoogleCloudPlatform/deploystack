@@ -15,9 +15,15 @@ import (
 	"google.golang.org/genproto/googleapis/type/money"
 )
 
+// GetMock returns a mock gcloud.Client
+// from github.com/GoogleCloudPlatform/deploystack/gcloud
+//
+//revive:disable:unexported-return
 func GetMock(delay int) mock {
 	return mock{d: delay}
 }
+
+//revive:enable:unexported-return
 
 type mock struct {
 	d        int

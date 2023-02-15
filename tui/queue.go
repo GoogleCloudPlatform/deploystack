@@ -292,7 +292,7 @@ func (q *Queue) add(m ...QueueModel) {
 	for _, v := range m {
 		// Basically if something dumb happens we don't rewrite queue
 		// And since this is a author issue, not a user one, we should
-		// fails silently
+		// fail silently
 		if _, ok := uniques[v.getKey()]; ok {
 			continue
 		}

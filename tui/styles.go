@@ -9,17 +9,25 @@ import (
 	"golang.org/x/term"
 )
 
+//			Normal  Bright
+// Black	0		8
+// Red		1		9
+// Green	2		10
+// Yellow	3		11
+// Blue		4		12
+// Purple	5		13
+// Cyan		6		14
+// White	7		15
+
 var (
 	width          = 100
 	hardWidthLimit = width
 	gray           = lipgloss.AdaptiveColor{Light: "7", Dark: "8"}
 	grayWeak       = lipgloss.AdaptiveColor{Light: "8", Dark: "7"}
 	simClearColor  = lipgloss.AdaptiveColor{Light: "15", Dark: "0"}
-	promptBGround  = lipgloss.AdaptiveColor{Light: "0", Dark: "15"}
 	highlight      = lipgloss.AdaptiveColor{Light: "6", Dark: "14"}
 	basicText      = lipgloss.AdaptiveColor{Light: "0", Dark: "15"}
 	alert          = lipgloss.AdaptiveColor{Light: "1", Dark: "9"}
-	attention      = lipgloss.AdaptiveColor{Light: "5", Dark: "13"}
 	completeColor  = lipgloss.AdaptiveColor{Light: "8", Dark: "8"}
 	pendingColor   = lipgloss.AdaptiveColor{Light: "6", Dark: "6"}
 
@@ -48,9 +56,6 @@ var (
 			Italic(true).
 			Foreground(basicText)
 
-	headerCopyStyle = lipgloss.NewStyle().
-			MaxWidth(hardWidthLimit)
-
 	margins = lipgloss.NewStyle().
 		MarginLeft(0).
 		MarginRight(0).
@@ -65,10 +70,6 @@ var (
 			MaxWidth(hardWidthLimit).
 			BorderForeground(gray).
 			Width(width)
-
-	cursorPromptStyle = lipgloss.NewStyle().
-				Foreground(highlight).
-				Background(simClearColor)
 
 	bodyStyle = margins.Copy().
 			Foreground(basicText).
@@ -86,10 +87,6 @@ var (
 
 	alertStyle = bodyStyle.Copy().
 			Foreground(alert)
-
-	alertStrongStyle = bodyStyle.Copy().
-				Foreground(alert).
-				PaddingLeft(3).Bold(true)
 
 	instructionStyle = lipgloss.NewStyle().
 				PaddingLeft(3)
@@ -128,9 +125,6 @@ var (
 			PaddingLeft(4).
 			PaddingBottom(1).
 			Foreground(grayWeak)
-
-	quitTextStyle = lipgloss.NewStyle().
-			Margin(1, 0, 2, 4)
 
 	spinnerStyle = lipgloss.NewStyle().
 			Foreground(highlight)
