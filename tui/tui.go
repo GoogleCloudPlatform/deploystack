@@ -136,9 +136,8 @@ https://github.com/GoogleCloudPlatform/deploystack/issues
 	}
 
 	msg := errorAlert{errmsg}
-	fmt.Printf("\n\n")
-	fmt.Printf(titleStyle.Render("DeployStack"))
-	fmt.Printf("\n")
+	fmt.Print("\n\n")
+	fmt.Println(titleStyle.Render("DeployStack"))
 	fmt.Println(msg.Render())
 	os.Exit(1)
 }

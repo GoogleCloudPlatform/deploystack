@@ -188,11 +188,7 @@ func checkYesOrNo(input string) bool {
 	yesList := " yes y "
 	noList := " no n "
 
-	if strings.Contains(yesList+noList, text) {
-		return true
-	}
-
-	return false
+	return strings.Contains(yesList+noList, text)
 }
 
 func validateYesOrNo(input string, q *Queue) tea.Cmd {

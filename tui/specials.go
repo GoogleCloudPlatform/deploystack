@@ -210,6 +210,7 @@ func newCustomPages(q *Queue) {
 				if strings.Contains(opt, "|") {
 					sl := strings.Split(opt, "|")
 					i.label = sl[1]
+					i.value = sl[0]
 				}
 
 				items = append(items, i)

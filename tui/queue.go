@@ -201,7 +201,7 @@ func (q *Queue) calcPercent() int {
 // to populate setting and variables with other information before running
 // the genreation of those screens
 func (q *Queue) ProcessConfig() error {
-	var project, region, zone, projectnumber, name string
+	var project, projectnumber, name string
 	var err error
 
 	s := q.stack
@@ -211,8 +211,8 @@ func (q *Queue) ProcessConfig() error {
 	}
 
 	project = s.GetSetting("project_id")
-	region = s.GetSetting("region")
-	zone = s.GetSetting("zone")
+	region := s.GetSetting("region")
+	zone := s.GetSetting("zone")
 	name = s.Config.Name
 
 	if name == "" {

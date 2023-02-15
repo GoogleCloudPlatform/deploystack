@@ -3,7 +3,6 @@ package tui
 import (
 	"context"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 	"time"
@@ -27,7 +26,6 @@ type mock struct {
 }
 
 func (m mock) delay() {
-	log.Printf("delaying")
 	time.Sleep(time.Second * time.Duration(m.d))
 }
 
@@ -425,7 +423,7 @@ func (m mock) MachineTypeList(project, zone string) (*compute.MachineTypeList, e
 	if m.forceErr {
 		return nil, errForced
 	}
-	r := *&compute.MachineTypeList{
+	r := compute.MachineTypeList{
 		Items: []*compute.MachineType{
 			{GuestCpus: 12, MemoryMb: 87040, Name: "a2-highgpu-1g"},
 			{GuestCpus: 24, MemoryMb: 174080, Name: "a2-highgpu-2g"},

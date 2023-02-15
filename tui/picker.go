@@ -90,7 +90,7 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 
 	for _, v := range items {
 		item := v.(item)
-		if item.value == defaultValue {
+		if item.value == defaultValue || item.label == defaultValue || defaultValue == item.value+"|"+item.label {
 			defaultItem = item
 			continue
 		}
