@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/kylelemons/godebug/diff"
@@ -177,5 +178,40 @@ set=["item1","item2"]
 	if got != want {
 		fmt.Println(diff.Diff(want, got))
 		t.Fatalf("expected: %v, got: %v", want, got)
+	}
+}
+
+func TestTerraformFile(t *testing.T) {
+	tests := map[string]struct {
+		filename string
+		want     error
+	}{
+		"Ok": {
+			filename: "test_files/file/shouldwork.txt",
+			want:     nil,
+		},
+		"fail": {
+			filename: "test_files/file/shouldwork/dir.txt",
+			want:     errors.New("open test_files/file/shouldwork/dir.txt: no such file or directory"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			s := NewStack()
+
+			got := s.TerraformFile(tc.filename)
+			os.Remove(tc.filename)
+			if tc.want == nil {
+				if got != nil {
+					t.Fatalf("expected: no error got: %+v", got)
+				}
+				t.SkipNow()
+			}
+
+			if !strings.Contains(got.Error(), tc.want.Error()) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
 	}
 }
