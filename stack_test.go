@@ -1,6 +1,7 @@
 package deploystack
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -8,6 +9,71 @@ import (
 
 	"github.com/kylelemons/godebug/diff"
 )
+
+func TestFindAndReadConfig(t *testing.T) {
+	wd, _ := os.Getwd()
+	testdata := fmt.Sprintf("%s/test_files/configs", wd)
+
+	tests := map[string]struct {
+		pwd string
+		err error
+	}{
+		"Original": {
+			pwd: "original",
+		},
+		"Perferred": {
+			pwd: "preferred",
+		},
+		"PerferredYAML": {
+			pwd: "preferredyaml",
+		},
+		"Configed": {
+			pwd: "configed",
+		},
+		"Error": {
+			pwd: "error",
+			err: ErrConfigNotExist,
+		},
+		"ErrorNoPAth": {
+			pwd: "errorNotexists",
+			err: ErrConfigNotExist,
+		},
+		"ErrorBadFile": {
+			pwd: "errorbadfile",
+			err: errors.New("unable to parse config file: unable to convert content to Config: yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `Look at...` into deploystack.Config"),
+		},
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if err := os.Chdir(fmt.Sprintf("%s/%s", testdata, tc.pwd)); err != nil {
+				if tc.err == nil {
+					t.Fatalf("failed to set the wd: %v", err)
+				}
+				t.SkipNow()
+			}
+
+			s := NewStack()
+
+			if _, err := s.findAndReadConfig(); err != nil {
+				if tc.err == nil {
+					t.Fatalf("could not read config file: %s", err)
+				}
+				if err.Error() != tc.err.Error() {
+					t.Fatalf("expected: \n'%s'\n, got: \n'%s'\n", tc.err, err)
+				}
+			}
+
+		})
+		if err := os.Chdir(wd); err != nil {
+			t.Errorf("failed to reset the wd: %v", err)
+		}
+	}
+}
 
 func TestFindAndReadRequired(t *testing.T) {
 	testdata := "test_files/configs"
@@ -18,9 +84,28 @@ func TestFindAndReadRequired(t *testing.T) {
 		scripts   string
 		messages  string
 	}{
-		"Original":  {pwd: "original", terraform: ".", scripts: "scripts", messages: "messages"},
-		"Perferred": {pwd: "preferred", terraform: "terraform", scripts: ".deploystack/scripts", messages: ".deploystack/messages"},
-		"Configed":  {pwd: "configed", terraform: "tf", scripts: "ds/scripts", messages: "ds/messages"},
+		"Original": {
+			pwd:       "original",
+			terraform: ".",
+			scripts:   "scripts",
+			messages:  "messages"},
+
+		"Perferred": {
+			pwd:       "preferred",
+			terraform: "terraform",
+			scripts:   ".deploystack/scripts",
+			messages:  ".deploystack/messages"},
+		"PerferredYAML": {
+			pwd:       "preferredyaml",
+			terraform: "terraform",
+			scripts:   ".deploystack/scripts",
+			messages:  ".deploystack/messages"},
+
+		"Configed": {
+			pwd:       "configed",
+			terraform: "tf",
+			scripts:   "ds/scripts",
+			messages:  "ds/messages"},
 	}
 
 	wd, err := os.Getwd()

@@ -48,5 +48,5 @@ func main() {
 		return
 	}
 
-	tui.Start(s)
+	tui.Start(s, false)
 }

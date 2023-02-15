@@ -1,11 +1,11 @@
 package deploystack
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -24,44 +24,53 @@ func NewStack() Stack {
 }
 
 func (s *Stack) findAndReadConfig() (Config, error) {
-	flavor := "json"
 	config := Config{}
 
-	configPath := ".deploystack/deploystack.json"
-	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		flavor = "yaml"
-		configPath = ".deploystack/deploystack.yaml"
+	candidates := []string{
+		".deploystack/deploystack.yaml",
+		".deploystack/deploystack.json",
+		"deploystack.json",
 	}
 
-	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		configPath = "deploystack.json"
+	configPath := ""
+	wd, _ := os.Getwd()
+	for _, v := range candidates {
+		file := fmt.Sprintf("%s/%s", wd, v)
+
+		if _, err := os.Stat(file); err == nil {
+			configPath = file
+			break
+		}
+
 	}
 
-	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		wd, _ := os.Getwd()
-		return config, fmt.Errorf("config file not present, looking for deploystack.json or .deploystack/deploystack.json in (%s)", wd)
+	if configPath == "" {
+		return config, ErrConfigNotExist
 	}
 
 	content, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		return config, fmt.Errorf("unable to find or read config file: %s", err)
+		return config, fmt.Errorf("unable to find or read config (%s) file: %s", configPath, err)
 	}
 
-	if flavor == "yaml" {
+	switch filepath.Ext(configPath) {
+	case ".yaml":
 		config, err = NewConfigYAML(content)
 		if err != nil {
 			return config, fmt.Errorf("unable to parse config file: %s", err)
 		}
 		return config, nil
-	}
+	default:
+		config, err = NewConfigJSON(content)
+		if err != nil {
+			return config, fmt.Errorf("unable to parse config file: %s", err)
+		}
 
-	config, err = NewConfigJSON(content)
-	if err != nil {
-		return config, fmt.Errorf("unable to parse config file: %s", err)
 	}
-
 	return config, nil
 }
+
+var ErrConfigNotExist = fmt.Errorf("could not file and parse a config file")
 
 func (s *Stack) findDSFolder(c Config, folder string) (string, error) {
 	switch folder {

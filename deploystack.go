@@ -66,14 +66,6 @@ func Init() (*Stack, error) {
 // 	os.Exit(1)
 // }
 
-// func handleEarlyShutdown(err error) {
-// 	fmt.Printf("\n\n%sYou've chosen to stop moving forward through Deploystack.                             %s\n\n", TERMCYANB, TERMCLEAR)
-// 	fmt.Printf("If this was an error, you can try again by typing %sdeploystack install%s at the command prompt. \n\n", TERMCYANB, TERMCLEAR)
-
-// 	fmt.Printf("Reason: %s\n", err)
-// 	os.Exit(1)
-// }
-
 // NewContactDataFromFile generates a new ContactData from a cached yaml file
 func NewContactDataFromFile(file string) (gcloud.ContactData, error) {
 	c := gcloud.NewContactData()
