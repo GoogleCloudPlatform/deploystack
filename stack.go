@@ -134,8 +134,7 @@ func (s *Stack) FindAndReadRequired() error {
 
 	messagePath, err := s.findDSFolder(config, "messages")
 	if err != nil {
-		wd, _ := os.Getwd()
-		return fmt.Errorf("unable to locate messages folder in (%s): %s", wd, err)
+		log.Printf("WARNING - unable to locate messages folder, folder not required, : %s", err)
 	}
 	config.PathMessages = messagePath
 

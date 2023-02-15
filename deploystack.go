@@ -43,7 +43,8 @@ func Init() (*Stack, error) {
 
 	if s.Config.Name == "" {
 		if err := s.Config.ComputeName(); err != nil {
-			return &s, fmt.Errorf("could retrieve name of stack: %s", err)
+			log.Printf("")
+			return &s, fmt.Errorf("could retrieve name of stack: %s \nDeployStack author: fix this by adding a 'name' key and value to the deploystack config", err)
 		}
 		s.AddSetting("stack_name", s.Config.Name)
 	}
