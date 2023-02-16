@@ -46,6 +46,19 @@ func TestTextInput(t *testing.T) {
 			msg:          tea.MouseEvent{},
 		},
 
+		"send_enter": {
+			label:          "test",
+			spinnerLabel:   "test",
+			defaultValue:   "test",
+			key:            "test",
+			msg:            tea.KeyMsg{Type: tea.KeyEnter},
+			outputFile:     "testdata/page_custom_send_enter.txt",
+			exlabel:        "dummy",
+			exspinnerLabel: "loading dummy",
+			exkey:          "dummy",
+			exstate:        "idle",
+		},
+
 		"success": {
 			outputFile:     "testdata/page_custom_success.txt",
 			label:          "test",
@@ -74,18 +87,6 @@ func TestTextInput(t *testing.T) {
 			key:          "test",
 			state:        "idle",
 			msg:          errMsg{err: fmt.Errorf("error")},
-		},
-		"send_enter": {
-			label:          "test",
-			spinnerLabel:   "test",
-			defaultValue:   "test",
-			key:            "test",
-			msg:            tea.KeyMsg{Type: tea.KeyEnter},
-			outputFile:     "testdata/page_custom_send_enter.txt",
-			exlabel:        "dummy",
-			exspinnerLabel: "loading dummy",
-			exkey:          "dummy",
-			exstate:        "idle",
 		},
 	}
 

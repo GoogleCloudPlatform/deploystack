@@ -1,16 +1,16 @@
-This process will create the following:                                                                              
+[0;37mThis process will create the following:[0m                                                                              
                                                                               
-[1;mVM template[0m                   Instance Template                               
-[1;mClustering[0m                    Managed Instance Group                          
-[1;mLoad Balancing[0m                Load Balancer                                   
-[1;mCaching[0m                       Cloud Memorystore                               
-[1;mDatabase Storage[0m              Cloud SQL                                       
-[1;mSecret Management[0m             Secret Manager                                  
-[1;mContainer Management[0m          Artifact Registry + Container Registry          
+[1;37mVM template[0m                   [0;36mInstance Template[0m                               
+[1;37mClustering[0m                    [0;36mManaged Instance Group[0m                          
+[1;37mLoad Balancing[0m                [0;36mLoad Balancer[0m                                   
+[1;37mCaching[0m                       [0;36mCloud Memorystore[0m                               
+[1;37mDatabase Storage[0m              [0;36mCloud SQL[0m                                       
+[1;37mSecret Management[0m             [0;36mSecret Manager[0m                                  
+[1;37mContainer Management[0m          [0;36mArtifact Registry + Container Registry[0m          
 
+[0;37m[0m
 
+[0;37mIt's going to take around [0m[0;36m15[0m[0;37m minutes.[0m
 
-It's going to take around 15 minutes.
-
-If you would like more information about this stack, please read the documentation at: [4;;4mh[0m[4;;4mt[0m[4;;4mt[0m[4;;4mp[0m[4;;4ms[0m[4;;4m:[0m[4;;4m/[0m[4;;4m/[0m[4;;4me[0m[4;;4mx[0m[4;;4ma[0m[4;;4mm[0m[4;;4mp[0m[4;;4ml[0m[4;;4me[0m[4;;4m.[0m[4;;4mc[0m[4;;4mo[0m[4;;4mm[0m
+[0;37mIf you would like more information about this stack, [0m[0;37mplease read the documentation at: [0m[4;36mhttps://example.com[0m
 
