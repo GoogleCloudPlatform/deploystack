@@ -493,6 +493,9 @@ func (c Config) Process(s *Stack, output string) error {
 		}
 
 	}
+	if project == "" {
+		project = s.GetSetting("project_id")
+	}
 
 	if c.ConfigureGCEInstance {
 		basename := s.GetSetting("basename")
