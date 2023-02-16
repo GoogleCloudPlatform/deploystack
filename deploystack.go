@@ -52,21 +52,6 @@ func Init() (*Stack, error) {
 	return &s, nil
 }
 
-// func handleProcessError(err error) {
-// 	fmt.Printf("\n\n%sThere was an issue collecting the information it takes to run this application.                             %s\n\n", TERMREDREV, TERMCLEAR)
-// 	fmt.Printf("%sYou can try again by typing %sdeploystack install%s at the command prompt  %s\n\n", TERMREDB, TERMREDREV, TERMCLEAR+TERMREDB, TERMCLEAR)
-// 	fmt.Printf("%sIf the issue persists, please report at https://github.com/GoogleCloudPlatform/deploystack/issues %s\n\n", TERMREDB, TERMCLEAR)
-
-// 	fmt.Printf("Extra diagnostic information:\n")
-
-// 	if strings.Contains(err.Error(), "invalid token JSON from metadata") {
-// 		fmt.Printf("timed out waiting for API activation, you must authorize API use to continue \n")
-// 	}
-
-// 	fmt.Println(err)
-// 	os.Exit(1)
-// }
-
 // NewContactDataFromFile generates a new ContactData from a cached yaml file
 func NewContactDataFromFile(file string) (gcloud.ContactData, error) {
 	c := gcloud.NewContactData()
