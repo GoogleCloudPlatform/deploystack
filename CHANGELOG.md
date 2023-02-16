@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.0.0...v1.0.1) (2023-02-16)
+
+
+### Bug Fixes
+
+* all requests for were failing because of bad projects ([35fdeb8](https://github.com/GoogleCloudPlatform/deploystack/commit/35fdeb865af96c9cf84bfecf999a4661e82a9dc4))
+* reverting fix ([704d530](https://github.com/GoogleCloudPlatform/deploystack/commit/704d530ab4f19493bfa7d5b2a0699e86de198fce))
+* reverting reverting fix. ([8b95f62](https://github.com/GoogleCloudPlatform/deploystack/commit/8b95f6200f4afb92d0c2b10fca4ef01b34cc98d6))
+
 ## 1.0.0 (2023-02-15)
 
 
