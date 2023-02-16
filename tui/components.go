@@ -15,6 +15,7 @@
 package tui
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -202,7 +203,7 @@ func (h header) render() string {
 	doc := strings.Builder{}
 
 	content := lipgloss.JoinVertical(lipgloss.Left,
-		titleStyle.Render(h.title),
+		fmt.Sprintf("%s%s%s", TERMCYANB, titleStyle.Render(h.title), TERMCLEAR),
 		subTitleStyle.Render(h.subtitle),
 	)
 
