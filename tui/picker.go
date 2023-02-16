@@ -40,8 +40,9 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 
 	fn := itemStyle.Render
 	if index == m.Index() {
+		color := selectedItemStyle.background.background()
 		fn = func(s string) string {
-			return selectedItemStyle.Render("> " + s)
+			return selectedItemStyle.Render(color + "> " + s)
 		}
 	}
 
@@ -67,7 +68,7 @@ func newPicker(listLabel, spinnerLabel, key, defaultValue string, preProcessor t
 
 	l := list.New([]list.Item{}, itemDelegate{}, 0, 20)
 	l.Title = listLabel
-	l.Styles.Title = titleStyle
+	l.Styles.Title = titleStyle.style
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 	p.list = l

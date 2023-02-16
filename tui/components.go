@@ -107,17 +107,17 @@ func (d description) render() string {
 	t.SetStyles(tableStyle)
 
 	if len(list) > 0 {
-		doc.WriteString("This process will create the following:")
+		doc.WriteString(normal.Render("This process will create the following:"))
 		doc.WriteString(t.View())
 		doc.WriteString("\n\n")
 	}
 
 	for _, v := range additionalText {
-		doc.WriteString(v)
+		doc.WriteString(normal.Render(v))
 		doc.WriteString("\n\n")
 	}
 
-	doc.WriteString("It's going to take around ")
+	doc.WriteString(normal.Render("It's going to take around "))
 	doc.WriteString(strong.Render(strconv.Itoa(d.stack.Config.Duration)))
 
 	if d.stack.Config.Duration == 1 {
@@ -128,8 +128,8 @@ func (d description) render() string {
 	doc.WriteString("\n\n")
 
 	if len(d.stack.Config.DocumentationLink) > 0 {
-		doc.WriteString("If you would like more information about this stack, ")
-		doc.WriteString("please read the documentation at: ")
+		doc.WriteString(normal.Render("If you would like more information about this stack, "))
+		doc.WriteString(normal.Render("please read the documentation at: "))
 		doc.WriteString(url.Render(d.stack.Config.DocumentationLink))
 		doc.WriteString("\n\n")
 	}
@@ -218,7 +218,7 @@ func drawProgress(percent int) string {
 	sb := strings.Builder{}
 
 	label := "   Progress "
-	sb.WriteString(label)
+	sb.WriteString(textStyle.Render(label))
 
 	totalWidth := hardWidthLimit - len(label)
 	completeLength := int(float32(totalWidth) * (float32(percent) / float32(100)))
@@ -234,10 +234,7 @@ func drawProgress(percent int) string {
 		pend.WriteString("░")
 	}
 
-	completeStyle := lipgloss.NewStyle().Foreground(pendingColor).Bold(true)
 	sb.WriteString(completeStyle.Render(comp.String()))
-
-	pendingStyle := lipgloss.NewStyle().Foreground(completeColor)
 	sb.WriteString(pendingStyle.Render(pend.String()))
 
 	return sb.String()

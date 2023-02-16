@@ -274,6 +274,7 @@ func (q *Queue) ProcessConfig() error {
 		newZone(q)
 	}
 
+	// TODO: add the query to the project lookup process
 	if s.Config.ProjectNumber {
 
 		proj, err := q.client.ProjectIDGet()

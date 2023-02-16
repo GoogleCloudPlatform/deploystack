@@ -105,7 +105,9 @@ func (p page) View() string {
 	doc.WriteString("\n")
 	doc.WriteString(bodyStyle.Render(promptStyle.Render(" Press the Enter Key to continue ")))
 
-	return docStyle.Render(doc.String())
+	test := docStyle.Render(doc.String())
+
+	return test
 }
 
 // TODO: a test for this is pretty straight forward
