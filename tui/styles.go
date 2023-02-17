@@ -47,20 +47,55 @@ const (
 )
 
 var colors = ansiColors{
-	"blank":   ansiColor{id: -1},
-	"black":   ansiColor{id: 0},
-	"red":     ansiColor{id: 1},
-	"green":   ansiColor{id: 2},
-	"yellow":  ansiColor{id: 3},
-	"blue":    ansiColor{id: 4},
-	"magenta": ansiColor{id: 5},
-	"cyan":    ansiColor{id: 6},
-	"white":   ansiColor{id: 7},
-	"grey":    ansiColor{id: 8},
-	"gray":    ansiColor{id: 8},
+	"blank":       ansiColor{id: -1},
+	"black":       ansiColor{id: 0},
+	"red":         ansiColor{id: 1},
+	"green":       ansiColor{id: 2},
+	"yellow":      ansiColor{id: 3},
+	"blue":        ansiColor{id: 4},
+	"magenta":     ansiColor{id: 5},
+	"cyan":        ansiColor{id: 6},
+	"white":       ansiColor{id: 7},
+	"grey":        ansiColor{id: 8},
+	"gray":        ansiColor{id: 8},
+	"deepBlack":   absColor{color: "\033[0;106m"},
+	"intenseCyan": absColor{color: "\033[0;106m"},
+	"brightWhite": absColor{color: "\033[1;37m"},
 }
 
 var clear = "\033[0m"
+
+type dsColor interface {
+	bright() string
+	regular() string
+	bold() string
+	underline() string
+	background() string
+}
+
+type absColor struct {
+	color string
+}
+
+func (a absColor) bright() string {
+	return a.color
+}
+
+func (a absColor) regular() string {
+	return a.color
+}
+
+func (a absColor) bold() string {
+	return a.color
+}
+
+func (a absColor) underline() string {
+	return a.color
+}
+
+func (a absColor) background() string {
+	return a.color
+}
 
 type ansiColor struct {
 	id int
@@ -101,23 +136,30 @@ func (a ansiColor) background() string {
 	return fmt.Sprintf("\033[1;4%dm", a.id)
 }
 
-type ansiColors map[string]ansiColor
+type ansiColors map[string]dsColor
 
-func (a ansiColors) get(s string) ansiColor {
+func (a ansiColors) get(s string) dsColor {
 
 	if s == "copy" {
 		if termenv.HasDarkBackground() {
-			return colors["white"]
+			return colors.get("white")
 		}
-		return colors["black"]
+		return colors.get("black")
 	}
+	if s == "anticopy" {
+		if termenv.HasDarkBackground() {
+			return colors.get("black")
+		}
+		return colors.get("white")
+	}
+
 	return colors[s]
 }
 
 type dsStyle struct {
 	style      lipgloss.Style
-	foreground ansiColor
-	background ansiColor
+	foreground dsColor
+	background dsColor
 	bright     bool
 	underline  bool
 	bold       bool
@@ -139,7 +181,7 @@ func (d dsStyle) Render(s string) string {
 
 	content := d.style.Render(s)
 
-	return fmt.Sprintf("%s%s%s%s", startBg, startFg, content, clear)
+	return fmt.Sprintf("%s%s%s%s", startFg, startBg, content, clear)
 }
 
 func newDsStyle() dsStyle {
@@ -149,12 +191,12 @@ func newDsStyle() dsStyle {
 	return r
 }
 
-func (d dsStyle) Foreground(a ansiColor) dsStyle {
+func (d dsStyle) Foreground(a dsColor) dsStyle {
 	d.foreground = a
 	return d
 }
 
-func (d dsStyle) Background(a ansiColor) dsStyle {
+func (d dsStyle) Background(a dsColor) dsStyle {
 	d.background = a
 	return d
 }
@@ -312,7 +354,6 @@ var (
 	subTitleStyle = newDsStyle().
 			MaxWidth(hardWidthLimit).
 			Bold(false).
-			Italic(true).
 			Foreground(colors.get("copy"))
 
 	headerCopyStyle = newDsStyle().
@@ -348,7 +389,8 @@ var (
 
 	promptStyle = newDsStyle().
 			Bold(true).
-			Background(colors.get("cyan"))
+			Background(colors.get("cyan")).
+			Foreground(colors.get("anticopy"))
 
 	alertStyle = bodyStyle.Copy().
 			Foreground(colors.get("red"))
