@@ -24,6 +24,7 @@ import (
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
 	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/api/cloudbilling/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -37,6 +38,10 @@ const (
 	validationPhoneNumber = "phonenumber"
 	validationYesOrNo     = "yesorno"
 	validationInteger     = "integer"
+)
+
+var (
+	spinnerType = spinner.Line
 )
 
 // ErrorCustomNotValidPhoneNumber is the error you get when you fail phone

@@ -85,7 +85,7 @@ func newPicker(listLabel, spinnerLabel, key, defaultValue string, preProcessor t
 	p.spinnerLabel = spinnerLabel
 
 	s := spinner.New()
-	s.Spinner = spinner.Dot
+	s.Spinner = spinnerType
 	p.spinner = s
 
 	return p

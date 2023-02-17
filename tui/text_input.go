@@ -46,7 +46,7 @@ func newTextInput(label, defaultValue, key, spinnerLabel string) textInput {
 	t.ti = ti
 
 	s := spinner.New()
-	s.Spinner = spinner.Dot
+	s.Spinner = spinnerType
 	t.spinner = s
 	t.showProgress = true
 
