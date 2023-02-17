@@ -34,3 +34,4 @@ gcloud/test_files/gcloudout/billing_accounts_local.json
 cmd/new-ui/debug.log
 tui/debug/testdata/*
 tui/cmd/mock/debug.log
+tui/cmd/mock-all/debug.log
