@@ -25,27 +25,6 @@ import (
 	"golang.org/x/term"
 )
 
-const (
-	// TERMCYAN is the terminal code for cyan text
-	TERMCYAN = "\033[0;36m"
-	// TERMCYANB is the terminal code for bold cyan text
-	TERMCYANB = "\033[1;36m"
-	// TERMCYANREV is the terminal code for black on cyan text
-	TERMCYANREV = "\u001b[46m"
-	// TERMRED is the terminal code for red text
-	TERMRED = "\033[0;31m"
-	// TERMREDB is the terminal code for bold red text
-	TERMREDB = "\033[1;31m"
-	// TERMREDREV is the terminal code for black on red text
-	TERMREDREV = "\033[41m"
-	// TERMCLEAR is the terminal code for the clear out color text
-	TERMCLEAR = "\033[0m"
-	// TERMCLEARSCREEN is the terminal code for clearning the whole screen.
-	TERMCLEARSCREEN = "\033[2J"
-	// TERMGREY is the terminal code for grey text
-	TERMGREY = "\033[1;30m"
-)
-
 var colors = ansiColors{
 	"blank":       ansiColor{id: -1},
 	"black":       ansiColor{id: 0},
