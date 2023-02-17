@@ -398,8 +398,7 @@ var (
 	quitTextStyle = newDsStyle().
 			Margin(1, 0, 2, 4)
 
-	spinnerStyle = lipgloss.NewStyle().
-			Foreground(highlight)
+	spinnerStyle = newDsStyle().Foreground(colors.get("cyan"))
 
 	textInputPrompt = helpStyle.Copy().
 			PaddingLeft(3)

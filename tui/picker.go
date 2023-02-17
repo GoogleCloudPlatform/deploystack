@@ -86,7 +86,6 @@ func newPicker(listLabel, spinnerLabel, key, defaultValue string, preProcessor t
 
 	s := spinner.New()
 	s.Spinner = spinner.Dot
-	s.Style = spinnerStyle
 	p.spinner = s
 
 	return p
@@ -272,7 +271,10 @@ func (p picker) View() string {
 	}
 
 	if p.state == "querying" {
-		doc.WriteString(bodyStyle.Render(fmt.Sprintf("%s %s", p.spinnerLabel, p.spinner.View())))
+		spinnerSB := strings.Builder{}
+		spinnerSB.WriteString(textStyle.Render(fmt.Sprintf("%s ", p.spinnerLabel)))
+		spinnerSB.WriteString(spinnerStyle.Render(fmt.Sprintf("%s", p.spinner.View())))
+		doc.WriteString(bodyStyle.Render(spinnerSB.String()))
 	}
 
 	return docStyle.Render(doc.String())

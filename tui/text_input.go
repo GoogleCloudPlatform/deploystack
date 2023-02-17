@@ -47,7 +47,6 @@ func newTextInput(label, defaultValue, key, spinnerLabel string) textInput {
 
 	s := spinner.New()
 	s.Spinner = spinner.Dot
-	s.Style = spinnerStyle
 	t.spinner = s
 	t.showProgress = true
 
@@ -167,8 +166,10 @@ func (p textInput) View() string {
 	}
 
 	if p.state == "querying" && p.err == nil {
-		doc.WriteString("\n")
-		doc.WriteString(bodyStyle.Render(fmt.Sprintf("%s %s", p.spinnerLabel, p.spinner.View())))
+		spinnerSB := strings.Builder{}
+		spinnerSB.WriteString(textStyle.Render(fmt.Sprintf("%s ", p.spinnerLabel)))
+		spinnerSB.WriteString(spinnerStyle.Render(fmt.Sprintf("%s", p.spinner.View())))
+		doc.WriteString(bodyStyle.Render(spinnerSB.String()))
 		doc.WriteString("\n")
 	}
 
