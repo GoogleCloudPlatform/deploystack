@@ -162,6 +162,7 @@ func (q *Queue) exitPage() (tea.Model, tea.Cmd) {
 	})
 	page.showProgress = false
 	q.add(&page)
+	q.Save("halted", true)
 
 	quit := func(string, *Queue) tea.Cmd {
 		return tea.Quit

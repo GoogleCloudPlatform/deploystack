@@ -110,6 +110,10 @@ func Start(s *deploystack.Stack, useMock bool) {
 		Fatal(err)
 	}
 
+	if q.Get("halted") != nil {
+		Fatal(nil)
+	}
+
 	s.TerraformFile("terraform.tfvars")
 
 	deploystack.CacheContact(q.Get("contact"))
@@ -126,21 +130,24 @@ func Start(s *deploystack.Stack, useMock bool) {
 // Fatal stops processing of Deploystack and halts the calling process. All
 // with an eye towards not processing in the shell script of things go wrong.
 func Fatal(err error) {
-	content := `There was an issue collecting the information it takes to run this application.
-You can try again by typing 'deploystack install' at the command prompt 
-If the issue persists, please report at: 
-https://github.com/GoogleCloudPlatform/deploystack/issues
-`
+	if err != nil {
+		content := `There was an issue collecting the information it takes to run this application.
+		You can try again by typing 'deploystack install' at the command prompt 
+		If the issue persists, please report at: 
+		https://github.com/GoogleCloudPlatform/deploystack/issues
+		`
 
-	errmsg := errMsg{
-		err:     err,
-		usermsg: content,
-		quit:    true,
+		errmsg := errMsg{
+			err:     err,
+			usermsg: content,
+			quit:    true,
+		}
+
+		msg := errorAlert{errmsg}
+		fmt.Print("\n\n")
+		fmt.Println(titleStyle.Render("DeployStack"))
+		fmt.Println(msg.Render())
 	}
 
-	msg := errorAlert{errmsg}
-	fmt.Print("\n\n")
-	fmt.Println(titleStyle.Render("DeployStack"))
-	fmt.Println(msg.Render())
 	os.Exit(1)
 }
