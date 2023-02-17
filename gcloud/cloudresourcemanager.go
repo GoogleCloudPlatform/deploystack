@@ -173,6 +173,21 @@ func (c *Client) ProjectCreate(project, parent, parentType string) error {
 	return ErrorProjectCreateTooLong
 }
 
+// ProjectGet returns the details of a single project
+func (c *Client) ProjectGet(project string) (*cloudresourcemanager.Project, error) {
+	svc, err := c.getCloudResourceManagerService()
+	if err != nil {
+		return nil, err
+	}
+
+	proj, err := svc.Projects.Get(project).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return proj, nil
+}
+
 // ProjectDelete does the work of actually deleting an existing project in
 // your GCP account
 func (c *Client) ProjectDelete(project string) error {
