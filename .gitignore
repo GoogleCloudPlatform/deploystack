@@ -35,3 +35,4 @@ cmd/new-ui/debug.log
 tui/debug/testdata/*
 tui/cmd/mock/debug.log
 tui/cmd/mock-all/debug.log
+tui/cmd/mock-all/contact.yaml

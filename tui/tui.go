@@ -120,7 +120,6 @@ func Run(s *deploystack.Stack, useMock bool) {
 	}
 
 	s.TerraformFile("terraform.tfvars")
-
 	deploystack.CacheContact(q.Get("contact"))
 
 	fmt.Print("\n\n")

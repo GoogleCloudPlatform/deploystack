@@ -155,9 +155,14 @@ func registerDomain(consent string, q *Queue) tea.Cmd {
 		d := gcloud.ContactData{}
 
 		contact := q.Get("contact")
+
 		if contact != nil {
-			d = contact.(gcloud.ContactData)
-		} else {
+			tmp := contact.(gcloud.ContactData)
+			if tmp.AllContacts.Email != "" {
+				d = tmp
+			}
+		}
+		if d.AllContacts.Email == "" {
 			d = gcloud.ContactData{
 				AllContacts: gcloud.DomainRegistrarContact{
 					Email: q.stack.GetSetting("domain_email"),
@@ -171,8 +176,10 @@ func registerDomain(consent string, q *Queue) tea.Cmd {
 						),
 						AdministrativeArea: q.stack.GetSetting("domain_state"),
 						Locality:           q.stack.GetSetting("domain_city"),
-						Recipients: []string{
+						AddressLines: []string{
 							q.stack.GetSetting("domain_address"),
+						},
+						Recipients: []string{
 							q.stack.GetSetting("domain_name"),
 						},
 					},
