@@ -88,8 +88,9 @@ func TestLinkProjectToBillingAccount(t *testing.T) {
 		account string
 		err     error
 	}{
-		"BadProject":  {project: "stackinaboxstackinabox", account: "0145C0-557C58-C970F3", err: ErrorBillingNoPermission},
+		"BadProject":  {project: "stackinaboxstackinabox", account: billingAccount, err: ErrorBillingNoPermission},
 		"BaddAccount": {project: projectID, account: "AAAAAA-BBBBBB-CCCCCC", err: ErrorBillingInvalidAccount},
+		"ShouldWork":  {project: "ds-deleteme-exp2", account: billingAccount, err: nil},
 	}
 
 	for name, tc := range tests {

@@ -33,6 +33,7 @@ import (
 
 var (
 	projectID        = ""
+	billingAccount   = ""
 	creds            map[string]string
 	opts             = option.WithCredentialsFile("")
 	ctx              = context.Background()
@@ -53,6 +54,10 @@ func TestMain(m *testing.M) {
 	projectID = creds["project_id"]
 	if err != nil {
 		log.Fatalf("could not get environment project id: %s", err)
+	}
+	billingAccount = creds["billing_account"]
+	if err != nil {
+		log.Fatalf("could not get environment billing account: %s", err)
 	}
 	code := m.Run()
 	os.Exit(code)
