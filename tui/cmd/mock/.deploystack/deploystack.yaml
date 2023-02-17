@@ -19,7 +19,7 @@ documentation_link: "https://cloud.google.com/shell/docs/cloud-shell-tutorials/d
 collect_project: true
 collect_project_number: true
 collect_region: true
-collect_billing_account: false
+collect_billing_account: true
 region_type: "run"
 region_default: "us-central1"
 collect_zone: true

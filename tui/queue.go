@@ -217,7 +217,7 @@ func (q *Queue) calcPercent() int {
 // to populate setting and variables with other information before running
 // the genreation of those screens
 func (q *Queue) ProcessConfig() error {
-	var project, projectnumber, name string
+	var project, name string
 	var err error
 
 	s := q.stack
@@ -273,21 +273,6 @@ func (q *Queue) ProcessConfig() error {
 	zone = s.GetSetting("zone")
 	if s.Config.Zone && len(zone) == 0 {
 		newZone(q)
-	}
-
-	// TODO: add the query to the project lookup process
-	if s.Config.ProjectNumber {
-
-		proj, err := q.client.ProjectIDGet()
-		if err != nil {
-			return err
-		}
-
-		projectnumber, err = q.client.ProjectNumberGet(proj)
-		if err != nil {
-			return err
-		}
-		s.AddSetting("project_number", projectnumber)
 	}
 
 	if s.Config.Domain {

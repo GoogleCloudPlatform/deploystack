@@ -28,9 +28,24 @@ import (
 // TODO: make this dynamic
 var currentProject = ""
 
-func cleanupProjectScreen(key string, q *Queue) tea.Cmd {
+func processProjectSelection(key string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
 		if key != "" {
+
+			if q.stack.Config.ProjectNumber {
+
+				proj, err := q.client.ProjectIDGet()
+				if err != nil {
+					return errMsg{err: err}
+				}
+
+				projectnumber, err := q.client.ProjectNumberGet(proj)
+				if err != nil {
+					return errMsg{err: err}
+				}
+				q.stack.AddSetting("project_number", projectnumber)
+			}
+
 			creator := q.currentKey() + projNewSuffix
 			billing := q.currentKey() + billNewSuffix
 

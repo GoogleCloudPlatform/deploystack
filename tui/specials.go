@@ -51,7 +51,7 @@ func newProjectSelector(key, listLabel string, preProcessor tea.Cmd) picker {
 	result := newPicker(listLabel, "Retrieving Projects", key, currentProject, preProcessor)
 	create := item{"Create New Project", ""}
 	result.list.InsertItem(0, create)
-	result.addPostProcessor(cleanupProjectScreen)
+	result.addPostProcessor(processProjectSelection)
 	return result
 }
 
