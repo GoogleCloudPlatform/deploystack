@@ -34,12 +34,7 @@ func processProjectSelection(key string, q *Queue) tea.Cmd {
 
 			if q.stack.Config.ProjectNumber {
 
-				proj, err := q.client.ProjectIDGet()
-				if err != nil {
-					return errMsg{err: err}
-				}
-
-				projectnumber, err := q.client.ProjectNumberGet(proj)
+				projectnumber, err := q.client.ProjectNumberGet(key)
 				if err != nil {
 					return errMsg{err: err}
 				}
