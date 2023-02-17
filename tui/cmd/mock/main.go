@@ -26,5 +26,5 @@ func main() {
 		tui.Fatal(err)
 	}
 
-	tui.Start(s, true)
+	tui.Run(s, true)
 }

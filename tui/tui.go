@@ -81,9 +81,9 @@ type UIClient interface {
 	BillingAccountAttach(project, account string) error
 }
 
-// Start takes a deploystack configuration and walks someone through all of the
+// Run takes a deploystack configuration and walks someone through all of the
 // input needed to run the eventual terraform
-func Start(s *deploystack.Stack, useMock bool) {
+func Run(s *deploystack.Stack, useMock bool) {
 	if len(os.Getenv("DEBUG")) > 0 {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {
