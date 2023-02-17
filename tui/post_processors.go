@@ -32,13 +32,8 @@ func processProjectSelection(key string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
 		if key != "" {
 
-			if q.stack.Config.ProjectNumber {
-
-				projectnumber, err := q.client.ProjectNumberGet(key)
-				if err != nil {
-					return errMsg{err: err}
-				}
-				q.stack.AddSetting("project_number", projectnumber)
+			if errMsg := handleProjectNumber(key, q); errMsg != nil {
+				return errMsg
 			}
 
 			creator := q.currentKey() + projNewSuffix
@@ -54,6 +49,17 @@ func processProjectSelection(key string, q *Queue) tea.Cmd {
 	}
 }
 
+func handleProjectNumber(projectID string, q *Queue) tea.Msg {
+	if q.stack.Config.ProjectNumber {
+		projectnumber, err := q.client.ProjectNumberGet(projectID)
+		if err != nil {
+			return errMsg{err: err}
+		}
+		q.stack.AddSetting("project_number", projectnumber)
+	}
+	return nil
+}
+
 func createProject(project string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
 		if currentProject == "" {
@@ -61,7 +67,6 @@ func createProject(project string, q *Queue) tea.Cmd {
 			if err != nil || len(tmp) == 0 || tmp[0].ID == "" {
 				return errMsg{err: fmt.Errorf("createProject: could not determine an alternate project for parent detection: %w ", err)}
 			}
-
 			currentProject = tmp[0].ID
 		}
 
@@ -74,6 +79,9 @@ func createProject(project string, q *Queue) tea.Cmd {
 			return errMsg{err: fmt.Errorf("createProject: could not create project: %w", err)}
 		}
 
+		if errMsg := handleProjectNumber(project, q); errMsg != nil {
+			return errMsg
+		}
 		return successMsg{}
 	}
 }
