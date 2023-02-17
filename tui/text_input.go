@@ -95,7 +95,9 @@ func (p textInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				return p, nil
 			}
-			p.queue.stack.AddSetting(p.key, p.value)
+			if !p.omitFromSettings {
+				p.queue.stack.AddSetting(p.key, p.value)
+			}
 			return p.queue.next()
 		}
 
@@ -115,7 +117,9 @@ func (p textInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Filter project creation screens screeens
 		newKey := strings.ReplaceAll(p.key, projNewSuffix, "")
 
-		p.queue.stack.AddSetting(newKey, p.value)
+		if !p.omitFromSettings {
+			p.queue.stack.AddSetting(newKey, p.value)
+		}
 		return p.queue.next()
 
 	}

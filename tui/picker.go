@@ -171,7 +171,7 @@ func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return p, nil
 	case successMsg:
 		p.state = "idle"
-		if !msg.unset {
+		if !msg.unset && !p.omitFromSettings {
 			p.queue.stack.AddSetting(p.key, p.value)
 		}
 
@@ -189,7 +189,9 @@ func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if ok {
 					p.value = string(i.value)
 				}
-				p.queue.stack.AddSetting(p.key, p.value)
+				if !p.omitFromSettings {
+					p.queue.stack.AddSetting(p.key, p.value)
+				}
 
 				// TODO: see if you can figure out a test for these untested bits
 

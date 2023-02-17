@@ -23,18 +23,19 @@ import (
 )
 
 type dynamicPage struct {
-	queue         *Queue
-	spinner       spinner.Model
-	spinnerLabel  string
-	key           string
-	value         string
-	err           error
-	state         string
-	content       []component
-	preProcessor  tea.Cmd
-	postProcessor func(string, *Queue) tea.Cmd
-	preViewFunc   func(*Queue)
-	showProgress  bool
+	queue            *Queue
+	spinner          spinner.Model
+	spinnerLabel     string
+	key              string
+	value            string
+	err              error
+	state            string
+	content          []component
+	preProcessor     tea.Cmd
+	postProcessor    func(string, *Queue) tea.Cmd
+	preViewFunc      func(*Queue)
+	showProgress     bool
+	omitFromSettings bool
 }
 
 func (p *dynamicPage) getKey() string {

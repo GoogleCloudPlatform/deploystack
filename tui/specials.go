@@ -252,6 +252,7 @@ func newCustomPages(q *Queue) {
 
 func newGCEInstance(q *Queue) {
 	r := newPicker("Do you want to accept the default configuration? (Yes or No)", "", "gce-use-defaults", "", getYesOrNo(q))
+	r.omitFromSettings = true
 	r.list.SetShowFilter(false)
 	r.list.SetShowHelp(false)
 	r.list.SetShowStatusBar(false)
