@@ -36,6 +36,10 @@ func processProjectSelection(key string, q *Queue) tea.Cmd {
 				return errMsg
 			}
 
+			if err := q.client.ProjectIDSet(key); err != nil {
+				return errMsg{err: err}
+			}
+
 			creator := q.currentKey() + projNewSuffix
 			billing := q.currentKey() + billNewSuffix
 
@@ -82,6 +86,10 @@ func createProject(project string, q *Queue) tea.Cmd {
 		if errMsg := handleProjectNumber(project, q); errMsg != nil {
 			return errMsg
 		}
+		if err := q.client.ProjectIDSet(project); err != nil {
+			return errMsg{err: err}
+		}
+
 		return successMsg{}
 	}
 }

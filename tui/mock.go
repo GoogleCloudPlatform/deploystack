@@ -56,6 +56,13 @@ func (m mock) ProjectIDGet() (string, error) {
 	return "ds-tester-singlevm", nil
 }
 
+func (m mock) ProjectIDSet(id string) error {
+	if m.forceErr {
+		return errForced
+	}
+	return nil
+}
+
 func (m mock) ProjectList() ([]gcloud.ProjectWithBilling, error) {
 	m.delay()
 	if m.forceErr {
