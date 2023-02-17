@@ -256,7 +256,7 @@ func (q *Queue) ProcessConfig() error {
 	}
 
 	if s.Config.BillingAccount {
-		b := newBillingSelector("billing_account", getBillingAccounts(q), nil)
+		b := newBillingSelector("billing_account", getBillingAccounts(q), attachBilling)
 		q.add(&b)
 	}
 
