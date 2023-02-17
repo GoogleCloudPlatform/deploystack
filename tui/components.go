@@ -203,7 +203,7 @@ func (h header) render() string {
 	doc := strings.Builder{}
 
 	content := lipgloss.JoinVertical(lipgloss.Left,
-		fmt.Sprintf("%s%s%s", TERMCYANB, titleStyle.Render(h.title), TERMCLEAR),
+		fmt.Sprintf("%s%s%s", colors.get("cyan").bright(), titleStyle.Render(h.title), clear),
 		subTitleStyle.Render(h.subtitle),
 	)
 
