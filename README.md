@@ -207,7 +207,7 @@ This process will create the following:
 	* Secrets - Cloud Secret Manager
 
 All of these will spin up configured in a 3 tier application that delievers a
-TODO app to show all of these pieces working together.  
+todo app to show all of these pieces working together.  
 ```
 ![UI for Project Selector](assets/ui_header.png)
 
