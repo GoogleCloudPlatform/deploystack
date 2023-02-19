@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package github includes all of the client calls to github for building
+// automation tools for deploystack
 package github
 
 import (
