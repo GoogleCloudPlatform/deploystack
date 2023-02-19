@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dsgithub
+package github
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/GoogleCloudPlatform/deploystack"
-	"github.com/GoogleCloudPlatform/deploystack/gcloudtf"
+	"github.com/GoogleCloudPlatform/deploystack/terraform"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
@@ -31,9 +31,9 @@ import (
 // bits of metadata about a stack.
 type Meta struct {
 	DeployStack deploystack.Config
-	Terraform   gcloudtf.Blocks `json:"terraform" yaml:"terraform"`
-	Github      Github          `json:"github" yaml:"github"`
-	LocalPath   string          `json:"localpath" yaml:"localpath"`
+	Terraform   terraform.Blocks `json:"terraform" yaml:"terraform"`
+	Github      Github           `json:"github" yaml:"github"`
+	LocalPath   string           `json:"localpath" yaml:"localpath"`
 }
 
 // Github contains the details of a github repo for the purpose of downloading
@@ -134,7 +134,7 @@ func NewMetaFromLocal(path string) (Meta, error) {
 		return d, fmt.Errorf("could not read config file: %s", err)
 	}
 
-	b, err := gcloudtf.Extract(s.Config.PathTerraform)
+	b, err := terraform.Extract(s.Config.PathTerraform)
 	if err != nil {
 		return d, fmt.Errorf("couldn't extract from TF file: %s", err)
 	}
