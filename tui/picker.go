@@ -40,7 +40,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 
 	fn := itemStyle.Render
 	if index == m.Index() {
-		color := selectedItemStyle.background.background()
+		color := selectedItemStyle.background.code()
 		fn = func(s string) string {
 			return selectedItemStyle.Render(color + "> " + s)
 		}

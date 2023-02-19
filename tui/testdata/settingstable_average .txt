@@ -1,8 +1,8 @@
 
 Setting                            Value                                                  
                                                                                           
-[1;37mStack Name[0m                         [0;36mtest-stack-value[0m                                       
-[1;37mProject Name[0m                       [0;36mtest-project[0m                                           
-[1;37mProject ID[0m                         [0;36mtest-id[0m                                                
-[1;37mProject Number[0m                     [0;36m123344567[0m                                              
-[1;37mTestkey[0m                            [0;36mtestvalue[0m                                              
+[0;37mStack Name[0m                         [1;36mtest-stack-value[0m                                       
+[0;37mProject Name[0m                       [1;36mtest-project[0m                                           
+[0;37mProject ID[0m                         [1;36mtest-id[0m                                                
+[0;37mProject Number[0m                     [1;36m123344567[0m                                              
+[0;37mTestkey[0m                            [1;36mtestvalue[0m                                              

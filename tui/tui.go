@@ -19,6 +19,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
@@ -107,6 +108,11 @@ func Run(s *deploystack.Stack, useMock bool) {
 	if useMock {
 		q = NewQueue(s, GetMock(1))
 	}
+
+	light := backgroundColors.color("bright cyan")
+	dark := backgroundColors.color("cyan")
+
+	log.Printf("light: %+v dark:%+v", light, dark)
 
 	q.Save("contact", deploystack.CheckForContact())
 	q.InitializeUI()

@@ -145,19 +145,11 @@ func (e errorAlert) Render() string {
 	sb := strings.Builder{}
 
 	height := len(e.err.Error()) / width
-	style := lipgloss.NewStyle().
-		Width(100).
-		Height(height).
-		Border(lipgloss.NormalBorder()).
-		BorderForeground(alert).
-		PaddingLeft(3).
-		Foreground(grayWeak)
-
-	b := lipgloss.NewStyle().Bold(true).Foreground(alert)
-	cmd := lipgloss.NewStyle().Background(grayWeak).Foreground(alert)
+	style := errorAlertStyle.Copy()
+	style.Height(height)
 
 	sb.WriteString("\n")
-	sb.WriteString(b.Render("There was an error!"))
+	sb.WriteString(boldAlert.Render("There was an error!"))
 	sb.WriteString("\n")
 	if e.err.usermsg != "" {
 		sb.WriteString(e.err.usermsg)
@@ -171,7 +163,7 @@ func (e errorAlert) Render() string {
 
 	if !e.err.quit {
 		sb.WriteString("You can exit the program by typing ")
-		sb.WriteString(cmd.Render("ctr+c."))
+		sb.WriteString(cmdStyle.Render("ctr+c."))
 	}
 
 	if e.err.target != "" {
@@ -203,7 +195,7 @@ func (h header) render() string {
 	doc := strings.Builder{}
 
 	content := lipgloss.JoinVertical(lipgloss.Left,
-		fmt.Sprintf("%s%s%s", colors.get("cyan").bright(), titleStyle.Render(h.title), clear),
+		fmt.Sprintf("%s%s%s", textColors.code("bright cyan"), titleStyle.Render(h.title), clear),
 		subTitleStyle.Render(h.subtitle),
 	)
 

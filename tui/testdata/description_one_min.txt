@@ -3,7 +3,7 @@
 * Clustering - Managed Instance Group
 * Load Balancing - Load Balancer[0m
 
-[0;37mIt's going to take around [0m[0;36m1[0m[0;37m minute.[0m
+[0;37mIt's going to take around [0m[1;36m1[0m[0;37m minute.[0m
 
 [0;37mIf you would like more information about this stack, [0m[0;37mplease read the documentation at: [0m[4;36mhttps://example.com[0m
 

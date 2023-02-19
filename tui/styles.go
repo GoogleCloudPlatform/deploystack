@@ -17,6 +17,7 @@ package tui
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/table"
@@ -25,120 +26,110 @@ import (
 	"golang.org/x/term"
 )
 
-var colors = ansiColors{
-	"blank":       ansiColor{id: -1},
-	"black":       ansiColor{id: 0},
-	"red":         ansiColor{id: 1},
-	"green":       ansiColor{id: 2},
-	"yellow":      ansiColor{id: 3},
-	"blue":        ansiColor{id: 4},
-	"magenta":     ansiColor{id: 5},
-	"cyan":        ansiColor{id: 6},
-	"white":       ansiColor{id: 7},
-	"grey":        ansiColor{id: 8},
-	"gray":        ansiColor{id: 8},
-	"deepBlack":   absColor{color: "\033[0;106m"},
-	"intenseCyan": absColor{color: "\033[0;106m"},
-	"brightWhite": absColor{color: "\033[1;37m"},
+type ansi16colors []ansi16color
+
+func (a ansi16colors) code(s string) string {
+	for _, v := range a {
+		if s == v.name {
+			return v.colorCode
+		}
+	}
+	return ""
+}
+
+func (a ansi16colors) codeByID(i int) string {
+	for _, v := range a {
+		if i == v.id {
+			return v.colorCode
+		}
+	}
+	return ""
+}
+
+func (a ansi16colors) color(s string) ansi16color {
+	for _, v := range a {
+		if strings.TrimSpace(s) == strings.TrimSpace(v.name) {
+			return v
+		}
+	}
+	return ansi16color{}
+}
+
+func (a ansi16colors) colorByID(i int) ansi16color {
+	for _, v := range a {
+		if i == v.id {
+			return v
+		}
+	}
+	return ansi16color{}
+}
+
+type ansi16color struct {
+	id        int
+	name      string
+	colorCode string
+}
+
+var textColors = ansi16colors{
+	{id: 0, name: "black", colorCode: "\033[0;30m"},
+	{id: 1, name: "red", colorCode: "\033[0;31m"},
+	{id: 2, name: "green", colorCode: "\033[0;32m"},
+	{id: 3, name: "yellow", colorCode: "\033[0;33m"},
+	{id: 4, name: "blue", colorCode: "\033[0;34m"},
+	{id: 5, name: "magenta", colorCode: "\033[0;35m"},
+	{id: 6, name: "cyan", colorCode: "\033[0;36m"},
+	{id: 7, name: "white", colorCode: "\033[0;37m"},
+	{id: 8, name: "bright black", colorCode: "\033[1;30m"},
+	{id: 9, name: "bright red", colorCode: "\033[1;31m"},
+	{id: 10, name: "bright green", colorCode: "\033[1;32m"},
+	{id: 11, name: "bright yellow", colorCode: "\033[1;33m"},
+	{id: 12, name: "bright blue", colorCode: "\033[1;34m"},
+	{id: 13, name: "bright magenta", colorCode: "\033[1;35m"},
+	{id: 14, name: "bright cyan", colorCode: "\033[1;36m"},
+	{id: 15, name: "bright white", colorCode: "\033[1;37m"},
+	{id: 8, name: "dark grey", colorCode: "\033[1;30m"},
+	{id: 8, name: "dark gray", colorCode: "\033[1;30m"},
+	{id: 7, name: "light grey", colorCode: "\033[0;37m"},
+	{id: 7, name: "light gray", colorCode: "\033[0;37m"},
+}
+var backgroundColors = ansi16colors{
+	{id: -1, name: "blank", colorCode: ""},
+	{id: 0, name: "black", colorCode: "\033[0;40m"},
+	{id: 1, name: "red", colorCode: "\033[0;41m"},
+	{id: 2, name: "green", colorCode: "\033[0;42m"},
+	{id: 3, name: "yellow", colorCode: "\033[0;43m"},
+	{id: 4, name: "blue", colorCode: "\033[0;44m"},
+	{id: 5, name: "magenta", colorCode: "\033[0;45m"},
+	{id: 6, name: "cyan", colorCode: "\033[0;46m"},
+	{id: 7, name: "white", colorCode: "\033[0;47m"},
+	{id: 8, name: "bold on black", colorCode: "\033[0;40m"},
+	{id: 9, name: "bold on red", colorCode: "\033[0;41m"},
+	{id: 10, name: "bold on green", colorCode: "\033[0;42m"},
+	{id: 11, name: "bold on yellow", colorCode: "\033[0;43m"},
+	{id: 12, name: "bold on blue", colorCode: "\033[0;44m"},
+	{id: 13, name: "bold on magenta", colorCode: "\033[0;45m"},
+	{id: 14, name: "bold on cyan", colorCode: "\033[0;46m"},
+	{id: 15, name: "bold on white", colorCode: "\033[0;47m"},
+}
+
+type dsAdaptiveColor struct {
+	light ansi16color
+	dark  ansi16color
+}
+
+func (a dsAdaptiveColor) code() string {
+	if termenv.HasDarkBackground() {
+		return a.dark.colorCode
+	}
+	return a.light.colorCode
 }
 
 var clear = "\033[0m"
 
-type dsColor interface {
-	bright() string
-	regular() string
-	bold() string
-	underline() string
-	background() string
-}
-
-type absColor struct {
-	color string
-}
-
-func (a absColor) bright() string {
-	return a.color
-}
-
-func (a absColor) regular() string {
-	return a.color
-}
-
-func (a absColor) bold() string {
-	return a.color
-}
-
-func (a absColor) underline() string {
-	return a.color
-}
-
-func (a absColor) background() string {
-	return a.color
-}
-
-type ansiColor struct {
-	id int
-}
-
-func (a ansiColor) bright() string {
-	if a.id == -1 {
-		return ""
-	}
-	return fmt.Sprintf("\033[1;3%dm", a.id)
-}
-
-func (a ansiColor) regular() string {
-	if a.id == -1 {
-		return ""
-	}
-	return fmt.Sprintf("\033[0;3%dm", a.id)
-}
-
-func (a ansiColor) bold() string {
-	if a.id == -1 {
-		return ""
-	}
-	return fmt.Sprintf("\033[1;3%dm", a.id)
-}
-
-func (a ansiColor) underline() string {
-	if a.id == -1 {
-		return ""
-	}
-	return fmt.Sprintf("\033[4;3%dm", a.id)
-}
-
-func (a ansiColor) background() string {
-	if a.id == -1 {
-		return ""
-	}
-	return fmt.Sprintf("\033[1;4%dm", a.id)
-}
-
-type ansiColors map[string]dsColor
-
-func (a ansiColors) get(s string) dsColor {
-
-	if s == "copy" {
-		if termenv.HasDarkBackground() {
-			return colors.get("white")
-		}
-		return colors.get("black")
-	}
-	if s == "anticopy" {
-		if termenv.HasDarkBackground() {
-			return colors.get("black")
-		}
-		return colors.get("white")
-	}
-
-	return colors[s]
-}
-
 type dsStyle struct {
 	style      lipgloss.Style
-	foreground dsColor
-	background dsColor
+	foreground dsAdaptiveColor
+	background dsAdaptiveColor
 	bright     bool
 	underline  bool
 	bold       bool
@@ -146,36 +137,36 @@ type dsStyle struct {
 
 func (d dsStyle) Render(s string) string {
 
-	startFg := d.foreground.regular()
-	if d.bright {
-		startFg = d.foreground.bright()
-	}
-	if d.bold {
-		startFg = d.foreground.bold()
-	}
+	startFg := d.foreground.code()
 	if d.underline {
-		startFg = d.foreground.underline()
+		// Replace the right character with the underline trigger
+		sl := strings.Split(startFg, "")
+		sl[2] = "4"
+		startFg = strings.Join(sl, "")
 	}
-	startBg := d.background.background()
-
+	startBg := d.background.code()
 	content := d.style.Render(s)
 
 	return fmt.Sprintf("%s%s%s%s", startFg, startBg, content, clear)
 }
 
 func newDsStyle() dsStyle {
+	blankBG := backgroundColors.color("blank")
+	black := textColors.color("black")
+	white := textColors.color("light grey")
+
 	r := dsStyle{style: lipgloss.NewStyle()}
-	r.foreground = colors.get("copy")
-	r.background = ansiColor{id: -1}
+	r.foreground = dsAdaptiveColor{light: black, dark: white}
+	r.background = dsAdaptiveColor{light: blankBG, dark: blankBG}
 	return r
 }
 
-func (d dsStyle) Foreground(a dsColor) dsStyle {
+func (d dsStyle) Foreground(a dsAdaptiveColor) dsStyle {
 	d.foreground = a
 	return d
 }
 
-func (d dsStyle) Background(a dsColor) dsStyle {
+func (d dsStyle) Background(a dsAdaptiveColor) dsStyle {
 	d.background = a
 	return d
 }
@@ -302,38 +293,44 @@ func (d dsStyle) BorderForeground(b lipgloss.TerminalColor) dsStyle {
 var (
 	width          = 100
 	hardWidthLimit = width
-	gray           = lipgloss.AdaptiveColor{Light: "7", Dark: "8"}
-	grayWeak       = lipgloss.AdaptiveColor{Light: "8", Dark: "7"}
-	simClearColor  = lipgloss.AdaptiveColor{Light: "15", Dark: "0"}
-	highlight      = lipgloss.AdaptiveColor{Light: "6", Dark: "14"}
-	basicText      = lipgloss.AdaptiveColor{Light: "0", Dark: "15"}
-	alert          = lipgloss.AdaptiveColor{Light: "1", Dark: "9"}
-	completeColor  = lipgloss.AdaptiveColor{Light: "8", Dark: "8"}
-	pendingColor   = lipgloss.AdaptiveColor{Light: "6", Dark: "6"}
+	lgbasicText    = lipgloss.AdaptiveColor{Light: "0", Dark: "15"}
+	lggray         = lipgloss.AdaptiveColor{Light: "7", Dark: "8"}
+	lggrayWeak     = lipgloss.AdaptiveColor{Light: "8", Dark: "7"}
+	lgalert        = lipgloss.AdaptiveColor{Light: "1", Dark: "9"}
+
+	gray          = dsAdaptiveColor{light: textColors.color("white"), dark: textColors.color("dark grey")}
+	grayWeak      = dsAdaptiveColor{light: textColors.color("dark grey"), dark: textColors.color("white")}
+	simClearColor = dsAdaptiveColor{light: textColors.color("bright white"), dark: textColors.colorByID(0)}
+	highlight     = dsAdaptiveColor{light: textColors.color("cyan"), dark: textColors.color("bright cyan")}
+	basicText     = dsAdaptiveColor{light: textColors.color("black"), dark: textColors.color("light grey")}
+	alert         = dsAdaptiveColor{light: textColors.color("red"), dark: textColors.color("bright red")}
+	completeColor = dsAdaptiveColor{light: textColors.color("dark grey"), dark: textColors.color("dark grey")}
+	pendingColor  = dsAdaptiveColor{light: textColors.color("cyan"), dark: textColors.color("bright cyan")}
+	highlightBG   = dsAdaptiveColor{light: backgroundColors.color("bold on cyan"), dark: backgroundColors.color("cyan")}
 
 	strong = newDsStyle().
-		Foreground(colors.get("cyan"))
+		Foreground(highlight)
 
 	normal = newDsStyle().
-		Foreground(colors.get("copy"))
+		Foreground(basicText)
 
 	url = newDsStyle().
-		Foreground(colors.get("cyan")).
+		Foreground(highlight).
 		Underline(true)
 
 	titleStyle = newDsStyle().
 			Bold(true).
-			Foreground(colors.get("copy"))
+			Foreground(basicText)
 
 	purchaseStyle = newDsStyle().
 			Bold(true).
-			Foreground(colors.get("red")).
-			Background(colors.get("grey"))
+			Foreground(alert).
+			Background(gray)
 
 	subTitleStyle = newDsStyle().
 			MaxWidth(hardWidthLimit).
 			Bold(false).
-			Foreground(colors.get("copy"))
+			Foreground(basicText)
 
 	headerCopyStyle = newDsStyle().
 			MaxWidth(hardWidthLimit)
@@ -348,64 +345,64 @@ var (
 			BorderRight(false).
 			BorderBottom(true).
 			MaxWidth(hardWidthLimit).
-			BorderForeground(gray).
+			BorderForeground(lggray).
 			Width(width)
 
 	cursorPromptStyle = newDsStyle().
-				Foreground(colors.get("cyan"))
+				Foreground(highlight)
 
 	bodyStyle = newDsStyle().
 			MarginLeft(0).
 			MarginRight(0).
 			Padding(0, 3).
-			Foreground(colors.get("copy")).
+			Foreground(basicText).
 			Width(width).
 			MaxWidth(hardWidthLimit)
 
 	docStyle = newDsStyle().
-			Foreground(colors.get("copy")).
+			Foreground(basicText).
 			Padding(0, 2)
 
 	promptStyle = newDsStyle().
 			Bold(true).
-			Background(colors.get("cyan")).
-			Foreground(colors.get("anticopy"))
+			Background(highlightBG).
+			Foreground(dsAdaptiveColor{textColors.color("white"), textColors.color("white")})
 
 	alertStyle = bodyStyle.Copy().
-			Foreground(colors.get("red"))
+			Foreground(alert)
 
 	alertStrongStyle = bodyStyle.Copy().
-				Foreground(colors.get("red")).
+				Foreground(alert).
 				PaddingLeft(3).Bold(true)
 
 	instructionStyle = newDsStyle().
 				PaddingLeft(3)
 
 	textStyle = newDsStyle().
-			Foreground(colors.get("copy"))
+			Foreground(basicText)
 
 	textInputDefaultStyle = newDsStyle().
-				Foreground(colors.get("cyan"))
+				Foreground(highlight)
 
 	tableStyle = table.DefaultStyles()
 
 	inputText = bodyStyle.Copy().
-			Foreground(colors.get("cyan"))
+			Foreground(highlight)
 
 	componentStyle = newDsStyle().
 			PaddingLeft(1).
 			MarginLeft(0)
 
 	billingDisabledStyle = newDsStyle().
-				Foreground(colors.get("grey"))
+				Foreground(gray)
 
 	itemStyle = newDsStyle().
 			PaddingLeft(4)
 
 	selectedItemStyle = newDsStyle().
 				PaddingLeft(2).
-				Background(colors.get("cyan")).
-				Foreground(colors.get("white"))
+				Background(highlightBG).
+				Foreground(basicText)
 
 	paginationStyle = list.DefaultStyles().
 			PaginationStyle.PaddingLeft(4)
@@ -414,22 +411,33 @@ var (
 			HelpStyle.
 			PaddingLeft(4).
 			PaddingBottom(1).
-			Foreground(grayWeak)
+			Foreground(lggrayWeak)
 
 	quitTextStyle = newDsStyle().
 			Margin(1, 0, 2, 4)
 
-	spinnerStyle = newDsStyle().Foreground(colors.get("cyan"))
+	spinnerStyle = newDsStyle().Foreground(highlight)
 
 	textInputPrompt = helpStyle.Copy().
 			PaddingLeft(3)
 
-	completeStyle = newDsStyle().Foreground(colors.get("cyan"))
+	completeStyle = newDsStyle().Foreground(highlight)
 
-	pendingStyle = newDsStyle().Foreground(colors.get("white"))
+	pendingStyle = newDsStyle().Foreground(grayWeak)
+
+	errorAlertStyle = lipgloss.NewStyle().
+			Width(100).
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(lgalert).
+			PaddingLeft(3).
+			Foreground(lggrayWeak)
+
+	boldAlert = lipgloss.NewStyle().Bold(true).Foreground(lgalert)
+	cmdStyle  = lipgloss.NewStyle().Background(lggrayWeak).Foreground(lgalert)
 )
 
 func init() {
+
 	width, _, _ = term.GetSize(int(os.Stdout.Fd()))
 
 	tableStyle.Header.
@@ -438,9 +446,9 @@ func init() {
 		Bold(false)
 
 	tableStyle.Selected.
-		Foreground(basicText).
+		Foreground(lgbasicText).
 		Bold(false)
-	tableStyle.Cell.Foreground(basicText).
+	tableStyle.Cell.Foreground(lgbasicText).
 		Padding(0)
 	tableStyle.Header.Padding(0)
 }
