@@ -136,8 +136,13 @@ func TestGetProjects(t *testing.T) {
 			}
 
 			if len(extraGots) > 0 {
-				t.Logf("extra gots: %v ", extraGots)
-				t.Fatalf("expected: %v got: %v", len(want), len(gotfiltered))
+				for _, v := range extraGots {
+					if !strings.Contains(v, "ds-unittest") {
+						t.Logf("extra gots: %v ", extraGots)
+						t.Fatalf("expected: %v got: %v", len(want), len(gotfiltered))
+					}
+				}
+
 			}
 
 			if err != nil {

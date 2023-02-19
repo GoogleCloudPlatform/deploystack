@@ -83,6 +83,7 @@ func TestGetFunctionRegions(t *testing.T) {
 	}
 }
 
+// TODO: Spend time fixing this.
 func TestCloudFunctionCreate(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
