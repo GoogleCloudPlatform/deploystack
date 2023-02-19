@@ -41,4 +41,11 @@ custom_settings:
   default: 'yes'
   options:
   - 'no'
-  - 'yes'  
+  - 'yes' 
+- name: roles
+  description: Please choose the role that you need for this project
+  default: 'roles/owner'
+  options:
+  - 'roles/reviewer|Project Reviewer'
+  - 'roles/owner|Project Owner'
+  - 'roles/vison.reader|Cloud Vision Reader'

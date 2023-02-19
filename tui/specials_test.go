@@ -419,13 +419,14 @@ func TestCustomPages(t *testing.T) {
 	}{
 		"region": {
 			config: "testdata/config_multicustom.yaml",
-			count:  5,
+			count:  6,
 			keys: []string{
 				"nodes",
 				"label",
 				"location",
 				"budgetamount",
 				"yesorno",
+				"roles",
 			},
 		},
 	}
