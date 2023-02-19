@@ -117,6 +117,12 @@ func (c *Client) ZoneList(project, region string) ([]string, error) {
 func (c *Client) MachineTypeList(project, zone string) (*compute.MachineTypeList, error) {
 	resp := &compute.MachineTypeList{}
 
+	i := c.get("MachineTypeList" + zone)
+	switch val := i.(type) {
+	case *compute.MachineTypeList:
+		return val, nil
+	}
+
 	svc, err := c.getComputeService(project)
 	if err != nil {
 		return resp, err
@@ -126,6 +132,8 @@ func (c *Client) MachineTypeList(project, zone string) (*compute.MachineTypeList
 	if err != nil {
 		return resp, err
 	}
+
+	c.save("MachineTypeList"+zone, results)
 
 	return results, nil
 }

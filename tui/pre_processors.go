@@ -136,7 +136,6 @@ func getMachineTypeFamilies(q *Queue) tea.Cmd {
 		project := s.GetSetting("project_id")
 		zone := s.GetSetting("zone")
 
-		// TODO: add caching to remove this double request overhead
 		types, err := q.client.MachineTypeList(project, zone)
 		if err != nil {
 			return errMsg{err: err}
@@ -163,7 +162,6 @@ func getMachineTypes(q *Queue) tea.Cmd {
 		zone := s.GetSetting("zone")
 		family := s.GetSetting("instance-machine-type-family")
 
-		// TODO: add caching to remove this double request overhead
 		types, err := q.client.MachineTypeList(project, zone)
 		if err != nil {
 			return errMsg{err: err}
