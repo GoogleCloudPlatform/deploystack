@@ -5,6 +5,6 @@ use (
 	./dsgithub
 	./dstester
 	./gcloud
-	./gcloudtf
+	./terraform
 	./tui
 )

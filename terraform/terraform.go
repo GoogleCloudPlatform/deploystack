@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package gcloudtf handles parsing Terraform files to extract structured
+// Package terraform handles parsing Terraform files to extract structured
 // information out of it, to support a few tools to speed up the DeployStack
 // authoring process
-package gcloudtf
+package terraform
 
 import (
 	"fmt"

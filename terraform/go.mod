@@ -1,4 +1,4 @@
-module github.com/GoogleCloudPlatform/deploystack/gcloudtf
+module github.com/GoogleCloudPlatform/deploystack/terraform
 
 go 1.20
 

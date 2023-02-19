@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/GoogleCloudPlatform/deploystack/gcloudtf"
+	"github.com/GoogleCloudPlatform/deploystack/terraform"
 )
 
 func main() {
-	b, err := gcloudtf.Extract("../testdata/extracttest")
+	b, err := terraform.Extract("../testdata/extracttest")
 	if err != nil {
 		log.Fatalf("couldn't extract from TF file: %s", err)
 	}
