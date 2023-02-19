@@ -26,7 +26,6 @@ import (
 var DiskProjects = LabeledValues{
 	LabeledValue{Label: "CentOS", Value: "centos-cloud"},
 	LabeledValue{Label: "Container-Optimized OS (COS)", Value: "cos-cloud"},
-	// TODO: figure out how to best set this to DefaultImageProject
 	LabeledValue{Label: "Debian", Value: "debian-cloud", IsDefault: true},
 	LabeledValue{Label: "Fedora CoreOS", Value: "fedora-coreos-cloud"},
 	LabeledValue{Label: "Red Hat Enterprise Linux (RHEL)", Value: "rhel-cloud"},
