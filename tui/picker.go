@@ -181,6 +181,8 @@ func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			break
 		}
 		switch keypress := msg.String(); keypress {
+		case "alt+b", "ctrl+b":
+			return p.queue.prev()
 		case "ctrl+c":
 			return p.queue.exitPage()
 		case "enter":

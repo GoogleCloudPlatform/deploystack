@@ -42,6 +42,10 @@ func (p *dynamicPage) getKey() string {
 	return p.key
 }
 
+func (p *dynamicPage) setValue(s string) {
+	p.value = s
+}
+
 func (p *dynamicPage) clear() {
 	p.value = ""
 }
@@ -119,6 +123,9 @@ func (p page) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return p.queue.next()
 	case tea.KeyMsg:
 		switch msg.(tea.KeyMsg).String() {
+
+		case "alt+b", "ctrl+b":
+			return p.queue.prev()
 		case "ctrl+c", "q":
 			if p.queue.Get("halted") != nil {
 				os.Exit(1)
@@ -137,6 +144,7 @@ func (p page) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			return p.queue.next()
 		}
+
 	}
 	return p, nil
 }

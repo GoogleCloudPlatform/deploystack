@@ -73,6 +73,8 @@ func (p textInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
 			return p.queue.exitPage()
+		case "alt+b", "ctrl+b":
+			return p.queue.prev()
 		case "enter":
 			val := p.ti.Value()
 			if val == "" {

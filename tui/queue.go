@@ -25,6 +25,7 @@ type QueueModel interface {
 	tea.Model
 	addQueue(*Queue)
 	getKey() string
+	setValue(string)
 	addContent(...string)
 	clearContent()
 	clear()
@@ -112,6 +113,17 @@ func (q *Queue) next() (tea.Model, tea.Cmd) {
 	}
 
 	r := q.models[q.current]
+	return r, r.Init()
+}
+
+func (q *Queue) prev() (tea.Model, tea.Cmd) {
+	q.current--
+	if q.current <= 0 {
+		return q.models[0], nil
+	}
+
+	r := q.models[q.current]
+	r.setValue("")
 	return r, r.Init()
 }
 
