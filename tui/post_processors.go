@@ -25,9 +25,6 @@ import (
 	"github.com/nyaruka/phonenumbers"
 )
 
-// TODO: make this dynamic
-var currentProject = ""
-
 func processProjectSelection(key string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
 		if key != "" {
@@ -39,6 +36,8 @@ func processProjectSelection(key string, q *Queue) tea.Cmd {
 			if err := q.client.ProjectIDSet(key); err != nil {
 				return errMsg{err: err}
 			}
+
+			q.Save("currentProject", key)
 
 			creator := q.currentKey() + projNewSuffix
 			billing := q.currentKey() + billNewSuffix
@@ -66,6 +65,9 @@ func handleProjectNumber(projectID string, q *Queue) tea.Msg {
 
 func createProject(project string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
+
+		currentProject := q.Get("currentProject").(string)
+
 		if currentProject == "" {
 			tmp, err := q.client.ProjectList()
 			if err != nil || len(tmp) == 0 || tmp[0].ID == "" {
@@ -89,6 +91,8 @@ func createProject(project string, q *Queue) tea.Cmd {
 		if err := q.client.ProjectIDSet(project); err != nil {
 			return errMsg{err: err}
 		}
+
+		q.Save("currentProject", project)
 
 		return successMsg{}
 	}
@@ -116,7 +120,7 @@ func attachBilling(ba string, q *Queue) tea.Cmd {
 
 func validateDomain(domain string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
-		project := currentProject
+		project := q.Get("currentProject").(string)
 
 		domainInfo, err := q.client.DomainIsAvailable(project, domain)
 		if err != nil {
@@ -199,6 +203,8 @@ func registerDomain(consent string, q *Queue) tea.Cmd {
 
 		raw := q.Get("domainInfo")
 		domainInfo := raw.(*domainspb.RegisterParameters)
+
+		currentProject := q.Get("currentProject").(string)
 
 		err := q.client.DomainRegister(currentProject, domainInfo, d)
 		if err != nil {

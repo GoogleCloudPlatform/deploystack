@@ -75,7 +75,7 @@ func TestNewProjectSelector(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			q := getTestQueue(appTitle, "test")
 
-			out := newProjectSelector(tc.key, tc.listLabel, getProjects(&q))
+			out := newProjectSelector(tc.key, tc.listLabel, "", getProjects(&q))
 			q.add(&out)
 
 			if tc.update {
@@ -230,7 +230,7 @@ func TestNewProjectFlow(t *testing.T) {
 			key := "project_id"
 
 			q := getTestQueue(appTitle, "test")
-			p1 := newProjectSelector(key, "", getProjects(&q))
+			p1 := newProjectSelector(key, "", "", getProjects(&q))
 			p2 := newProjectCreator(key + projNewSuffix)
 			p3 := newPage("dummy", []component{})
 			q.add(&p1, &p2, &p3)

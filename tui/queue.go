@@ -50,6 +50,10 @@ func NewQueue(s *deploystack.Stack, client UIClient) Queue {
 	q := Queue{stack: s, store: map[string]interface{}{}}
 	q.client = client
 	q.index = []string{}
+
+	currentProject, _ := client.ProjectIDGet()
+
+	q.Save("currentProject", currentProject)
 	return q
 }
 
@@ -260,8 +264,11 @@ func (q *Queue) ProcessConfig() error {
 	}
 
 	if len(s.Config.Projects.Items) > 0 {
+
+		currentProject := q.Get("currentProject").(string)
+
 		for _, v := range s.Config.Projects.Items {
-			s := newProjectSelector(v.Name, v.UserPrompt, getProjects(q))
+			s := newProjectSelector(v.Name, v.UserPrompt, currentProject, getProjects(q))
 			c := newProjectCreator(v.Name + projNewSuffix)
 			b := newBillingSelector(v.Name+billNewSuffix, getBillingAccounts(q), attachBilling)
 			q.add(&s, &c, &b)
