@@ -36,6 +36,7 @@ type dynamicPage struct {
 	preViewFunc      func(*Queue)
 	showProgress     bool
 	omitFromSettings bool
+	querySlowText    string
 }
 
 func (p *dynamicPage) getKey() string {

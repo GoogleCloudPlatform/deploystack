@@ -57,6 +57,17 @@ func NewQueue(s *deploystack.Stack, client UIClient) Queue {
 	return q
 }
 
+func (q *Queue) Model(key string) QueueModel {
+
+	for _, v := range q.models {
+		if v.getKey() == key {
+			return v
+		}
+	}
+
+	return nil
+}
+
 // Save stores a value in a simple cache for communicating between operations
 // in the same process
 func (q *Queue) Save(key string, val interface{}) {

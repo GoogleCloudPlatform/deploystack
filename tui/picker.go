@@ -278,6 +278,10 @@ func (p picker) View() string {
 		spinnerSB := strings.Builder{}
 		spinnerSB.WriteString(textStyle.Render(fmt.Sprintf("%s ", p.spinnerLabel)))
 		spinnerSB.WriteString(spinnerStyle.Render(fmt.Sprintf("%s", p.spinner.View())))
+		if p.querySlowText != "" {
+			spinnerSB.WriteString(textStyle.Render(fmt.Sprintf("\n%s ", p.querySlowText)))
+		}
+
 		doc.WriteString(bodyStyle.Render(spinnerSB.String()))
 	}
 
