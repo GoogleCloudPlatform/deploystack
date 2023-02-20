@@ -24,6 +24,44 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+func TestProcessProjectSelection(t *testing.T) {
+	tests := map[string]struct {
+		in       string
+		want     tea.Msg
+		setError bool
+		err      error
+	}{
+		"basic": {
+			in:   "testproject",
+			want: successMsg{},
+		},
+		"fail": {
+			in:       "testproject",
+			want:     errMsg{err: errForced},
+			setError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			q := getTestQueue(appTitle, "test")
+
+			if tc.setError {
+				errMock := GetMock(0)
+				errMock.forceErr = true
+				q.client = errMock
+			}
+
+			cmd := processProjectSelection(tc.in, &q)
+			got := cmd()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestCheckYesOrNo(t *testing.T) {
 	tests := map[string]struct {
 		in   string
@@ -303,6 +341,44 @@ func TestRegisterDomain(t *testing.T) {
 					t.Fatalf("want: \n'%+v' \ngot: \n'%+v'", tcmsgE.err.Error(), gotE.err.Error())
 				}
 
+			}
+		})
+	}
+}
+
+func TestAttachBilling(t *testing.T) {
+	tests := map[string]struct {
+		in       string
+		want     tea.Msg
+		setError bool
+		err      error
+	}{
+		"basic": {
+			in:   "000000-000000-000000",
+			want: successMsg{},
+		},
+		"fail": {
+			in:       "000000-000000-000000",
+			want:     errMsg{err: fmt.Errorf("attachBilling: could not attach billing to project: %w", errForced)},
+			setError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+
+			if tc.setError {
+				errMock := GetMock(0)
+				errMock.forceErr = true
+				q.client = errMock
+			}
+
+			cmd := attachBilling(tc.in, &q)
+			got := cmd()
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}
 		})
 	}

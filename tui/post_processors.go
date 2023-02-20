@@ -25,19 +25,19 @@ import (
 	"github.com/nyaruka/phonenumbers"
 )
 
-func processProjectSelection(key string, q *Queue) tea.Cmd {
+func processProjectSelection(projectID string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
-		if key != "" {
+		if projectID != "" {
 
-			if errMsg := handleProjectNumber(key, q); errMsg != nil {
+			if errMsg := handleProjectNumber(projectID, q); errMsg != nil {
 				return errMsg
 			}
 
-			if err := q.client.ProjectIDSet(key); err != nil {
+			if err := q.client.ProjectIDSet(projectID); err != nil {
 				return errMsg{err: err}
 			}
 
-			q.Save("currentProject", key)
+			q.Save("currentProject", projectID)
 
 			creator := q.currentKey() + projNewSuffix
 			billing := q.currentKey() + billNewSuffix

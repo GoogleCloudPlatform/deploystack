@@ -80,6 +80,21 @@ func TestPicker(t *testing.T) {
 			msg:          tea.Msg([]list.Item{item{label: "Choice", value: "choice"}}),
 			outputFile:   "testdata/picker_items.txt",
 		},
+		"items_with_default": {
+			listLabel:    "test",
+			spinnerLabel: "test",
+			key:          "test",
+			preProcessor: nil,
+			state:        "displaying",
+			msg: tea.Msg([]list.Item{
+				item{label: "Choice", value: "choice"},
+				item{label: "Choice1", value: "choice1"},
+				item{label: "Choice2", value: "choice2"},
+				item{label: "Choice3", value: "choice3"},
+			}),
+			defaultValue: "choice3",
+			outputFile:   "testdata/picker_items_with_default.txt",
+		},
 		"error": {
 			listLabel:    "test",
 			spinnerLabel: "test",
