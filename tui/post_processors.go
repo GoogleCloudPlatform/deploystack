@@ -63,36 +63,36 @@ func handleProjectNumber(projectID string, q *Queue) tea.Msg {
 	return nil
 }
 
-func createProject(project string, q *Queue) tea.Cmd {
+func createProject(projectID string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
 
-		currentProject := q.Get("currentProject").(string)
+		currentProjectID := q.Get("currentProject").(string)
 
-		if currentProject == "" {
+		if currentProjectID == "" {
 			tmp, err := q.client.ProjectList()
 			if err != nil || len(tmp) == 0 || tmp[0].ID == "" {
 				return errMsg{err: fmt.Errorf("createProject: could not determine an alternate project for parent detection: %w ", err)}
 			}
-			currentProject = tmp[0].ID
+			currentProjectID = tmp[0].ID
 		}
 
-		parent, err := q.client.ProjectParentGet(currentProject)
+		parent, err := q.client.ProjectParentGet(currentProjectID)
 		if err != nil {
 			return errMsg{err: fmt.Errorf("createProject: could not determine proper parent for project: %w ", err)}
 		}
 
-		if err := q.client.ProjectCreate(project, parent.Id, parent.Type); err != nil {
+		if err := q.client.ProjectCreate(projectID, parent.Id, parent.Type); err != nil {
 			return errMsg{err: fmt.Errorf("createProject: could not create project: %w", err)}
 		}
 
-		if errMsg := handleProjectNumber(project, q); errMsg != nil {
+		if errMsg := handleProjectNumber(projectID, q); errMsg != nil {
 			return errMsg
 		}
-		if err := q.client.ProjectIDSet(project); err != nil {
+		if err := q.client.ProjectIDSet(projectID); err != nil {
 			return errMsg{err: err}
 		}
 
-		q.Save("currentProject", project)
+		q.Save("currentProject", projectID)
 
 		return successMsg{}
 	}
@@ -102,9 +102,9 @@ func attachBilling(ba string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
 		baclean := strings.ReplaceAll(ba, "billingAccounts/", "")
 		key := strings.ReplaceAll(q.currentKey(), billNewSuffix, "")
-		project := q.stack.GetSetting(key)
+		projectID := q.stack.GetSetting(key)
 
-		if err := q.client.BillingAccountAttach(project, baclean); err != nil {
+		if err := q.client.BillingAccountAttach(projectID, baclean); err != nil {
 			return errMsg{err: fmt.Errorf("attachBilling: could not attach billing to project: %w", err)}
 		}
 
@@ -120,9 +120,9 @@ func attachBilling(ba string, q *Queue) tea.Cmd {
 
 func validateDomain(domain string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
-		project := q.Get("currentProject").(string)
+		projectID := q.Get("currentProject").(string)
 
-		domainInfo, err := q.client.DomainIsAvailable(project, domain)
+		domainInfo, err := q.client.DomainIsAvailable(projectID, domain)
 		if err != nil {
 			return errMsg{err: fmt.Errorf("validateDomain: error checking domain availability %w", err)}
 		}
@@ -131,7 +131,7 @@ func validateDomain(domain string, q *Queue) tea.Cmd {
 		q.Save("domain", domain)
 
 		if domainInfo.Availability == domainspb.RegisterParameters_UNAVAILABLE {
-			isVerified, err := q.client.DomainIsVerified(project, domain)
+			isVerified, err := q.client.DomainIsVerified(projectID, domain)
 			if err != nil {
 				return errMsg{
 					usermsg: "Trying to validate that you own this domain failed due to an error",
@@ -204,9 +204,9 @@ func registerDomain(consent string, q *Queue) tea.Cmd {
 		raw := q.Get("domainInfo")
 		domainInfo := raw.(*domainspb.RegisterParameters)
 
-		currentProject := q.Get("currentProject").(string)
+		projectID := q.Get("currentProject").(string)
 
-		err := q.client.DomainRegister(currentProject, domainInfo, d)
+		err := q.client.DomainRegister(projectID, domainInfo, d)
 		if err != nil {
 			q.stack.AddSetting("domain_consent", "")
 			return errMsg{
