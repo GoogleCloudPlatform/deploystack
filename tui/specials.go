@@ -57,7 +57,7 @@ func newProjectSelector(key, listLabel, currentProject string, preProcessor tea.
 }
 
 func newBillingSelector(key string, preProcessor tea.Cmd, postProccessor func(string, *Queue) tea.Cmd) picker {
-	result := newPicker("Choose a billing account to use for this project", "Retrieving Billing Accounts", key, "", preProcessor)
+	result := newPicker("Choose an account to use to enable billing on the new project", "Retrieving Billing Accounts", key, "", preProcessor)
 	result.postProcessor = postProccessor
 	return result
 }
