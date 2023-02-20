@@ -87,21 +87,20 @@ func CheckForContact() gcloud.ContactData {
 func CacheContact(i interface{}) {
 	switch v := i.(type) {
 
+	// If anything goes wrong with this, it's fine, this is a convenience
+	// for the next time someone runs this.
 	case gcloud.ContactData:
 		if v.AllContacts.Email == "" {
-			log.Printf("CacheContact: email address is somehow empty: %+v", v)
 			return
 		}
 
 		if v.AllContacts.Email != "" {
 			yaml, err := v.YAML()
 			if err != nil {
-				log.Printf("CacheContact: could not convert contact to yaml: %s", err)
 				return
 			}
 
 			if err := os.WriteFile(contactfile, []byte(yaml), 0o644); err != nil {
-				log.Printf("CacheContact: could not write contact to file: %s", err)
 				return
 			}
 		}
