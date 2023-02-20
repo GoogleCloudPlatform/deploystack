@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package gcloud wraps up all of the cloud operations for DeployStack into
+// one client. It's mostly used to drive querying GCP projects and settings for
+// DeployStack ui. But it is also used to drive some of the authoring tooling
 package gcloud
 
 import (
