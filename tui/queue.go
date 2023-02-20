@@ -57,6 +57,7 @@ func NewQueue(s *deploystack.Stack, client UIClient) Queue {
 	return q
 }
 
+// Model retrieves a give model by key from the queue
 func (q *Queue) Model(key string) QueueModel {
 
 	for _, v := range q.models {
@@ -287,7 +288,8 @@ func (q *Queue) ProcessConfig() error {
 	}
 
 	if s.Config.BillingAccount {
-		b := newBillingSelector("billing_account", getBillingAccounts(q), attachBilling)
+		b := newBillingSelector("billing_account", getBillingAccounts(q), nil)
+		b.list.Title = "Choose a billing account to use for with this application"
 		q.add(&b)
 	}
 
