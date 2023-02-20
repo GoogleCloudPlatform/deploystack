@@ -93,12 +93,16 @@ func createProject(projectID string, q *Queue) tea.Cmd {
 		}
 
 		qmod := q.Model("region")
-		r := qmod.(*picker)
-		r.querySlowText = "Getting regions can take a little extra time if this is a new project"
+		if qmod != nil {
+			r := qmod.(*picker)
+			r.querySlowText = "Getting regions can take a little extra time if this is a new project"
+		}
 
 		qmod = q.Model("zone")
-		z := qmod.(*picker)
-		z.querySlowText = "Getting zones can take a little extra time if this is a new project"
+		if qmod != nil {
+			z := qmod.(*picker)
+			z.querySlowText = "Getting zones can take a little extra time if this is a new project"
+		}
 
 		q.Save("currentProject", projectID)
 
