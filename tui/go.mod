@@ -4,26 +4,26 @@ go 1.20
 
 require (
 	cloud.google.com/go/domains v0.8.0
-	github.com/GoogleCloudPlatform/deploystack v0.0.0-20230211225259-7dd3e51a73f5
-	github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230211225259-7dd3e51a73f5
+	github.com/GoogleCloudPlatform/deploystack v1.1.3
+	github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230221184722-2d2b928c6567
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/kylelemons/godebug v1.1.0
 	github.com/muesli/termenv v0.14.0
-	github.com/nyaruka/phonenumbers v1.1.5
+	github.com/nyaruka/phonenumbers v1.1.6
 	golang.org/x/term v0.5.0
 	golang.org/x/text v0.7.0
-	google.golang.org/api v0.109.0
-	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc
+	google.golang.org/api v0.110.0
+	google.golang.org/genproto v0.0.0-20230221151758-ace64dc21148
 )
 
 require (
-	cloud.google.com/go v0.109.0 // indirect
+	cloud.google.com/go v0.110.0 // indirect
 	cloud.google.com/go/compute v1.18.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	cloud.google.com/go/iam v0.10.0 // indirect
-	cloud.google.com/go/longrunning v0.4.0 // indirect
+	cloud.google.com/go/iam v0.12.0 // indirect
+	cloud.google.com/go/longrunning v0.4.1 // indirect
 	cloud.google.com/go/scheduler v1.8.0 // indirect
 	cloud.google.com/go/storage v1.29.0 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
@@ -35,7 +35,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.2.2 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
@@ -44,10 +44,10 @@ require (
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
+	github.com/muesli/ansi v0.0.0-20221106050444-61f0cd9a192a // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/sahilm/fuzzy v0.1.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
@@ -55,7 +55,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.5.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
