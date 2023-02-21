@@ -5,6 +5,7 @@ go 1.20
 require (
 	cloud.google.com/go/domains v0.8.0
 	github.com/GoogleCloudPlatform/deploystack v1.1.3
+	github.com/GoogleCloudPlatform/deploystack/config v0.0.0-20230221221222-a9ff58db1f28
 	github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230221184722-2d2b928c6567
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2

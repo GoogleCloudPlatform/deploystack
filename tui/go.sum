@@ -18,6 +18,8 @@ cloud.google.com/go/storage v1.29.0/go.mod h1:4puEjyTKnku6gfKoTfNOU/W+a9JyuVNxjp
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/GoogleCloudPlatform/deploystack v1.1.3 h1:j1NuQtQWQg1/8ekGONZi/4P/I3B5OCBoI71X4g8zPms=
 github.com/GoogleCloudPlatform/deploystack v1.1.3/go.mod h1:5PKnn01qfubUU4qjJYSdh+ztN3G7sMCey+bNgKO2tV0=
+github.com/GoogleCloudPlatform/deploystack/config v0.0.0-20230221221222-a9ff58db1f28 h1:LL1C2QZp6iIKUGhr8lm21IEZat0617BrFDqQ0HZd6n0=
+github.com/GoogleCloudPlatform/deploystack/config v0.0.0-20230221221222-a9ff58db1f28/go.mod h1:bJcIzv2d/00c1N4w5f9/eD2QWMIn69jbnvbjIMsRgCU=
 github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230221184722-2d2b928c6567 h1:v8QM0TeT7tsu2TngEZVjZP3mRjZ85S2hMewsW8TnC68=
 github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230221184722-2d2b928c6567/go.mod h1:EwSfKBfysxv/rSCDiXdFjWwxHravipirIpGztR52f3E=
 github.com/Microsoft/go-winio v0.5.2/go.mod h1:WpS1mjBmmwHBEWmogvA2mj8546UReBk4v8QkMxJ6pZY=
