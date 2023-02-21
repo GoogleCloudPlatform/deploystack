@@ -44,7 +44,7 @@ steps:
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
-     dir: "gcloudtf"
+     dir: "terraform"
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
@@ -52,7 +52,7 @@ steps:
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
-     dir: "dsgithub"   
+     dir: "github"   
 timeout: 3600s
 options:
   machineType: 'E2_HIGHCPU_8'
