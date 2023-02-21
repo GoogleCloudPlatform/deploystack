@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.1.2...v1.1.3) (2023-02-21)
+
+
+### Bug Fixes
+
+* still trying to get please-release to work ([d0967bd](https://github.com/GoogleCloudPlatform/deploystack/commit/d0967bd529d66e68bd2d85e37b536967a230361e))
+
 ## [1.1.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.1.1...v1.1.2) (2023-02-21)
 
 
