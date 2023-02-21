@@ -1,4 +1,4 @@
 
 Setting                            Value                                                  
                                                                                           
-[1;mTestkey[0m                            testvalue                                              
+[0;37mTestkey[0m                            [1;36mtestvalue[0m                                              

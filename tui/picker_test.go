@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tui
 
 import (
@@ -13,6 +27,7 @@ func TestPicker(t *testing.T) {
 		listLabel      string
 		spinnerLabel   string
 		key            string
+		defaultValue   string
 		preProcessor   tea.Cmd
 		state          string
 		outputFile     string
@@ -65,6 +80,21 @@ func TestPicker(t *testing.T) {
 			msg:          tea.Msg([]list.Item{item{label: "Choice", value: "choice"}}),
 			outputFile:   "testdata/picker_items.txt",
 		},
+		"items_with_default": {
+			listLabel:    "test",
+			spinnerLabel: "test",
+			key:          "test",
+			preProcessor: nil,
+			state:        "displaying",
+			msg: tea.Msg([]list.Item{
+				item{label: "Choice", value: "choice"},
+				item{label: "Choice1", value: "choice1"},
+				item{label: "Choice2", value: "choice2"},
+				item{label: "Choice3", value: "choice3"},
+			}),
+			defaultValue: "choice3",
+			outputFile:   "testdata/picker_items_with_default.txt",
+		},
 		"error": {
 			listLabel:    "test",
 			spinnerLabel: "test",
@@ -109,20 +139,21 @@ func TestPicker(t *testing.T) {
 		},
 
 		"send_ctrl_c": {
-			listLabel:    "test",
-			spinnerLabel: "test",
-			key:          "test",
+			listLabel:    "",
+			spinnerLabel: "",
+			key:          "",
 			preProcessor: nil,
-			state:        "idle",
+			state:        "",
 			msg:          tea.KeyMsg{Type: tea.KeyCtrlC},
 			outputFile:   "testdata/picker_send_ctrl_c.txt",
+			exkey:        "",
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			q := getTestQueue(appTitle, "test")
-			dummyPicker := newPicker("dummy", "dummy", "dummy", nil)
+			dummyPicker := newPicker("dummy", "dummy", "dummy", "", nil)
 
 			if tc.exkey == "" {
 				tc.exkey = tc.key
@@ -140,7 +171,7 @@ func TestPicker(t *testing.T) {
 				tc.exspinnerLabel = tc.spinnerLabel
 			}
 
-			ptmp := newPicker(tc.listLabel, tc.spinnerLabel, tc.key, tc.preProcessor)
+			ptmp := newPicker(tc.listLabel, tc.spinnerLabel, tc.key, tc.defaultValue, tc.preProcessor)
 
 			if tc.content != "" {
 				ptmp.addContent(tc.content)
@@ -184,11 +215,14 @@ func TestPicker(t *testing.T) {
 				t.Fatalf("state - want '%s' got '%s'", tc.exstate, newP.state)
 			}
 
-			content := newP.View()
-			tcOutput := readTestFile(tc.outputFile)
-			if content != tcOutput {
-				writeDebugFile(content, tc.outputFile)
-				t.Fatalf("text wasn't the same")
+			if newP.key != "" {
+				content := newP.View()
+				tcOutput := readTestFile(tc.outputFile)
+				if content != tcOutput {
+					writeDebugFile(content, tc.outputFile)
+					t.Fatalf("text wasn't the same")
+				}
+
 			}
 		})
 	}

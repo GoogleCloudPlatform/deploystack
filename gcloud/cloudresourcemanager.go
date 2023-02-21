@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gcloud
 
 import (
@@ -9,26 +23,6 @@ import (
 	"time"
 
 	"google.golang.org/api/cloudresourcemanager/v1"
-)
-
-var (
-	// ErrorBillingInvalidAccount is the error you get if you pass in a bad
-	// Billing Account ID
-	ErrorBillingInvalidAccount = fmt.Errorf("not a valid billing account")
-	// ErrorBillingNoPermission is the error you get if the user lacks billing
-	// related permissions
-	ErrorBillingNoPermission = fmt.Errorf("user lacks permission")
-	// ErrorProjectCreateTooLong is an error when you try to create a project
-	// wuth more than 30 characters
-	ErrorProjectCreateTooLong = fmt.Errorf("project_id contains too many characters, limit 30")
-	// ErrorProjectInvalidCharacters is an error when you try and pass bad
-	// characters into a CreateProjectCall
-	ErrorProjectInvalidCharacters = fmt.Errorf("project_id contains invalid characters")
-	// ErrorProjectAlreadyExists is an error when you try and create a project
-	// That already exists
-	ErrorProjectAlreadyExists = fmt.Errorf("project_id already exists")
-	// ErrorProjectDidNotFinish is an error we cannot confirm that project completion actually occured
-	ErrorProjectDidNotFinish = fmt.Errorf("project creation did not complete in a timely manner")
 )
 
 func (c *Client) getCloudResourceManagerService() (*cloudresourcemanager.Service, error) {
@@ -87,6 +81,12 @@ func (c *Client) ProjectParentGet(id string) (*cloudresourcemanager.ResourceId, 
 func (c *Client) ProjectList() ([]ProjectWithBilling, error) {
 	resp := []ProjectWithBilling{}
 
+	i := c.get("ProjectList")
+	switch val := i.(type) {
+	case []ProjectWithBilling:
+		return val, nil
+	}
+
 	svc, err := c.getCloudResourceManagerService()
 	if err != nil {
 		return resp, err
@@ -105,6 +105,8 @@ func (c *Client) ProjectList() ([]ProjectWithBilling, error) {
 	sort.Slice(pwb, func(i, j int) bool {
 		return strings.ToLower(pwb[i].Name) < strings.ToLower(pwb[j].Name)
 	})
+
+	c.save("ProjectList", pwb)
 
 	return pwb, nil
 }
@@ -141,10 +143,13 @@ func (c *Client) ProjectCreate(project, parent, parentType string) error {
 		if strings.Contains(err.Error(), "project_id must be at most 30 characters long") {
 			return ErrorProjectCreateTooLong
 		}
+		if strings.Contains(err.Error(), "must be at least 6 characters long") {
+			return ErrorProjectCreateTooShort
+		}
 		if strings.Contains(err.Error(), "project_id contains invalid characters") {
 			return ErrorProjectInvalidCharacters
 		}
-		if strings.Contains(err.Error(), "requested entity already exists") {
+		if strings.Contains(err.Error(), "entity already exists") {
 			return ErrorProjectAlreadyExists
 		}
 
@@ -166,6 +171,21 @@ func (c *Client) ProjectCreate(project, parent, parentType string) error {
 	}
 
 	return ErrorProjectCreateTooLong
+}
+
+// ProjectGet returns the details of a single project
+func (c *Client) ProjectGet(project string) (*cloudresourcemanager.Project, error) {
+	svc, err := c.getCloudResourceManagerService()
+	if err != nil {
+		return nil, err
+	}
+
+	proj, err := svc.Projects.Get(project).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return proj, nil
 }
 
 // ProjectDelete does the work of actually deleting an existing project in

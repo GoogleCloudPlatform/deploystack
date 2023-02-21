@@ -1,5 +1,6 @@
 DIR="../../test_files/gcloudout"
 
+gcloud projects list --format="value(name)" > $DIR/projects.txt
 gcloud compute regions list --format="value(name)" > $DIR/regions_compute.txt
 gcloud compute zones list --format="value(name)"> $DIR/zones.txt
 gcloud run regions list --format="value(name)" > $DIR/regions_run.txt

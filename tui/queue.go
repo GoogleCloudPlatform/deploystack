@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tui
 
 import (
@@ -11,6 +25,7 @@ type QueueModel interface {
 	tea.Model
 	addQueue(*Queue)
 	getKey() string
+	setValue(string)
 	addContent(...string)
 	clearContent()
 	clear()
@@ -35,7 +50,23 @@ func NewQueue(s *deploystack.Stack, client UIClient) Queue {
 	q := Queue{stack: s, store: map[string]interface{}{}}
 	q.client = client
 	q.index = []string{}
+
+	currentProject, _ := client.ProjectIDGet()
+
+	q.Save("currentProject", currentProject)
 	return q
+}
+
+// Model retrieves a give model by key from the queue
+func (q *Queue) Model(key string) QueueModel {
+
+	for _, v := range q.models {
+		if v.getKey() == key {
+			return v
+		}
+	}
+
+	return nil
 }
 
 // Save stores a value in a simple cache for communicating between operations
@@ -101,21 +132,23 @@ func (q *Queue) next() (tea.Model, tea.Cmd) {
 	return r, r.Init()
 }
 
+func (q *Queue) prev() (tea.Model, tea.Cmd) {
+	q.current--
+	if q.current <= 0 {
+		return q.models[0], nil
+	}
+
+	r := q.models[q.current]
+	r.setValue("")
+	return r, r.Init()
+}
+
 func (q *Queue) currentKey() string {
 	if len(q.models) == 0 {
 		return ""
 	}
 
 	r := q.models[q.current].getKey()
-	return r
-}
-
-func (q *Queue) nextKey() string {
-	i := q.current + 1
-	if i >= len(q.models) {
-		return ""
-	}
-	r := q.models[i].getKey()
 	return r
 }
 
@@ -128,11 +161,14 @@ func (q *Queue) InitializeUI() {
 	firstPage := newPage("firstpage", []component{newTextBlock(explainText)})
 	descPage := newPage("descpage", []component{desc})
 
+	firstPage.showProgress = false
+	descPage.showProgress = false
+
 	endpage := newPage("endpage", []component{
 		newTextBlock(titleStyle.Render("Project Settings")),
 		newSettingsTable(q.stack),
 	})
-	endpage.addPostProcessor(cleanUp)
+	endpage.addPreProcessor(cleanUp(q))
 
 	q.header = appHeader
 	q.add(&firstPage)
@@ -141,12 +177,75 @@ func (q *Queue) InitializeUI() {
 	q.add(&endpage)
 }
 
+func (q *Queue) getSettings() string {
+	r := newSettingsTable(q.stack)
+
+	return r.render()
+}
+
+func (q *Queue) exitPage() (tea.Model, tea.Cmd) {
+	page := newPage("exit", []component{
+		newTextBlock("You've chosen to stop moving forward through DeployStack. \n"),
+		newTextBlock("If this was an error, you can try again by typing 'deploystack install' at the command prompt \n"),
+	})
+	page.showProgress = false
+	q.add(&page)
+	q.Save("halted", true)
+
+	quit := func(string, *Queue) tea.Cmd {
+		return tea.Quit
+	}
+
+	page.addPostProcessor(quit)
+
+	return page, nil
+}
+
+func (q *Queue) countTotalSteps() int {
+	total := len(q.models)
+
+	for _, v := range q.models {
+		if v.getKey() == "firstpage" {
+			total--
+		}
+
+		if v.getKey() == "descpage" {
+			total--
+		}
+
+		if v.getKey() == "endpage" {
+			total--
+		}
+	}
+	return total
+}
+
+func (q *Queue) calcPercent() int {
+
+	if q.current == 2 {
+		return 0
+	}
+
+	if q.current == len(q.models)-1 {
+		return 100
+	}
+	total := q.countTotalSteps()
+	current := q.current + 1 - 2
+	percentage := int((float32(current) / float32(total)) * 100)
+
+	if percentage >= 100 && q.current != len(q.models)-1 {
+		return 90
+	}
+
+	return percentage
+}
+
 // ProcessConfig does the work of turning a DeployStack config file to a set
 // of tui screens. It's separate from Initialize in case we want to be able
 // to populate setting and variables with other information before running
 // the genreation of those screens
 func (q *Queue) ProcessConfig() error {
-	var project, region, zone, projectnumber, name string
+	var project, name string
 	var err error
 
 	s := q.stack
@@ -156,8 +255,8 @@ func (q *Queue) ProcessConfig() error {
 	}
 
 	project = s.GetSetting("project_id")
-	region = s.GetSetting("region")
-	zone = s.GetSetting("zone")
+	region := s.GetSetting("region")
+	zone := s.GetSetting("zone")
 	name = s.Config.Name
 
 	if name == "" {
@@ -177,19 +276,21 @@ func (q *Queue) ProcessConfig() error {
 	}
 
 	if len(s.Config.Projects.Items) > 0 {
+
+		currentProject := q.Get("currentProject").(string)
+
 		for _, v := range s.Config.Projects.Items {
-
-			projectsPage := newProjectSelector(
-				v.Name,
-				v.UserPrompt,
-				getProjects(q),
-			)
-			q.add(&projectsPage)
-
-			projectCreator := newProjectCreator(v.Name + "_new")
-			q.add(projectCreator)
-
+			s := newProjectSelector(v.Name, v.UserPrompt, currentProject, getProjects(q))
+			c := newProjectCreator(v.Name + projNewSuffix)
+			b := newBillingSelector(v.Name+billNewSuffix, getBillingAccounts(q), attachBilling)
+			q.add(&s, &c, &b)
 		}
+	}
+
+	if s.Config.BillingAccount {
+		b := newBillingSelector("billing_account", getBillingAccounts(q), nil)
+		b.list.Title = "Choose a billing account to use for with this application"
+		q.add(&b)
 	}
 
 	if s.Config.ConfigureGCEInstance {
@@ -204,20 +305,6 @@ func (q *Queue) ProcessConfig() error {
 	zone = s.GetSetting("zone")
 	if s.Config.Zone && len(zone) == 0 {
 		newZone(q)
-	}
-
-	if s.Config.ProjectNumber {
-
-		proj, err := q.client.ProjectIDGet()
-		if err != nil {
-			return err
-		}
-
-		projectnumber, err = q.client.ProjectNumberGet(proj)
-		if err != nil {
-			return err
-		}
-		s.AddSetting("project_number", projectnumber)
 	}
 
 	if s.Config.Domain {
@@ -239,7 +326,7 @@ func (q *Queue) add(m ...QueueModel) {
 	for _, v := range m {
 		// Basically if something dumb happens we don't rewrite queue
 		// And since this is a author issue, not a user one, we should
-		// fails silently
+		// fail silently
 		if _, ok := uniques[v.getKey()]; ok {
 			continue
 		}
@@ -248,6 +335,16 @@ func (q *Queue) add(m ...QueueModel) {
 		q.models = append(q.models, v)
 		q.index = append(q.index, v.getKey())
 	}
+}
+
+// method only used for testing
+func (q *Queue) insert(m ...QueueModel) {
+	tmp := q.models[:len(q.models)-1]
+	tmp = append(tmp, m...)
+	tmp = append(tmp, q.models[len(q.models)-1])
+
+	q.models = tmp
+
 }
 
 // Start returns the first model to the hosting application so that it can

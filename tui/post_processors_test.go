@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tui
 
 import (
@@ -6,9 +20,47 @@ import (
 	"testing"
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+func TestProcessProjectSelection(t *testing.T) {
+	tests := map[string]struct {
+		in       string
+		want     tea.Msg
+		setError bool
+		err      error
+	}{
+		"basic": {
+			in:   "testproject",
+			want: successMsg{},
+		},
+		"fail": {
+			in:       "testproject",
+			want:     errMsg{err: errForced},
+			setError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			q := getTestQueue(appTitle, "test")
+
+			if tc.setError {
+				errMock := GetMock(0)
+				errMock.forceErr = true
+				q.client = errMock
+			}
+
+			cmd := processProjectSelection(tc.in, &q)
+			got := cmd()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
 
 func TestCheckYesOrNo(t *testing.T) {
 	tests := map[string]struct {
@@ -129,7 +181,7 @@ func TestMassagePhoneNumber(t *testing.T) {
 	}{
 		"Good":  {"800 555 1234", "+1.8005551234", nil},
 		"Weird": {"d746fd83843", "+1.74683843", nil},
-		"BAD":   {"dghdhdfuejfhfhfhrghfhfhdhgreh", "", errorCustomNotValidPhoneNumber},
+		"BAD":   {"dghdhdfuejfhfhfhrghfhfhdhgreh", "", ErrorCustomNotValidPhoneNumber},
 	}
 
 	for name, tc := range tests {
@@ -294,6 +346,44 @@ func TestRegisterDomain(t *testing.T) {
 	}
 }
 
+func TestAttachBilling(t *testing.T) {
+	tests := map[string]struct {
+		in       string
+		want     tea.Msg
+		setError bool
+		err      error
+	}{
+		"basic": {
+			in:   "000000-000000-000000",
+			want: successMsg{},
+		},
+		"fail": {
+			in:       "000000-000000-000000",
+			want:     errMsg{err: fmt.Errorf("attachBilling: could not attach billing to project: %w", errForced)},
+			setError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+
+			if tc.setError {
+				errMock := GetMock(0)
+				errMock.forceErr = true
+				q.client = errMock
+			}
+
+			cmd := attachBilling(tc.in, &q)
+			got := cmd()
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestCreateProject(t *testing.T) {
 	tests := map[string]struct {
 		in  string
@@ -379,7 +469,7 @@ func TestValidateGCEConfiguration(t *testing.T) {
 		value string
 	}{
 		// "nowebserver":  {in: "n", msg: successMsg{unset: true}, value: ""},
-		"yeswebserver": {in: "y", msg: successMsg{unset: true}, value: deploystack.HTTPServerTags},
+		"yeswebserver": {in: "y", msg: successMsg{unset: true}, value: gcloud.HTTPServerTags},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

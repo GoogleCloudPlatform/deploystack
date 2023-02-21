@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gcloud
 
 import (
@@ -10,7 +24,7 @@ import (
 )
 
 func TestGetProjectNumbers(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 
 	tests := map[string]struct {
 		input string
@@ -33,7 +47,7 @@ func TestGetProjectNumbers(t *testing.T) {
 }
 
 func TestCheckProject(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 
 	tests := map[string]struct {
 		input string
@@ -54,7 +68,7 @@ func TestCheckProject(t *testing.T) {
 }
 
 func TestGetProjectParent(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input string
 		want  *cloudresourcemanager.ResourceId
@@ -82,41 +96,53 @@ func TestGetProjectParent(t *testing.T) {
 }
 
 func TestGetProjects(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
-		want []string
+		filepath string
 	}{
-		"1": {want: []string{
-			creds["project_id"],
-		}},
+		"1": {filepath: "../test_files/gcloudout/projects.txt"},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got, err := c.ProjectList()
 
+			raw := readTestFile(tc.filepath)
+			want := strings.Split(strings.TrimSpace(raw), "\n")
+
 			gotfiltered := []string{}
 
 			for _, v := range got {
-				if !strings.Contains(v.Name, "zprojectnamedelete") {
-					gotfiltered = append(gotfiltered, v.Name)
-				}
+				gotfiltered = append(gotfiltered, v.Name)
 			}
 
-			sort.Strings(tc.want)
+			sort.Strings(want)
 			sort.Strings(gotfiltered)
 
-			pass := false
-			for _, v := range gotfiltered {
-				if v == tc.want[0] {
-					pass = true
+			extraGots := []string{}
+			for _, gotItem := range gotfiltered {
+				found := false
+				for _, wantItem := range want {
+					if wantItem == gotItem {
+						found = true
+						break
+					}
 				}
+
+				if !found {
+					extraGots = append(extraGots, gotItem)
+				}
+
 			}
 
-			if !pass {
-				t.Logf("Expected:%s\n", tc.want)
-				t.Logf("Got     :%s", gotfiltered)
-				t.Fatalf("expected: %v got: %v", len(tc.want), len(gotfiltered))
+			if len(extraGots) > 0 {
+				for _, v := range extraGots {
+					if !strings.Contains(v, "ds-unittest") && !strings.Contains(v, "ds-test-") {
+						t.Logf("extra gots: %v ", extraGots)
+						t.Fatalf("expected: %v got: %v", len(want), len(gotfiltered))
+					}
+				}
+
 			}
 
 			if err != nil {
@@ -127,10 +153,11 @@ func TestGetProjects(t *testing.T) {
 }
 
 func TestCreateProject(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
-		input string
-		err   error
+		input   string
+		err     error
+		noRando bool
 	}{
 		"Too long": {
 			input: "zprojectnamedeletethisprojectnamehastoomanycharacters",
@@ -144,14 +171,38 @@ func TestCreateProject(t *testing.T) {
 			input: "spaces in name",
 			err:   ErrorProjectInvalidCharacters,
 		},
-		// "Duplicate": {input: projectID, err: ErrorProjectAlreadyExists},
+		// TODO: Figure out why this isn't working for test account
+		// "Duplicate": {
+		// 	input:   projectID,
+		// 	err:     ErrorProjectAlreadyExists,
+		// 	noRando: true,
+		// },
+		"Too short": {
+			input: "",
+			err:   ErrorProjectCreateTooShort,
+		},
+		// TODO: Figure out why this isn't working for test account
+		// "Should work": {
+		// 	input: "ds-unittest",
+		// 	err:   nil,
+		// },
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			name := tc.input + randSeq(5)
-			err := c.ProjectCreate(name, "", "")
-			c.ProjectDelete(name)
+			if tc.noRando {
+				name = tc.input
+			}
+
+			err := c.ProjectCreate(name, creds["parent"], creds["parent_type"])
+
+			// Don't accidently delete the project that you are using to run
+			// these tests. Yes I found out the hard way
+			if name != projectID {
+				c.ProjectDelete(name)
+			}
+
 			if err != tc.err {
 				t.Fatalf("expected: %v, got: %v project: %s", tc.err, err, name)
 			}
@@ -160,7 +211,7 @@ func TestCreateProject(t *testing.T) {
 }
 
 func TestGetProject(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	expected := projectID
 
 	old, err := c.ProjectIDGet()

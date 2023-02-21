@@ -1,13 +1,12 @@
-This process will create the following:
+[0;37mThis process will create the following:[0m                                                        
                                                         
-                                                        
-[1;mVM template[0m             Instance Template               
-[1;mClustering[0m              Managed Instance Group          
-[1;mLoad Balancing[0m          Load Balancer                   
+[0;37mVM template[0m             [1;36mInstance Template[0m               
+[0;37mClustering[0m              [1;36mManaged Instance Group[0m          
+[0;37mLoad Balancing[0m          [1;36mLoad Balancer[0m                   
 
-This process will configure and create the following: 
+[0;37m[0m
 
-It's going to take around 5 minutes.
+[0;37mIt's going to take around [0m[1;36m5[0m[0;37m minutes.[0m
 
-If you would like more information about this stack, please read the documentation at: [4;;4mh[0m[4;;4mt[0m[4;;4mt[0m[4;;4mp[0m[4;;4ms[0m[4;;4m:[0m[4;;4m/[0m[4;;4m/[0m[4;;4me[0m[4;;4mx[0m[4;;4ma[0m[4;;4mm[0m[4;;4mp[0m[4;;4ml[0m[4;;4me[0m[4;;4m.[0m[4;;4mc[0m[4;;4mo[0m[4;;4mm[0m
+[0;37mIf you would like more information about this stack, [0m[0;37mplease read the documentation at: [0m[4;36mhttps://example.com[0m
 

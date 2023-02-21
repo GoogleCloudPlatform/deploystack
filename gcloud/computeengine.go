@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gcloud
 
 import (
@@ -5,27 +19,25 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/deploystack"
 	"google.golang.org/api/compute/v1"
 )
 
 // DiskProjects are the list of projects for disk images for Compute Engine
-var DiskProjects = deploystack.LabeledValues{
-	deploystack.LabeledValue{Label: "CentOS", Value: "centos-cloud"},
-	deploystack.LabeledValue{Label: "Container-Optimized OS (COS)", Value: "cos-cloud"},
-	// TODO: figure out how to best set this to DefaultImageProject
-	deploystack.LabeledValue{Label: "Debian", Value: "debian-cloud", IsDefault: true},
-	deploystack.LabeledValue{Label: "Fedora CoreOS", Value: "fedora-coreos-cloud"},
-	deploystack.LabeledValue{Label: "Red Hat Enterprise Linux (RHEL)", Value: "rhel-cloud"},
-	deploystack.LabeledValue{Label: "Red Hat Enterprise Linux (RHEL) for SAP", Value: "rhel-sap-cloud"},
-	deploystack.LabeledValue{Label: "Rocky Linux", Value: "rocky-linux-cloud"},
-	deploystack.LabeledValue{Label: "SQL Server", Value: "windows-sql-cloud"},
-	deploystack.LabeledValue{Label: "SUSE Linux Enterprise Server (SLES)", Value: "suse-cloud"},
-	deploystack.LabeledValue{Label: "SUSE Linux Enterprise Server (SLES) for SAP", Value: "suse-cloud"},
-	deploystack.LabeledValue{Label: "SUSE Linux Enterprise Server (SLES) BYOS", Value: "suse-byos-cloud"},
-	deploystack.LabeledValue{Label: "Ubuntu LTS", Value: "ubuntu-os-cloud"},
-	deploystack.LabeledValue{Label: "Ubuntu Pro", Value: "ubuntu-os-pro-cloud"},
-	deploystack.LabeledValue{Label: "Windows Server", Value: "windows-cloud"},
+var DiskProjects = LabeledValues{
+	LabeledValue{Label: "CentOS", Value: "centos-cloud"},
+	LabeledValue{Label: "Container-Optimized OS (COS)", Value: "cos-cloud"},
+	LabeledValue{Label: "Debian", Value: "debian-cloud", IsDefault: true},
+	LabeledValue{Label: "Fedora CoreOS", Value: "fedora-coreos-cloud"},
+	LabeledValue{Label: "Red Hat Enterprise Linux (RHEL)", Value: "rhel-cloud"},
+	LabeledValue{Label: "Red Hat Enterprise Linux (RHEL) for SAP", Value: "rhel-sap-cloud"},
+	LabeledValue{Label: "Rocky Linux", Value: "rocky-linux-cloud"},
+	LabeledValue{Label: "SQL Server", Value: "windows-sql-cloud"},
+	LabeledValue{Label: "SUSE Linux Enterprise Server (SLES)", Value: "suse-cloud"},
+	LabeledValue{Label: "SUSE Linux Enterprise Server (SLES) for SAP", Value: "suse-cloud"},
+	LabeledValue{Label: "SUSE Linux Enterprise Server (SLES) BYOS", Value: "suse-byos-cloud"},
+	LabeledValue{Label: "Ubuntu LTS", Value: "ubuntu-os-cloud"},
+	LabeledValue{Label: "Ubuntu Pro", Value: "ubuntu-os-pro-cloud"},
+	LabeledValue{Label: "Windows Server", Value: "windows-cloud"},
 }
 
 func (c *Client) getComputeService(project string) (*compute.Service, error) {
@@ -104,6 +116,12 @@ func (c *Client) ZoneList(project, region string) ([]string, error) {
 func (c *Client) MachineTypeList(project, zone string) (*compute.MachineTypeList, error) {
 	resp := &compute.MachineTypeList{}
 
+	i := c.get("MachineTypeList" + zone)
+	switch val := i.(type) {
+	case *compute.MachineTypeList:
+		return val, nil
+	}
+
 	svc, err := c.getComputeService(project)
 	if err != nil {
 		return resp, err
@@ -113,6 +131,8 @@ func (c *Client) MachineTypeList(project, zone string) (*compute.MachineTypeList
 	if err != nil {
 		return resp, err
 	}
+
+	c.save("MachineTypeList"+zone, results)
 
 	return results, nil
 }
@@ -180,9 +200,9 @@ func (c *Client) ImageLatestGet(project, imageproject, imagefamily string) (stri
 }
 
 // MachineTypeFamilyList gets the list of machine type families
-func (c *Client) MachineTypeFamilyList(imgs *compute.MachineTypeList) deploystack.LabeledValues {
+func (c *Client) MachineTypeFamilyList(imgs *compute.MachineTypeList) LabeledValues {
 	fam := make(map[string]string)
-	lb := deploystack.LabeledValues{}
+	lb := LabeledValues{}
 
 	for _, v := range imgs.Items {
 		parts := strings.Split(v.Name, "-")
@@ -195,21 +215,21 @@ func (c *Client) MachineTypeFamilyList(imgs *compute.MachineTypeList) deploystac
 		if key == "" {
 			continue
 		}
-		lb = append(lb, deploystack.LabeledValue{
+		lb = append(lb, LabeledValue{
 			Value:     value,
 			Label:     key,
 			IsDefault: false,
 		})
 	}
-	lb.SetDefault(deploystack.DefaultImageFamily)
+	lb.SetDefault(DefaultImageFamily)
 	lb.Sort()
 	return lb
 }
 
 // MachineTypeListByFamily retrieves the list of machine types available
 // for each family
-func (c *Client) MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) deploystack.LabeledValues {
-	lb := deploystack.LabeledValues{}
+func (c *Client) MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) LabeledValues {
+	lb := LabeledValues{}
 
 	tempTypes := []compute.MachineType{}
 
@@ -227,7 +247,7 @@ func (c *Client) MachineTypeListByFamily(imgs *compute.MachineTypeList, family s
 		if strings.Contains(v.Name, family) {
 			value := v.Name
 			label := fmt.Sprintf("%s %s", v.Name, v.Description)
-			lb = append(lb, deploystack.LabeledValue{
+			lb = append(lb, LabeledValue{
 				Value:     value,
 				Label:     label,
 				IsDefault: false,
@@ -240,9 +260,9 @@ func (c *Client) MachineTypeListByFamily(imgs *compute.MachineTypeList, family s
 }
 
 // ImageFamilyList gets a list of image families
-func (c *Client) ImageFamilyList(imgs *compute.ImageList) deploystack.LabeledValues {
+func (c *Client) ImageFamilyList(imgs *compute.ImageList) LabeledValues {
 	fam := make(map[string]bool)
-	lb := deploystack.LabeledValues{}
+	lb := LabeledValues{}
 
 	for _, v := range imgs.Items {
 		fam[v.Family] = false
@@ -252,25 +272,25 @@ func (c *Client) ImageFamilyList(imgs *compute.ImageList) deploystack.LabeledVal
 		if i == "" {
 			continue
 		}
-		lb = append(lb, deploystack.LabeledValue{
+		lb = append(lb, LabeledValue{
 			Value:     i,
 			Label:     i,
 			IsDefault: false,
 		})
 	}
-	lb.SetDefault(deploystack.DefaultImageFamily)
+	lb.SetDefault(DefaultImageFamily)
 	lb.Sort()
 	return lb
 }
 
 // ImageTypeListByFamily retrieves a list of iamge types by the family
-func (c *Client) ImageTypeListByFamily(imgs *compute.ImageList, project, family string) deploystack.LabeledValues {
-	lb := deploystack.LabeledValues{}
+func (c *Client) ImageTypeListByFamily(imgs *compute.ImageList, project, family string) LabeledValues {
+	lb := LabeledValues{}
 
 	for _, v := range imgs.Items {
 		if v.Family == family {
 			value := fmt.Sprintf("%s/%s", project, v.Name)
-			lb = append(lb, deploystack.LabeledValue{
+			lb = append(lb, LabeledValue{
 				Value:     value,
 				Label:     v.Name,
 				IsDefault: false,

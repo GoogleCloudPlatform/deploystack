@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tui
 
 import (
@@ -9,6 +23,8 @@ import (
 	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type component interface {
@@ -46,30 +62,20 @@ func newDescription(stack *deploystack.Stack) description {
 }
 
 func (d *description) parse() (productList, []string) {
-	content := []string{}
 	p := productList{}
 
-	sl := strings.Split(d.stack.Config.Description, "\n")
+	if len(d.stack.Config.Products) > 0 {
 
-	for _, v := range sl {
-		if strings.Index(v, "*") > -1 {
-			val := strings.TrimSpace(v)
-			val = strings.ReplaceAll(val, "*", "")
-			psl := strings.Split(val, "-")
-			if psl != nil && len(psl) > 1 {
-				tmp := struct{ item, product string }{}
-				tmp.item = strings.TrimSpace(psl[0])
-				tmp.product = strings.TrimSpace(psl[1])
-
-				p = append(p, tmp)
-			}
-
-			continue
+		for _, v := range d.stack.Config.Products {
+			tmp := struct{ item, product string }{}
+			tmp.item = strings.TrimSpace(v.Info)
+			tmp.product = strings.TrimSpace(v.Product)
+			p = append(p, tmp)
 		}
-		content = append(content, v)
+
 	}
 
-	return p, content
+	return p, []string{d.stack.Config.Description}
 }
 
 func (d description) render() string {
@@ -101,19 +107,17 @@ func (d description) render() string {
 	t.SetStyles(tableStyle)
 
 	if len(list) > 0 {
-		doc.WriteString("This process will create the following:")
-		doc.WriteString("\n")
-
+		doc.WriteString(normal.Render("This process will create the following:"))
 		doc.WriteString(t.View())
 		doc.WriteString("\n\n")
 	}
 
 	for _, v := range additionalText {
-		doc.WriteString(v)
+		doc.WriteString(normal.Render(v))
 		doc.WriteString("\n\n")
 	}
 
-	doc.WriteString("It's going to take around ")
+	doc.WriteString(normal.Render("It's going to take around "))
 	doc.WriteString(strong.Render(strconv.Itoa(d.stack.Config.Duration)))
 
 	if d.stack.Config.Duration == 1 {
@@ -124,8 +128,8 @@ func (d description) render() string {
 	doc.WriteString("\n\n")
 
 	if len(d.stack.Config.DocumentationLink) > 0 {
-		doc.WriteString("If you would like more information about this stack, ")
-		doc.WriteString("please read the documentation at: ")
+		doc.WriteString(normal.Render("If you would like more information about this stack, "))
+		doc.WriteString(normal.Render("please read the documentation at: "))
 		doc.WriteString(url.Render(d.stack.Config.DocumentationLink))
 		doc.WriteString("\n\n")
 	}
@@ -141,22 +145,14 @@ func (e errorAlert) Render() string {
 	sb := strings.Builder{}
 
 	height := len(e.err.Error()) / width
-	style := lipgloss.NewStyle().
-		Width(100).
-		Height(height).
-		Border(lipgloss.NormalBorder()).
-		BorderForeground(alert).
-		PaddingLeft(3).
-		Foreground(grayWeak)
-
-	b := lipgloss.NewStyle().Bold(true).Foreground(alert)
-	cmd := lipgloss.NewStyle().Background(grayWeak).Foreground(alert)
+	style := errorAlertStyle.Copy()
+	style.Height(height)
 
 	sb.WriteString("\n")
-	sb.WriteString(b.Render("There was an error!"))
+	sb.WriteString(boldAlert.Render("There was an error!"))
 	sb.WriteString("\n")
 	if e.err.usermsg != "" {
-		sb.WriteString(fmt.Sprintf("%s", e.err.usermsg))
+		sb.WriteString(e.err.usermsg)
 		sb.WriteString("\n")
 	}
 	sb.WriteString("\n")
@@ -165,8 +161,10 @@ func (e errorAlert) Render() string {
 	sb.WriteString("\n")
 	sb.WriteString("\n")
 
-	sb.WriteString("You can exit the program by typing ")
-	sb.WriteString(cmd.Render("ctr+c."))
+	if !e.err.quit {
+		sb.WriteString("You can exit the program by typing ")
+		sb.WriteString(cmdStyle.Render("ctr+c."))
+	}
 
 	if e.err.target != "" {
 		text := " Press the Enter Key to go back and change choice "
@@ -197,13 +195,41 @@ func (h header) render() string {
 	doc := strings.Builder{}
 
 	content := lipgloss.JoinVertical(lipgloss.Left,
-		titleStyle.Render(h.title),
+		fmt.Sprintf("%s%s%s", textColors.code("bright cyan"), titleStyle.Render(h.title), clear),
 		subTitleStyle.Render(h.subtitle),
 	)
 
 	doc.WriteString(headerStyle.Render(content))
+
 	doc.WriteString("\n\n")
 	return doc.String()
+}
+
+func drawProgress(percent int) string {
+
+	sb := strings.Builder{}
+
+	label := "   Progress "
+	sb.WriteString(textStyle.Render(label))
+
+	totalWidth := hardWidthLimit - len(label)
+	completeLength := int(float32(totalWidth) * (float32(percent) / float32(100)))
+	pendingLength := totalWidth - completeLength
+
+	comp := strings.Builder{}
+	for i := 0; i < completeLength; i++ {
+		comp.WriteString("█")
+	}
+
+	pend := strings.Builder{}
+	for i := 0; i < pendingLength; i++ {
+		pend.WriteString("░")
+	}
+
+	sb.WriteString(completeStyle.Render(comp.String()))
+	sb.WriteString(pendingStyle.Render(pend.String()))
+
+	return sb.String()
 }
 
 type settingsTable struct {
@@ -281,9 +307,9 @@ func (s settingsTable) render() string {
 		}
 
 		settingRaw := strings.TrimSpace(setting)
-		settingRaw = strings.ReplaceAll(setting, "_", " ")
-		settingRaw = strings.ReplaceAll(setting, "-", " ")
-		formatted := strings.Title(strings.ReplaceAll(settingRaw, "_", " "))
+		settingRaw = strings.ReplaceAll(settingRaw, "_", " ")
+		settingRaw = strings.ReplaceAll(settingRaw, "-", " ")
+		formatted := cases.Title(language.English).String(settingRaw)
 		rows = append(rows, table.Row{titleStyle.Render(formatted), value})
 
 	}

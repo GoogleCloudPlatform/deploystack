@@ -1,10 +1,25 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tui
 
 import (
-	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/deploystack"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func getTestQueue(title, subtitle string) Queue {
@@ -78,6 +93,8 @@ func TestQueueStart(t *testing.T) {
 	}
 }
 
+func TestQueueCalculateProgress(t *testing.T) {}
+
 func TestQueueRemoveModel(t *testing.T) {
 	firstPage := newPage("firstpage", []component{newTextBlock(explainText)})
 	secondPage := newPage("secondpage", []component{newTextBlock(explainText)})
@@ -115,7 +132,6 @@ func TestQueueRemoveModel(t *testing.T) {
 
 			got := len(q.models)
 			if tc.want != got {
-				fmt.Printf("%+v", q.models)
 				t.Fatalf("want '%d' got '%d'", tc.want, got)
 			}
 		})
@@ -125,22 +141,22 @@ func TestQueueRemoveModel(t *testing.T) {
 func TestQueueProcess(t *testing.T) {
 	tests := map[string]struct {
 		config string
-		count  int
 		keys   []string
 	}{
 		"basic": {
 			config: "testdata/config_basic.yaml",
-			count:  0,
 			keys:   []string{},
 		},
 		"complex": {
 			config: "testdata/config_complex.yaml",
-			count:  27,
 			keys: []string{
 				"project_id",
 				"project_id_2",
-				"project_id_new",
-				"project_id_2_new",
+				"project_id" + projNewSuffix,
+				"project_id_2" + projNewSuffix,
+				"project_id" + billNewSuffix,
+				"project_id_2" + billNewSuffix,
+				"billing_account",
 				"gce-use-defaults",
 				"instance-name",
 				"region",
@@ -183,20 +199,20 @@ func TestQueueProcess(t *testing.T) {
 				t.Fatalf("expected no error, got %s", err)
 			}
 
-			if tc.count != len(q.models) {
+			if len(tc.keys) != len(q.models) {
 				t.Logf("Models")
 				for i, v := range q.models {
 					t.Logf("%d:%s", i, v.getKey())
 				}
 
-				t.Fatalf("count - want '%d' got '%d'", tc.count, len(q.models))
+				t.Fatalf("count - want '%d' got '%d'", len(tc.keys), len(q.models))
 			}
 
 			for _, v := range tc.keys {
 				q.removeModel(v)
 			}
 
-			if 0 != len(q.models) {
+			if len(q.models) != 0 {
 				t.Logf("Models remain")
 				for _, v := range q.models {
 					t.Logf("%s", v.getKey())
@@ -241,7 +257,7 @@ func TestQueueInitialize(t *testing.T) {
 				q.removeModel(v)
 			}
 
-			if 0 != len(q.models) {
+			if len(q.models) != 0 {
 				t.Logf("Models remain")
 				for _, v := range q.models {
 					t.Logf("%s", v.getKey())
@@ -249,6 +265,158 @@ func TestQueueInitialize(t *testing.T) {
 
 				t.Fatalf("key check - want '%d' got '%d'", 0, len(q.models))
 
+			}
+		})
+	}
+}
+
+func TestQueueCalcPercent(t *testing.T) {
+
+	p1 := newPage("1stpage", []component{newTextBlock(explainText)})
+	p2 := newPage("2ndpage", []component{newTextBlock(explainText)})
+	p3 := newPage("3rdpage", []component{newTextBlock(explainText)})
+	p4 := newPage("4thpage", []component{newTextBlock(explainText)})
+	tests := map[string]struct {
+		in   int
+		want int
+	}{
+		"50%": {
+			in:   3,
+			want: 50,
+		},
+		"75%": {
+			in:   4,
+			want: 75,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+
+			q.InitializeUI()
+			q.insert(&p1, &p2, &p3, &p4)
+			q.current = tc.in
+
+			got := q.calcPercent()
+
+			if tc.want != got {
+				t.Fatalf("want '%d' got '%d'", tc.want, got)
+			}
+
+		})
+
+	}
+}
+
+func TestQueueGoToModel(t *testing.T) {
+	firstPage := newPage("firstpage", []component{newTextBlock("A 1st page")})
+	secondPage := newPage("secondpage", []component{newTextBlock("A 2nd page")})
+	thirdPage := newPage("thirdpage", []component{newTextBlock("A 3rd page")})
+	fourthPage := newPage("fourthpage", []component{newTextBlock("A last page")})
+
+	tests := map[string]struct {
+		models   []QueueModel
+		target   string
+		want     string
+		wanttype string
+	}{
+		"one": {
+			models:   []QueueModel{&firstPage},
+			target:   "firstpage",
+			want:     "A 1st page",
+			wanttype: "nil",
+		},
+		"two": {
+			models:   []QueueModel{&firstPage, &secondPage},
+			target:   "firstpage",
+			want:     "A 1st page",
+			wanttype: "nil",
+		},
+		"four": {
+			models:   []QueueModel{&firstPage, &secondPage, &thirdPage, &fourthPage},
+			target:   "thirdpage",
+			want:     "A 3rd page",
+			wanttype: "nil",
+		},
+
+		"quit": {
+			models:   []QueueModel{&firstPage, &secondPage, &thirdPage, &fourthPage},
+			target:   "quit",
+			want:     "A 3rd page",
+			wanttype: "quitMsg",
+		},
+		"invalidkey": {
+			models:   []QueueModel{&firstPage, &secondPage, &thirdPage, &fourthPage},
+			target:   "aninvalidkey",
+			want:     "A 1st page",
+			wanttype: "nil",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+			q.add(tc.models...)
+
+			got, cmd := q.goToModel(tc.target)
+
+			if tc.wanttype == "nil" && cmd != nil {
+				t.Fatalf("wanted '%s' to be nil got '%+v'", tc.want, cmd)
+
+				if !strings.Contains(got.View(), tc.want) {
+					t.Fatalf("wanted '%s' to be contained in got '%s'", tc.want, got.View())
+				}
+			}
+
+			if tc.wanttype != "nil" {
+				gotmsg := cmd()
+				wantmsg := tea.Quit()
+
+				if gotmsg != wantmsg {
+					t.Fatalf("wanted '%+v' got '%+v'", wantmsg, gotmsg)
+				}
+
+			}
+		})
+	}
+}
+
+func TestQueueClear(t *testing.T) {
+	firstPage := newPage("firstpage", []component{newTextBlock("A 1st page")})
+
+	tests := map[string]struct {
+		model page
+		key   string
+		value string
+		want  string
+	}{
+		"one": {
+			model: firstPage,
+			key:   "firstpage",
+			value: "A value",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+			q.stack.AddSetting(tc.key, tc.value)
+			tc.model.value = tc.value
+			q.add(&tc.model)
+
+			if q.stack.GetSetting(tc.key) != tc.value {
+				t.Fatalf("stack setting did not happen properly")
+			}
+
+			q.clear(tc.key)
+
+			if q.stack.GetSetting(tc.key) != "" {
+				t.Fatalf("stack clear did not happen properly")
+			}
+
+			if tc.model.value != "" {
+				t.Fatalf("model clear did not happen properly")
 			}
 		})
 	}

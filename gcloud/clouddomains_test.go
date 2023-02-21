@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gcloud
 
 import (
@@ -101,20 +115,19 @@ func TestDomainRegistrarContactReadYAML(t *testing.T) {
 }
 
 func TestDomainIsAvailable(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		domain    string
 		wantAvail string
 		wantCost  string
 		err       error
 	}{
-		// TODO: Get this test to work with testing service account.
-		// "example.com": {
-		// 	domain:    "example.com",
-		// 	wantAvail: "UNAVAILABLE",
-		// 	wantCost:  "",
-		// 	err:       nil,
-		// },
+		"example.com": {
+			domain:    "example.com",
+			wantAvail: "UNAVAILABLE",
+			wantCost:  "",
+			err:       nil,
+		},
 		"dsadsahcashfhfdsh.com": {
 			domain:    "dsadsahcashfhfdsh.com",
 			wantAvail: "AVAILABLE",
@@ -150,7 +163,7 @@ func TestDomainIsAvailable(t *testing.T) {
 }
 
 func TestDomainIsVerified(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		domain  string
 		project string
@@ -163,7 +176,7 @@ func TestDomainIsVerified(t *testing.T) {
 			want:    false,
 			err:     nil,
 		},
-		// TODO: Get this test to work with testing service account.
+		// TODO: fix this broken test
 		// "yesornositetester.com": {
 		// 	domain:  "yesornositetester.com",
 		// 	project: "ds-tester-yesornosite",

@@ -2,9 +2,9 @@ go 1.19
 
 use (
 	.
-	./dsgithub
+	./github
 	./dstester
 	./gcloud
-	./gcloudtf
+	./terraform
 	./tui
 )

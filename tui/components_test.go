@@ -1,12 +1,71 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tui
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/kylelemons/godebug/diff"
 )
+
+func TestDrawProgress(t *testing.T) {
+	tests := map[string]struct {
+		in   int
+		want string
+		len  int
+	}{
+		"50%": {
+			in:   50,
+			want: "[0;37m   Progress [1;36m████████████████████████████████████████████[0;37m░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░",
+			len:  hardWidthLimit,
+		},
+		"0%": {
+			in:   0,
+			want: "[0;37m   Progress [1;36m[0;37m░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░",
+			len:  hardWidthLimit,
+		},
+		"100%": {
+			in:   100,
+			want: "[0;37m   Progress [1;36m████████████████████████████████████████████████████████████████████████████████████████[0;37m",
+			len:  hardWidthLimit,
+		},
+		"75%": {
+			in:   75,
+			want: "[0;37m   Progress [1;36m██████████████████████████████████████████████████████████████████[0;37m░░░░░░░░░░░░░░░░░░░░░░",
+			len:  hardWidthLimit,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := drawProgress(tc.in)
+
+			got = strings.ReplaceAll(got, "\x1b[1;m", "")
+			got = strings.ReplaceAll(got, "\x1b[0m", "")
+
+			if tc.want != got {
+				t.Fatalf("want \n%s\n got\n%s\n", tc.want, got)
+			}
+
+		})
+	}
+
+}
 
 func TestProductListLongest(t *testing.T) {
 	tests := map[string]struct {

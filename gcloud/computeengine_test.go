@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gcloud
 
 import (
@@ -12,12 +26,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/deploystack"
 	"google.golang.org/api/compute/v1"
 )
 
 func TestGetComputeRegions(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	cRegions, err := regionsListHelper("test_files/gcloudout/regions_compute.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -47,7 +60,7 @@ func TestGetComputeRegions(t *testing.T) {
 }
 
 func TestZones(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
 		region  string
@@ -96,7 +109,7 @@ func TestFormatMBToGB(t *testing.T) {
 }
 
 func TestGetMachineTypes(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	uscaTypes, err := typefileHelper("test_files/gcloudout/types_uscentral1a.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -185,10 +198,10 @@ func typefileHelper(file string) (*compute.MachineTypeList, error) {
 }
 
 func TestGetListOfDiskFamilies(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input *compute.ImageList
-		want  deploystack.LabeledValues
+		want  LabeledValues
 	}{
 		"DiskFamilies": {
 			input: &compute.ImageList{
@@ -201,20 +214,20 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 					{Family: "debian-cloud"},
 				},
 			},
-			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{
+			want: LabeledValues{
+				LabeledValue{
 					Value:     "centos-cloud",
 					Label:     "centos-cloud",
 					IsDefault: false,
 				},
 
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "debian-cloud",
 					Label:     "debian-cloud",
 					IsDefault: false,
 				},
 
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "windows-cloud",
 					Label:     "windows-cloud",
 					IsDefault: false,
@@ -236,11 +249,11 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 }
 
 func TestGetListOfImageTypesByFamily(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input           *compute.ImageList
 		family, project string
-		want            deploystack.LabeledValues
+		want            LabeledValues
 	}{
 		"DiskFamilies": {
 			input: &compute.ImageList{
@@ -255,23 +268,23 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 			},
 			family:  "centos-server-pro",
 			project: "centos-cloud",
-			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{
+			want: LabeledValues{
+				LabeledValue{
 					Value:     "centos-cloud/centos-server-1",
 					Label:     "centos-server-1",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "centos-cloud/centos-server-2",
 					Label:     "centos-server-2",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "centos-cloud/centos-server-3",
 					Label:     "centos-server-3",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "centos-cloud/centos-server-4",
 					Label:     "centos-server-4 (Latest)",
 					IsDefault: true,
@@ -291,11 +304,11 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 }
 
 func TestGetListOfMachineeTypesByFamily(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input  *compute.MachineTypeList
 		family string
-		want   deploystack.LabeledValues
+		want   LabeledValues
 	}{
 		"DiskFamilies": {
 			input: &compute.MachineTypeList{
@@ -311,33 +324,33 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 				},
 			},
 			family: "n1-standard",
-			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{
+			want: LabeledValues{
+				LabeledValue{
 					Value:     "n1-standard-1",
 					Label:     "n1-standard-1 1 Proc",
 					IsDefault: true,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-2",
 					Label:     "n1-standard-2 2 Proc",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-4",
 					Label:     "n1-standard-4 4 Proc",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-8",
 					Label:     "n1-standard-8 8 Proc",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-16",
 					Label:     "n1-standard-16 16 Proc",
 					IsDefault: false,
 				},
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-standard-32",
 					Label:     "n1-standard-32 32 Proc",
 					IsDefault: false,
@@ -357,10 +370,10 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 }
 
 func TestGetListOfMachineTypeFamily(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input *compute.MachineTypeList
-		want  deploystack.LabeledValues
+		want  LabeledValues
 	}{
 		"DiskFamilies": {
 			input: &compute.MachineTypeList{
@@ -375,20 +388,20 @@ func TestGetListOfMachineTypeFamily(t *testing.T) {
 					{Name: "a1-highmem-32", Description: "32 Proc"},
 				},
 			},
-			want: deploystack.LabeledValues{
-				deploystack.LabeledValue{
+			want: LabeledValues{
+				LabeledValue{
 					Value:     "n1-standard",
 					Label:     "n1 standard",
 					IsDefault: false,
 				},
 
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "n1-highmem",
 					Label:     "n1 highmem",
 					IsDefault: false,
 				},
 
-				deploystack.LabeledValue{
+				LabeledValue{
 					Value:     "a1-highmem",
 					Label:     "a1 highmem",
 					IsDefault: false,
@@ -447,7 +460,7 @@ func getLatestImageByProjectFromFile(imgs []*compute.Image, imageproject, imagef
 }
 
 func TestImages(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	dat, err := os.ReadFile("test_files/gcloudout/images.json")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -494,7 +507,7 @@ func TestImages(t *testing.T) {
 }
 
 func TestGetLatestImage(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	dat, err := os.ReadFile("test_files/gcloudout/images.json")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)

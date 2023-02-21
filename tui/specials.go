@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tui
 
 import (
@@ -6,11 +20,17 @@ import (
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
 	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func newProjectCreator(key string) QueueModel {
+var (
+	projNewSuffix = "_new_project_creator"
+	billNewSuffix = "_new_billing_selector"
+)
+
+func newProjectCreator(key string) textInput {
 	r := newTextInput("Create New Project",
 		"",
 		key,
@@ -24,18 +44,26 @@ func newProjectCreator(key string) QueueModel {
 	r.addContent("Project IDs must be between 6 and 30 characters. ")
 	r.addContent("\n\n")
 	r.addContent(textInputDefaultStyle.Render("Please enter a new project name to create:"))
-	return &r
+	return r
 }
 
-func newProjectSelector(key, listLabel string, preProcessor tea.Cmd) picker {
-	result := newPicker(listLabel, "Retrieving Projects", key, preProcessor)
+func newProjectSelector(key, listLabel, currentProject string, preProcessor tea.Cmd) picker {
+
+	result := newPicker(listLabel, "Retrieving Projects", key, currentProject, preProcessor)
 	create := item{"Create New Project", ""}
 	result.list.InsertItem(0, create)
+	result.addPostProcessor(processProjectSelection)
+	return result
+}
+
+func newBillingSelector(key string, preProcessor tea.Cmd, postProccessor func(string, *Queue) tea.Cmd) picker {
+	result := newPicker("Choose an account to use to enable billing on the new project", "Retrieving Billing Accounts", key, "", preProcessor)
+	result.postProcessor = postProccessor
 	return result
 }
 
 func newYesOrNo(q *Queue, listLabel, key string, defaultNo bool, postProcessor func(string, *Queue) tea.Cmd) picker {
-	p := newPicker(listLabel, "", key, getYesOrNo(q))
+	p := newPicker(listLabel, "", key, "", getYesOrNo(q))
 	p.list.SetShowStatusBar(false)
 	p.list.SetShowFilter(false)
 	p.list.SetShowHelp(false)
@@ -64,11 +92,15 @@ func newCustom(c deploystack.Custom) QueueModel {
 		r.addPostProcessor(validateInteger)
 	}
 
+	if c.PrependProject {
+		r.addPostProcessor(prependProject)
+	}
+
 	return &r
 }
 
 func newDomain(q *Queue) {
-	contact := deploystack.ContactData{}
+	contact := gcloud.ContactData{}
 
 	t := newTextInput(
 		"Enter a domain you wish to purchase and use for this application",
@@ -137,10 +169,10 @@ func newDomain(q *Queue) {
 
 	tmp := q.Get("contact")
 	switch v := tmp.(type) {
-	case deploystack.ContactData:
+	case gcloud.ContactData:
 		contact = v
 	default:
-		contact = deploystack.ContactData{}
+		contact = gcloud.ContactData{}
 	}
 
 	if contact.AllContacts.Email == "" {
@@ -175,7 +207,7 @@ func newDomain(q *Queue) {
 
 	dy := newYesOrNo(
 		q,
-		msgDomainPurchase,
+		"Buying a domain is not reversable, saying 'y' will incur a charge.",
 		"domain_consent",
 		false,
 		nil,
@@ -198,6 +230,7 @@ func newCustomPages(q *Queue) {
 				if strings.Contains(opt, "|") {
 					sl := strings.Split(opt, "|")
 					i.label = sl[1]
+					i.value = sl[0]
 				}
 
 				items = append(items, i)
@@ -209,7 +242,10 @@ func newCustomPages(q *Queue) {
 				}
 			}
 
-			pickerPage := newPicker(v.Description, "", v.Name, f(items))
+			pickerPage := newPicker(v.Description, "", v.Name, v.Default, f(items))
+			if v.PrependProject {
+				pickerPage.addPostProcessor(prependProject)
+			}
 			q.add(&pickerPage)
 			continue
 		}
@@ -223,7 +259,8 @@ func newCustomPages(q *Queue) {
 }
 
 func newGCEInstance(q *Queue) {
-	r := newPicker("Do you want to accept the default configuration? (Yes or No)", "", "gce-use-defaults", getYesOrNo(q))
+	r := newPicker("Do you want to accept the default configuration? (Yes or No)", "", "gce-use-defaults", "", getYesOrNo(q))
+	r.omitFromSettings = true
 	r.list.SetShowFilter(false)
 	r.list.SetShowHelp(false)
 	r.list.SetShowStatusBar(false)
@@ -260,7 +297,7 @@ trying out most use cases, or hand configure key settings.
 	ds.addPostProcessor(validateInteger)
 	q.add(&ds)
 
-	dt := newPicker("Pick the type of the boot disk you want", "", "instance-disktype", getDiskTypes(q))
+	dt := newPicker("Pick the type of the boot disk you want", "", "instance-disktype", gcloud.DefaultDiskType, getDiskTypes(q))
 	q.add(&dt)
 
 	dy := newYesOrNo(
@@ -274,17 +311,17 @@ trying out most use cases, or hand configure key settings.
 }
 
 func newRegion(q *Queue) {
-	r := newPicker("Pick a region", "Retrieving regions", "region", getRegions(q))
+	r := newPicker("Pick a region", "Retrieving regions", "region", q.stack.Config.RegionDefault, getRegions(q))
 	q.add(&r)
 }
 
 func newZone(q *Queue) {
-	z := newPicker("Pick a zone", "Retrieving zones", "zone", getZones(q))
+	z := newPicker("Pick a zone", "Retrieving zones", "zone", gcloud.DefaultZone, getZones(q))
 	q.add(&z)
 }
 
 func newMachineTypeManager(q *Queue) {
-	p := newPicker("Pick a Machine Type Family", "Retrieving machine type familes", "instance-machine-type-family", getMachineTypeFamilies(q))
+	p := newPicker("Pick a Machine Type Family", "Retrieving machine type familes", "instance-machine-type-family", gcloud.DefaultMachineFamily, getMachineTypeFamilies(q))
 	p.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p.addContent("\n\n")
 	p.addContent("There are a large number of machine types to choose from. For more information \n")
@@ -292,7 +329,7 @@ func newMachineTypeManager(q *Queue) {
 	p.addContent(url.Render("https://cloud.google.com/compute/docs/machine-types"))
 	q.add(&p)
 
-	p2 := newPicker("Pick a Machine Type", "Retrieving machine types", "instance-machine-type", getMachineTypes(q))
+	p2 := newPicker("Pick a Machine Type", "Retrieving machine types", "instance-machine-type", gcloud.DefaultMachineType, getMachineTypes(q))
 	p2.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p2.addContent("\n\n")
 	p2.addContent("There are a large number of machine types to choose from. For more information \n")
@@ -302,7 +339,7 @@ func newMachineTypeManager(q *Queue) {
 }
 
 func newDiskImageManager(q *Queue) {
-	p := newPicker("Pick an operating system", "Retrieving operating systems", "instance-image-project", getDiskProjects(q))
+	p := newPicker("Pick an operating system", "Retrieving operating systems", "instance-image-project", gcloud.DefaultImageProject, getDiskProjects(q))
 	p.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p.addContent("\n\n")
 	p.addContent("There are a large number of machine images to choose from. For more information \n")
@@ -310,7 +347,7 @@ func newDiskImageManager(q *Queue) {
 	p.addContent(url.Render("https://cloud.google.com/compute/docs/images"))
 	q.add(&p)
 
-	p2 := newPicker("Pick a disk family", "Retrieving disk family", "instance-image-family", getImageFamilies(q))
+	p2 := newPicker("Pick a disk family", "Retrieving disk family", "instance-image-family", gcloud.DefaultImageFamily, getImageFamilies(q))
 	p2.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p2.addContent("\n\n")
 	p2.addContent("There are a large number of machine images to choose from. For more information \n")
@@ -318,7 +355,7 @@ func newDiskImageManager(q *Queue) {
 	p2.addContent(url.Render("https://cloud.google.com/compute/docs/images"))
 	q.add(&p2)
 
-	p3 := newPicker("Pick a disk image", "Retrieving disk image", "instance-image", getImageDisks(q))
+	p3 := newPicker("Pick a disk image", "Retrieving disk image", "instance-image", "", getImageDisks(q))
 	p3.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p3.addContent("\n\n")
 	p3.addContent("There are a large number of machine images to choose from. For more information \n")

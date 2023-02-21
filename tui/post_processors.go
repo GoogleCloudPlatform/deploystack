@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tui
 
 import (
@@ -6,54 +20,110 @@ import (
 	"strings"
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
-	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/nyaruka/phonenumbers"
 )
 
-// TODO: make this dynamic
-var currentProject = "ds-tester-singlevm"
-
-func cleanUp(input string, q *Queue) tea.Cmd {
+func processProjectSelection(projectID string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
-		for i, v := range q.stack.Settings {
-			if strings.Contains(i, "_new") {
-				short := strings.ReplaceAll(i, "_new", "")
-				q.stack.AddSetting(short, v)
-				q.stack.DeleteSetting(i)
+		if projectID != "" {
+
+			if errMsg := handleProjectNumber(projectID, q); errMsg != nil {
+				return errMsg
 			}
+
+			if err := q.client.ProjectIDSet(projectID); err != nil {
+				return errMsg{err: err}
+			}
+
+			q.Save("currentProject", projectID)
+
+			creator := q.currentKey() + projNewSuffix
+			billing := q.currentKey() + billNewSuffix
+
+			q.removeModel(creator)
+			q.removeModel(billing)
+
+			return successMsg{}
 		}
-		q.stack.DeleteSetting("domain_consent")
 
 		return successMsg{}
 	}
 }
 
-func createProject(project string, q *Queue) tea.Cmd {
+func handleProjectNumber(projectID string, q *Queue) tea.Msg {
+	if q.stack.Config.ProjectNumber {
+		projectnumber, err := q.client.ProjectNumberGet(projectID)
+		if err != nil {
+			return errMsg{err: err}
+		}
+		q.stack.AddSetting("project_number", projectnumber)
+	}
+	return nil
+}
+
+func createProject(projectID string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
-		if currentProject == "" {
+
+		currentProjectID := q.Get("currentProject").(string)
+
+		if currentProjectID == "" {
 			tmp, err := q.client.ProjectList()
 			if err != nil || len(tmp) == 0 || tmp[0].ID == "" {
 				return errMsg{err: fmt.Errorf("createProject: could not determine an alternate project for parent detection: %w ", err)}
 			}
-
-			currentProject = tmp[0].ID
+			currentProjectID = tmp[0].ID
 		}
 
-		parent, err := q.client.ProjectParentGet(currentProject)
+		parent, err := q.client.ProjectParentGet(currentProjectID)
 		if err != nil {
 			return errMsg{err: fmt.Errorf("createProject: could not determine proper parent for project: %w ", err)}
 		}
 
-		if err := q.client.ProjectCreate(project, parent.Id, parent.Type); err != nil {
+		if err := q.client.ProjectCreate(projectID, parent.Id, parent.Type); err != nil {
 			return errMsg{err: fmt.Errorf("createProject: could not create project: %w", err)}
 		}
 
-		// This makes sure that project creation screens for new projects
-		// are removed if we just picked one from the list
-		if q.nextKey() == q.currentKey()+"_new" {
-			q.removeModel(q.nextKey())
+		if errMsg := handleProjectNumber(projectID, q); errMsg != nil {
+			return errMsg
+		}
+		if err := q.client.ProjectIDSet(projectID); err != nil {
+			return errMsg{err: err}
+		}
+
+		qmod := q.Model("region")
+		if qmod != nil {
+			r := qmod.(*picker)
+			r.querySlowText = "Getting regions can take a little extra time if this is a new project"
+		}
+
+		qmod = q.Model("zone")
+		if qmod != nil {
+			z := qmod.(*picker)
+			z.querySlowText = "Getting zones can take a little extra time if this is a new project"
+		}
+
+		q.Save("currentProject", projectID)
+
+		return successMsg{}
+	}
+}
+
+func attachBilling(ba string, q *Queue) tea.Cmd {
+	return func() tea.Msg {
+		baclean := strings.ReplaceAll(ba, "billingAccounts/", "")
+		key := strings.ReplaceAll(q.currentKey(), billNewSuffix, "")
+		projectID := q.stack.GetSetting(key)
+
+		if err := q.client.BillingAccountAttach(projectID, baclean); err != nil {
+			return errMsg{err: fmt.Errorf("attachBilling: could not attach billing to project: %w", err)}
+		}
+
+		// If this is one of those billing for project form, let's skip
+		// adding it to the stack settings
+		if strings.Contains(q.currentKey(), billNewSuffix) {
+			return successMsg{unset: true}
 		}
 
 		return successMsg{}
@@ -62,9 +132,9 @@ func createProject(project string, q *Queue) tea.Cmd {
 
 func validateDomain(domain string, q *Queue) tea.Cmd {
 	return func() tea.Msg {
-		project := currentProject
+		projectID := q.Get("currentProject").(string)
 
-		domainInfo, err := q.client.DomainIsAvailable(project, domain)
+		domainInfo, err := q.client.DomainIsAvailable(projectID, domain)
 		if err != nil {
 			return errMsg{err: fmt.Errorf("validateDomain: error checking domain availability %w", err)}
 		}
@@ -73,7 +143,7 @@ func validateDomain(domain string, q *Queue) tea.Cmd {
 		q.Save("domain", domain)
 
 		if domainInfo.Availability == domainspb.RegisterParameters_UNAVAILABLE {
-			isVerified, err := q.client.DomainIsVerified(project, domain)
+			isVerified, err := q.client.DomainIsVerified(projectID, domain)
 			if err != nil {
 				return errMsg{
 					usermsg: "Trying to validate that you own this domain failed due to an error",
@@ -109,9 +179,14 @@ func registerDomain(consent string, q *Queue) tea.Cmd {
 		d := gcloud.ContactData{}
 
 		contact := q.Get("contact")
+
 		if contact != nil {
-			d = contact.(gcloud.ContactData)
-		} else {
+			tmp := contact.(gcloud.ContactData)
+			if tmp.AllContacts.Email != "" {
+				d = tmp
+			}
+		}
+		if d.AllContacts.Email == "" {
 			d = gcloud.ContactData{
 				AllContacts: gcloud.DomainRegistrarContact{
 					Email: q.stack.GetSetting("domain_email"),
@@ -125,8 +200,10 @@ func registerDomain(consent string, q *Queue) tea.Cmd {
 						),
 						AdministrativeArea: q.stack.GetSetting("domain_state"),
 						Locality:           q.stack.GetSetting("domain_city"),
-						Recipients: []string{
+						AddressLines: []string{
 							q.stack.GetSetting("domain_address"),
+						},
+						Recipients: []string{
 							q.stack.GetSetting("domain_name"),
 						},
 					},
@@ -139,7 +216,9 @@ func registerDomain(consent string, q *Queue) tea.Cmd {
 		raw := q.Get("domainInfo")
 		domainInfo := raw.(*domainspb.RegisterParameters)
 
-		err := q.client.DomainRegister(currentProject, domainInfo, d)
+		projectID := q.Get("currentProject").(string)
+
+		err := q.client.DomainRegister(projectID, domainInfo, d)
 		if err != nil {
 			q.stack.AddSetting("domain_consent", "")
 			return errMsg{
@@ -174,11 +253,7 @@ func checkYesOrNo(input string) bool {
 	yesList := " yes y "
 	noList := " no n "
 
-	if strings.Contains(yesList+noList, text) {
-		return true
-	}
-
-	return false
+	return strings.Contains(yesList+noList, text)
 }
 
 func validateYesOrNo(input string, q *Queue) tea.Cmd {
@@ -204,14 +279,10 @@ func validatePhoneNumber(input string, q *Queue) tea.Cmd {
 	}
 }
 
-// errorCustomNotValidPhoneNumber is the error you get when you fail phone
-// number validation.
-var errorCustomNotValidPhoneNumber = fmt.Errorf("not a valid phone number")
-
 func massagePhoneNumber(s string) (string, error) {
 	num, err := phonenumbers.Parse(s, "US")
 	if err != nil {
-		return "", errorCustomNotValidPhoneNumber
+		return "", ErrorCustomNotValidPhoneNumber
 	}
 	result := phonenumbers.Format(num, phonenumbers.INTERNATIONAL)
 	result = strings.Replace(result, " ", ".", 1)
@@ -237,20 +308,20 @@ func validateGCEDefault(input string, q *Queue) tea.Cmd {
 		project := q.stack.GetSetting("project-id")
 		basename := q.stack.GetSetting("basename")
 
-		defaultImage, err := q.client.ImageLatestGet(project, deploystack.DefaultImageProject, deploystack.DefaultImageFamily)
+		defaultImage, err := q.client.ImageLatestGet(project, gcloud.DefaultImageProject, gcloud.DefaultImageFamily)
 		if err != nil {
 			return errMsg{err: fmt.Errorf("validateGCEDefault: could not get DefaultImage deafult")}
 		}
 
-		defaultConfig := deploystack.GCEInstanceConfig{
+		defaultConfig := map[string]string{
 			"instance-image":        defaultImage,
-			"instance-disksize":     deploystack.DefaultDiskSize,
-			"instance-disktype":     deploystack.DefaultDiskType,
-			"instance-tags":         deploystack.HTTPServerTags,
+			"instance-disksize":     gcloud.DefaultDiskSize,
+			"instance-disktype":     gcloud.DefaultDiskType,
+			"instance-tags":         gcloud.HTTPServerTags,
 			"instance-name":         fmt.Sprintf("%s-instance", basename),
-			"region":                deploystack.DefaultRegion,
-			"zone":                  deploystack.DefaultZone,
-			"instance-machine-type": deploystack.DefaultInstanceType,
+			"region":                gcloud.DefaultRegion,
+			"zone":                  gcloud.DefaultZone,
+			"instance-machine-type": gcloud.DefaultInstanceType,
 		}
 
 		for i, v := range defaultConfig {
@@ -280,7 +351,7 @@ func validateGCEConfiguration(input string, q *Queue) tea.Cmd {
 		instanceWebserver := q.stack.GetSetting("instance-webserver")
 
 		if instanceWebserver == "y" || input == "y" {
-			q.stack.AddSetting("instance-tags", deploystack.HTTPServerTags)
+			q.stack.AddSetting("instance-tags", gcloud.HTTPServerTags)
 		}
 		q.stack.DeleteSetting("gce-use-defaults")
 		q.stack.DeleteSetting("instance-webserver")
@@ -288,5 +359,11 @@ func validateGCEConfiguration(input string, q *Queue) tea.Cmd {
 		q.stack.DeleteSetting("instance-machine-type-family")
 		q.stack.DeleteSetting("instance-image-family")
 		return successMsg{unset: true}
+	}
+}
+
+func prependProject(value string, q *Queue) tea.Cmd {
+	return func() tea.Msg {
+		return successMsg{msg: "prependProject"}
 	}
 }

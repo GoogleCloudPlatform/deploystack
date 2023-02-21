@@ -1,3 +1,17 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gcloud
 
 import (
@@ -19,6 +33,7 @@ import (
 
 var (
 	projectID        = ""
+	billingAccount   = ""
 	creds            map[string]string
 	opts             = option.WithCredentialsFile("")
 	ctx              = context.Background()
@@ -40,8 +55,21 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("could not get environment project id: %s", err)
 	}
+	billingAccount = creds["billing_account"]
+	if err != nil {
+		log.Fatalf("could not get environment billing account: %s", err)
+	}
 	code := m.Run()
 	os.Exit(code)
+}
+
+func readTestFile(file string) string {
+	dat, err := os.ReadFile(file)
+	if err != nil {
+		return "Couldn't read test file"
+	}
+
+	return string(dat)
 }
 
 func randSeq(n int) string {
@@ -100,7 +128,7 @@ func regionsListHelper(file string) ([]string, error) {
 }
 
 func TestGetRegions(t *testing.T) {
-	c := NewClient(ctx, defaultUserAgent, opts)
+	c := NewClient(ctx, defaultUserAgent)
 	cRegions, err := regionsListHelper("test_files/gcloudout/regions_compute.txt")
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
@@ -164,6 +192,10 @@ func TestGetRegions(t *testing.T) {
 			}
 
 			if err != tc.err {
+				if tc.err == nil {
+					t.Fatalf("expected: no error, got: %v", err)
+				}
+
 				if err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error (%v), got: %v", tc.err, err)
 				}

@@ -1,0 +1,4 @@
+This process will configure and create the following: 
+	* Instance Template
+	* Managed Instance Group
+	* Load Balancer
