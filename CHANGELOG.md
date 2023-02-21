@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.2.1...v1.2.2) (2023-02-21)
+
+
+### Bug Fixes
+
+* reverting release-please config ([9adfd7f](https://github.com/GoogleCloudPlatform/deploystack/commit/9adfd7ff7d352a92bd06065a875bc61af9c5c722))
+
 ## [1.2.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.2.0...v1.2.1) (2023-02-21)
 
 
