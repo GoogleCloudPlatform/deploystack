@@ -8,8 +8,6 @@ test:
 	go test ./gcloud/.  -cover
 	
 update: 
-	#  gcloud auth activate-service-account --key-file \
- 	# 	$(GOOGLE_APPLICATION_CREDENTIALS)
 	gcloud config set project ds-tester-helper	
 	cd tools/test_files_updater && ./update
 
