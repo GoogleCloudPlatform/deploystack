@@ -19,13 +19,14 @@ import (
 	"log"
 
 	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
-	s := deploystack.NewStack()
+	s := config.NewStack()
 
 	if err := s.FindAndReadRequired(); err != nil {
 		log.Fatalf("could not read config file: %s", err)

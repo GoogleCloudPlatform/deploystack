@@ -15,7 +15,7 @@ func compareValues(label string, want interface{}, got interface{}, t *testing.T
 }
 
 func TestConfig(t *testing.T) {
-	testdata := "test_files/configs"
+	testdata := "../test_files/configs"
 	tests := map[string]struct {
 		pwd      string
 		want     Config
@@ -115,17 +115,17 @@ func TestComputeNames(t *testing.T) {
 		err   error
 	}{
 		"http": {
-			"test_files/computenames_repos/deploystack-single-vm",
+			"../test_files/computenames_repos/deploystack-single-vm",
 			"single-vm",
 			nil,
 		},
 		"ssh": {
-			"test_files/computenames_repos/deploystack-gcs-to-bq-with-least-privileges",
+			"../test_files/computenames_repos/deploystack-gcs-to-bq-with-least-privileges",
 			"gcs-to-bq-with-least-privileges",
 			nil,
 		},
 		"nogit": {
-			"test_files/computenames_repos/folder-no-git",
+			"../test_files/computenames_repos/folder-no-git",
 			"",
 			fmt.Errorf("could not open local git directory: repository does not exist"),
 		},
@@ -168,7 +168,7 @@ func TestReadConfig(t *testing.T) {
 			err:  errUnableToRead,
 		},
 		"no_custom": {
-			path: "test_files/no_customs",
+			path: "../test_files/no_customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -183,7 +183,7 @@ func TestReadConfig(t *testing.T) {
 			err: nil,
 		},
 		"custom": {
-			path: "test_files/customs",
+			path: "../test_files/customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -201,7 +201,7 @@ func TestReadConfig(t *testing.T) {
 			err: nil,
 		},
 		"custom_options": {
-			path: "test_files/customs_options",
+			path: "../test_files/customs_options",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",

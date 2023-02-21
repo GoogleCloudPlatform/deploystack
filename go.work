@@ -7,4 +7,5 @@ use (
 	./gcloud
 	./terraform
 	./tui
+	./config
 )

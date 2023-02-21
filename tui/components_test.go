@@ -19,7 +19,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/kylelemons/godebug/diff"
 )
 
@@ -90,8 +90,8 @@ func TestProductListLongest(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			s := readTestFile(tc.configPath)
 
-			stack := deploystack.NewStack()
-			config, err := deploystack.NewConfigYAML([]byte(s))
+			stack := config.NewStack()
+			config, err := config.NewConfigYAML([]byte(s))
 			if err != nil {
 				t.Fatalf("could not read in config %s:", err)
 			}
@@ -140,8 +140,8 @@ func TestDescriptionRender(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			s := readTestFile(tc.configPath)
 
-			stack := deploystack.NewStack()
-			config, err := deploystack.NewConfigYAML([]byte(s))
+			stack := config.NewStack()
+			config, err := config.NewConfigYAML([]byte(s))
 			if err != nil {
 				t.Fatalf("could not read in config %s:", err)
 			}
@@ -248,7 +248,7 @@ func TestSettingsTableRender(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			stack := deploystack.NewStack()
+			stack := config.NewStack()
 
 			for key, value := range tc.settings {
 				stack.AddSetting(key, value)

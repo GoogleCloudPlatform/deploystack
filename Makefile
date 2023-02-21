@@ -5,6 +5,7 @@ test:
 	go test ./terraform/.  -cover
 	go test ./github/.  -cover
 	go test ./dstester/.  -cover
+	go test ./config/.  -cover
 	go test ./gcloud/.  -cover
 	
 update: 

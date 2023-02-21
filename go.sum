@@ -16,6 +16,8 @@ cloud.google.com/go/scheduler v1.8.0/go.mod h1:TCET+Y5Gp1YgHT8py4nlg2Sew8nUHMqcp
 cloud.google.com/go/storage v1.29.0 h1:6weCgzRvMg7lzuUurI4697AqIRPU1SvzHhynwpW31jI=
 cloud.google.com/go/storage v1.29.0/go.mod h1:4puEjyTKnku6gfKoTfNOU/W+a9JyuVNxjpS5GBrB8h4=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/GoogleCloudPlatform/deploystack/config v0.0.0-20230221202056-7c1a63410cf6 h1:8p45RtU7rXLnWYA3DFy/sJn7cBN8Y6FyxZqZtn/nHRw=
+github.com/GoogleCloudPlatform/deploystack/config v0.0.0-20230221202056-7c1a63410cf6/go.mod h1:EFU5gQzFUDT3Loflf5coZq6zQK8+MRX+ESNdhCoL92I=
 github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230221184722-2d2b928c6567 h1:v8QM0TeT7tsu2TngEZVjZP3mRjZ85S2hMewsW8TnC68=
 github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230221184722-2d2b928c6567/go.mod h1:EwSfKBfysxv/rSCDiXdFjWwxHravipirIpGztR52f3E=
 github.com/GoogleCloudPlatform/deploystack/tui v0.0.0-20230221184722-2d2b928c6567 h1:FUxoNbJHnJ/+WFcj6WOPA9Dt+mEYDh+JMrALCXO5suk=

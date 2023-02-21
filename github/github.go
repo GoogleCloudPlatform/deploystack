@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/terraform"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -32,7 +32,7 @@ import (
 // Meta is a datastructure that combines the Deploystack, github and Terraform
 // bits of metadata about a stack.
 type Meta struct {
-	DeployStack deploystack.Config
+	DeployStack config.Config
 	Terraform   terraform.Blocks `json:"terraform" yaml:"terraform"`
 	Github      Github           `json:"github" yaml:"github"`
 	LocalPath   string           `json:"localpath" yaml:"localpath"`
@@ -130,7 +130,7 @@ func NewMetaFromLocal(path string) (Meta, error) {
 		return d, fmt.Errorf("could not change the wd: %s", err)
 	}
 
-	s := deploystack.NewStack()
+	s := config.NewStack()
 
 	if err := s.FindAndReadRequired(); err != nil {
 		return d, fmt.Errorf("could not read config file: %s", err)

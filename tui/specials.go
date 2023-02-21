@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -73,7 +73,7 @@ func newYesOrNo(q *Queue, listLabel, key string, defaultNo bool, postProcessor f
 	return p
 }
 
-func newCustom(c deploystack.Custom) QueueModel {
+func newCustom(c config.Custom) QueueModel {
 	r := newTextInput(c.Description,
 		c.Default,
 		c.Name,

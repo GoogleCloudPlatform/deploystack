@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/text/cases"
@@ -54,10 +54,10 @@ func (p productList) longest(k string) int {
 }
 
 type description struct {
-	stack *deploystack.Stack
+	stack *config.Stack
 }
 
-func newDescription(stack *deploystack.Stack) description {
+func newDescription(stack *config.Stack) description {
 	return description{stack: stack}
 }
 
@@ -233,10 +233,10 @@ func drawProgress(percent int) string {
 }
 
 type settingsTable struct {
-	stack *deploystack.Stack
+	stack *config.Stack
 }
 
-func newSettingsTable(s *deploystack.Stack) settingsTable {
+func newSettingsTable(s *config.Stack) settingsTable {
 	return settingsTable{stack: s}
 }
 
