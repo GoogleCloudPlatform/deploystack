@@ -1,5 +1,49 @@
 # Changelog
 
+## [1.1.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.0.1...v1.1.0) (2023-02-21)
+
+
+### Features
+
+* added a warning about slow lookups in a new project ([855ac53](https://github.com/GoogleCloudPlatform/deploystack/commit/855ac537cf7470ba4df3788e229790efdb3e7cbd))
+* added caching to speed up these requests ([a0aaad8](https://github.com/GoogleCloudPlatform/deploystack/commit/a0aaad877b643181757d84e37621109f9e2f9d5a))
+* adding project retrieval to the mix ([12d6dcd](https://github.com/GoogleCloudPlatform/deploystack/commit/12d6dcd92e8f9b3b6a9bc8a9b987a40cb5998966))
+* build a "don't put into settings flag" into the base configuration of pages ([d616a13](https://github.com/GoogleCloudPlatform/deploystack/commit/d616a138f29a10f56f7f14efb0636b34358f3621))
+* forgot to add prependProject setting. Working now ([a6b2e25](https://github.com/GoogleCloudPlatform/deploystack/commit/a6b2e25c2980b459d715e82ba4ec5c1cbbdac735))
+* implemented a back function ([c65badc](https://github.com/GoogleCloudPlatform/deploystack/commit/c65badc1f5a2041e725ba43015ff8af8438948f8))
+* renamed package to better reflect purpose ([70850fc](https://github.com/GoogleCloudPlatform/deploystack/commit/70850fce76e7402261d9ae31177ffeaddec1722b))
+* renamed package to make more clear its purpose ([d3d476e](https://github.com/GoogleCloudPlatform/deploystack/commit/d3d476ef2ae3da26910b3f44d6ce3edd5f07feab))
+
+
+### Bug Fixes
+
+* actually fixing the problem with project numbers ([5175fea](https://github.com/GoogleCloudPlatform/deploystack/commit/5175fea1dedd89b5d5da9c4a8174e4c9c7f92ecb))
+* commented out tests that were commented out before ([3755a5f](https://github.com/GoogleCloudPlatform/deploystack/commit/3755a5f5ca3c4f182e545112b4cc1ae619ded1b1))
+* commenting out previously commented test ([a023d8a](https://github.com/GoogleCloudPlatform/deploystack/commit/a023d8a2115a7f6d83d52f989db175ba3433f6d2))
+* commenting out tests that were commented out before ([d17cb02](https://github.com/GoogleCloudPlatform/deploystack/commit/d17cb02b8959e564b8d32fa9d78cff2dd7f535e2))
+* converted spinner to use dsStyles to render color on Cloud Shell ([a7456b7](https://github.com/GoogleCloudPlatform/deploystack/commit/a7456b743a79585a481bd66242737ec31f7748d8))
+* corrected issue where domain contact info was not being refreshed properly ([546af35](https://github.com/GoogleCloudPlatform/deploystack/commit/546af355c1a795017accddd23271e3a429db3480))
+* correcting billing check quality ([a830b43](https://github.com/GoogleCloudPlatform/deploystack/commit/a830b43c443dd6fea60b5ddd41ec3e096c7b9cd4))
+* fixes dealing with changes in color rendering ([26bd638](https://github.com/GoogleCloudPlatform/deploystack/commit/26bd63893c6cfc23929d4517c1457a4fa06698a3))
+* fixing error where ctr-c on the exit page causes a panic ([3974a8b](https://github.com/GoogleCloudPlatform/deploystack/commit/3974a8bbf92387104e5f644d4054cf3414b5560a))
+* getting rid of old calls. ([a391e39](https://github.com/GoogleCloudPlatform/deploystack/commit/a391e39aa119211e49570f4f1e6a67b804a87325))
+* got domain availability test to work ([7103da2](https://github.com/GoogleCloudPlatform/deploystack/commit/7103da2c83a1af3cb84ef4981a66ff93ef4506e6))
+* made currentProject a queue value instead of a global one ([c3bfb7b](https://github.com/GoogleCloudPlatform/deploystack/commit/c3bfb7bcbd46d781e84612dc4327204f93ba8897))
+* making sure that gcloud config project set is called ([4295f73](https://github.com/GoogleCloudPlatform/deploystack/commit/4295f739633f75e9360b76f97d662fc363cf73d1))
+* making sure that project creation captures project number ([fb0d8d7](https://github.com/GoogleCloudPlatform/deploystack/commit/fb0d8d7cbb46a54c191e642846e39369ed128f77))
+* massively changed the way color was rendered to make it simpler ([a5c652a](https://github.com/GoogleCloudPlatform/deploystack/commit/a5c652a9cdfc9a6820681ac734a7c1a51af8d300))
+* moved project number retrieval to the actual flow. ([a546144](https://github.com/GoogleCloudPlatform/deploystack/commit/a546144dc53b5c0a02a9918d14daa96dd22288fc))
+* needed to account for nils in casting operation ([4b0ea90](https://github.com/GoogleCloudPlatform/deploystack/commit/4b0ea90634dedde02b8ed34920639fdf341a944f))
+* process is now exit(1) when user stops process ([ab4bbcf](https://github.com/GoogleCloudPlatform/deploystack/commit/ab4bbcf81370953a083b3224f01035401c9403e3))
+* resolves issue with color not showing in CloudShell ([df2a788](https://github.com/GoogleCloudPlatform/deploystack/commit/df2a788e2a4b7e9accb481e5b5c8c69fa8906b39))
+* resolving issue where new accounts weren't getting billing attached ([fba7fad](https://github.com/GoogleCloudPlatform/deploystack/commit/fba7fadadeef1a7af510d4dfd58594a11d1e111e))
+* restoreing full screen mode. ([3259419](https://github.com/GoogleCloudPlatform/deploystack/commit/3259419229d9abee0991a907350969def9ef5ede))
+* testing color rendering for Cloud Shell ([9535e12](https://github.com/GoogleCloudPlatform/deploystack/commit/9535e12b8a0aa1c828b152fa751b9265697b84e1))
+* testing if the alt screen is the problem on cloudshell ([8ce98f9](https://github.com/GoogleCloudPlatform/deploystack/commit/8ce98f999cfe31b61165180e3e389df2185c2ee4))
+* tests didn't get renamed ([bfa2066](https://github.com/GoogleCloudPlatform/deploystack/commit/bfa20663d6ab659e5fe1217c0dcc3dc0d3950d79))
+* updated colors to try and make it look better on Cloud Shell ([5d7f220](https://github.com/GoogleCloudPlatform/deploystack/commit/5d7f2206b3445d9e94430dec61df0b2e7db90d8a))
+* when you are just asking for the billing account, you don't need to attach it. ([0f9f547](https://github.com/GoogleCloudPlatform/deploystack/commit/0f9f5478f79d883ec7f857937e31a5bbcb83d3ea))
+
 ## [1.0.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.0.0...v1.0.1) (2023-02-16)
 
 
