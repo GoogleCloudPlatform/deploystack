@@ -1,4 +1,6 @@
 {
+  "release-type": "go",
+  "tag-separator": "/",
   "packages": {
     ".": {
       "changelog-path": "CHANGELOG.md",
@@ -9,6 +11,7 @@
       "prerelease": false
     },
     "gcloud": {
+      "component": "gcloud",
       "changelog-path": "CHANGELOG.md",
       "release-type": "go",
       "bump-minor-pre-major": false,
@@ -17,6 +20,7 @@
       "prerelease": false
     },
     "tui": {
+      "component": "tui",
       "changelog-path": "CHANGELOG.md",
       "release-type": "go",
       "bump-minor-pre-major": false,
