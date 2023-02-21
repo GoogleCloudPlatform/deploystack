@@ -84,7 +84,9 @@ func (s *Stack) findAndReadConfig() (Config, error) {
 	return config, nil
 }
 
-var ErrConfigNotExist = fmt.Errorf("could not file and parse a config file")
+// ErrConfigNotExist is what happens when a config file either does not exist
+// or exists but is not readable.
+var ErrConfigNotExist = fmt.Errorf("could not find and parse a config file")
 
 func (s *Stack) findDSFolder(c Config, folder string) (string, error) {
 	switch folder {
