@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.1.3...v1.1.4) (2023-02-21)
+
+
+### Bug Fixes
+
+* trying to update all the things to ensure proper dependencies ([e76fdae](https://github.com/GoogleCloudPlatform/deploystack/commit/e76fdae2123f6997268c7bc8a552e8f552e24a49))
+
 ## [1.1.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.1.2...v1.1.3) (2023-02-21)
 
 
