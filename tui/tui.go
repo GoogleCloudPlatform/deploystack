@@ -23,6 +23,7 @@ import (
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
 	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -89,7 +90,7 @@ type UIClient interface {
 
 // Run takes a deploystack configuration and walks someone through all of the
 // input needed to run the eventual terraform
-func Run(s *deploystack.Stack, useMock bool) {
+func Run(s *config.Stack, useMock bool) {
 	if len(os.Getenv("DEBUG")) > 0 {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {

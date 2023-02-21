@@ -21,6 +21,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"google.golang.org/api/option"
 	"gopkg.in/yaml.v2"
@@ -34,8 +35,8 @@ var (
 )
 
 // Init initializes a Deploystack stack by looking on teh local file system
-func Init() (*Stack, error) {
-	s := NewStack()
+func Init() (*config.Stack, error) {
+	s := config.NewStack()
 
 	if err := s.FindAndReadRequired(); err != nil {
 		return &s, fmt.Errorf("could not read config file: %s", err)

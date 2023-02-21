@@ -3,12 +3,11 @@ module github.com/GoogleCloudPlatform/deploystack
 go 1.20
 
 require (
+	github.com/GoogleCloudPlatform/deploystack/config v0.0.0-20230221202056-7c1a63410cf6
 	github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230221184722-2d2b928c6567
 	github.com/GoogleCloudPlatform/deploystack/tui v0.0.0-20230221184722-2d2b928c6567
 	github.com/charmbracelet/bubbletea v0.23.2
-	github.com/kylelemons/godebug v1.1.0
 	google.golang.org/api v0.110.0
-	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -67,5 +66,6 @@ require (
 	google.golang.org/grpc v1.53.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
+	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )

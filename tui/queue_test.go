@@ -18,13 +18,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func getTestQueue(title, subtitle string) Queue {
 	appHeader := newHeader(title, subtitle)
-	stack := deploystack.NewStack()
+	stack := config.NewStack()
 	mock := mock{}
 	q := NewQueue(&stack, mock)
 	q.header = appHeader
@@ -189,7 +189,7 @@ func TestQueueProcess(t *testing.T) {
 			q := getTestQueue(appTitle, "test")
 			s := readTestFile(tc.config)
 
-			config, err := deploystack.NewConfigYAML([]byte(s))
+			config, err := config.NewConfigYAML([]byte(s))
 			if err != nil {
 				t.Fatalf("could not read in config %s:", err)
 			}

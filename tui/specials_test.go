@@ -17,7 +17,7 @@ package tui
 import (
 	"testing"
 
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/api/cloudbilling/v1"
 )
@@ -256,11 +256,11 @@ func TestNewProjectFlow(t *testing.T) {
 
 func TestNewCustom(t *testing.T) {
 	tests := map[string]struct {
-		c          deploystack.Custom
+		c          config.Custom
 		outputFile string
 	}{
 		"basic": {
-			c: deploystack.Custom{
+			c: config.Custom{
 				Name:        "test",
 				Description: "A test option",
 				Default:     "Test",
@@ -268,7 +268,7 @@ func TestNewCustom(t *testing.T) {
 			outputFile: "testdata/custom_basic.txt",
 		},
 		"phone": {
-			c: deploystack.Custom{
+			c: config.Custom{
 				Name:        "test",
 				Description: "A test phone",
 				Default:     "1-555-555-4040",
@@ -277,7 +277,7 @@ func TestNewCustom(t *testing.T) {
 			outputFile: "testdata/custom_phone.txt",
 		},
 		"yesorno": {
-			c: deploystack.Custom{
+			c: config.Custom{
 				Name:        "test",
 				Description: "Yay or Nay",
 				Default:     "Yes",
@@ -286,7 +286,7 @@ func TestNewCustom(t *testing.T) {
 			outputFile: "testdata/custom_yesorno.txt",
 		},
 		"integer": {
-			c: deploystack.Custom{
+			c: config.Custom{
 				Name:        "test",
 				Description: "a number",
 				Default:     "5",
@@ -437,7 +437,7 @@ func TestCustomPages(t *testing.T) {
 
 			s := readTestFile(tc.config)
 
-			config, err := deploystack.NewConfigYAML([]byte(s))
+			config, err := config.NewConfigYAML([]byte(s))
 			if err != nil {
 				t.Fatalf("could not read in config %s:", err)
 			}

@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -26,7 +27,10 @@ import (
 )
 
 func TestFindAndReadConfig(t *testing.T) {
-	wd, _ := os.Getwd()
+	wd, err := filepath.Abs("../")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
 	testdata := fmt.Sprintf("%s/test_files/configs", wd)
 
 	tests := map[string]struct {
@@ -55,12 +59,8 @@ func TestFindAndReadConfig(t *testing.T) {
 		},
 		"ErrorBadFile": {
 			pwd: "errorbadfile",
-			err: errors.New("unable to parse config file: unable to convert content to Config: yaml: unmarshal errors:\n  line 15: cannot unmarshal !!str `Look at...` into deploystack.Config"),
+			err: errors.New("unable to parse config file: unable to convert content to Config: yaml: unmarshal errors:\n  line 15: cannot unmarshal !!str `Look at...` into config.Config"),
 		},
-	}
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("error setting up environment for testing %v", err)
 	}
 
 	for name, tc := range tests {

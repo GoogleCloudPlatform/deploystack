@@ -15,7 +15,7 @@
 package tui
 
 import (
-	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -39,14 +39,14 @@ type Queue struct {
 	models  []QueueModel
 	current int
 	header  component
-	stack   *deploystack.Stack
+	stack   *config.Stack
 	store   map[string]interface{}
 	index   []string
 	client  UIClient
 }
 
 // NewQueue creates a new queue. You should need only one per app
-func NewQueue(s *deploystack.Stack, client UIClient) Queue {
+func NewQueue(s *config.Stack, client UIClient) Queue {
 	q := Queue{stack: s, store: map[string]interface{}{}}
 	q.client = client
 	q.index = []string{}
@@ -268,7 +268,7 @@ func (q *Queue) ProcessConfig() error {
 	s.AddSetting("stack_name", s.Config.Name)
 
 	if s.Config.Project && len(project) == 0 {
-		p := deploystack.Project{
+		p := config.Project{
 			Name:       "project_id",
 			UserPrompt: "Choose a project to use for this application.",
 		}
