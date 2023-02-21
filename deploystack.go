@@ -62,6 +62,7 @@ func NewContactDataFromFile(file string) (gcloud.ContactData, error) {
 	}
 
 	err = yaml.Unmarshal(dat, &c)
+
 	if err != nil {
 		return c, err
 	}
