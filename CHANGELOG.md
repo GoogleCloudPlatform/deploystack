@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.1.4...v1.2.0) (2023-02-21)
+
+
+### Features
+
+* adding package config ([48c944b](https://github.com/GoogleCloudPlatform/deploystack/commit/48c944b97c8263e3032d92c90e9cc02f0cf7efe2))
+* created new package to remove threat of circular dependency ([8b0738e](https://github.com/GoogleCloudPlatform/deploystack/commit/8b0738e28a839d2f9a21cb4c880ddd382d9017e2))
+
+
+### Bug Fixes
+
+* adding test for new package to CI/CD ([641cac8](https://github.com/GoogleCloudPlatform/deploystack/commit/641cac8680b3bcb0a241dea8174a7c8eaeb5f67b))
+
 ## [1.1.4](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.1.3...v1.1.4) (2023-02-21)
 
 
