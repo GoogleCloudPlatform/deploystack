@@ -119,8 +119,14 @@ func (p textInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Filter project creation screens screeens
 		newKey := strings.ReplaceAll(p.key, projNewSuffix, "")
 
+		newValue := p.value
+		if msg.msg == "prependProject" {
+			currentProject := p.queue.Get("currentProject").(string)
+			newValue = fmt.Sprintf("%s-%s", currentProject, newValue)
+		}
+
 		if !p.omitFromSettings {
-			p.queue.stack.AddSetting(newKey, p.value)
+			p.queue.stack.AddSetting(newKey, newValue)
 		}
 		return p.queue.next()
 

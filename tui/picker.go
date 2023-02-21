@@ -171,8 +171,14 @@ func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return p, nil
 	case successMsg:
 		p.state = "idle"
+		newValue := p.value
+		if msg.msg == "prependProject" {
+			currentProject := p.queue.Get("currentProject").(string)
+			newValue = fmt.Sprintf("%s-%s", currentProject, newValue)
+		}
+
 		if !msg.unset && !p.omitFromSettings {
-			p.queue.stack.AddSetting(p.key, p.value)
+			p.queue.stack.AddSetting(p.key, newValue)
 		}
 
 		return p.queue.next()

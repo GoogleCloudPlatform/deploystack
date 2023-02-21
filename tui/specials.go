@@ -92,6 +92,10 @@ func newCustom(c deploystack.Custom) QueueModel {
 		r.addPostProcessor(validateInteger)
 	}
 
+	if c.PrependProject {
+		r.addPostProcessor(prependProject)
+	}
+
 	return &r
 }
 
@@ -239,6 +243,9 @@ func newCustomPages(q *Queue) {
 			}
 
 			pickerPage := newPicker(v.Description, "", v.Name, v.Default, f(items))
+			if v.PrependProject {
+				pickerPage.addPostProcessor(prependProject)
+			}
 			q.add(&pickerPage)
 			continue
 		}

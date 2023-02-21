@@ -47,6 +47,10 @@ func (p *dynamicPage) setValue(s string) {
 	p.value = s
 }
 
+func (p *dynamicPage) getValue() string {
+	return p.value
+}
+
 func (p *dynamicPage) clear() {
 	p.value = ""
 }

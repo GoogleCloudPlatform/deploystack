@@ -361,3 +361,9 @@ func validateGCEConfiguration(input string, q *Queue) tea.Cmd {
 		return successMsg{unset: true}
 	}
 }
+
+func prependProject(value string, q *Queue) tea.Cmd {
+	return func() tea.Msg {
+		return successMsg{msg: "prependProject"}
+	}
+}
