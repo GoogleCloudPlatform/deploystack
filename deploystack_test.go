@@ -21,8 +21,15 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 )
+
+func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
+	if !reflect.DeepEqual(want, got) {
+		t.Fatalf("%s: expected: \n|%v|\ngot: \n|%v|", label, want, got)
+	}
+}
 
 func TestCacheContact(t *testing.T) {
 	tests := map[string]struct {
@@ -169,6 +176,153 @@ func TestCheckForContact(t *testing.T) {
 			}
 
 			contactfile = oldContactFile
+		})
+	}
+}
+
+func TestBasic(t *testing.T) {
+	tests := map[string]struct {
+		in   string
+		want string
+	}{
+		"basic": {
+			in:   "test",
+			want: "test",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.in
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestInit(t *testing.T) {
+	errUnableToRead := errors.New("unable to read config file: ")
+	tests := map[string]struct {
+		path string
+		want config.Stack
+		err  error
+	}{
+		"error": {
+			path: "sadasd",
+			want: config.Stack{},
+			err:  errUnableToRead,
+		},
+		"no_custom": {
+			path: "test_files/dsfolders/no_customs",
+			want: config.Stack{
+				Config: config.Config{
+					Title:         "TESTCONFIG",
+					Name:          "test",
+					Description:   "A test string for usage with this stuff.",
+					Duration:      5,
+					Project:       true,
+					Region:        true,
+					RegionType:    "functions",
+					RegionDefault: "us-central1",
+				},
+			},
+			err: nil,
+		},
+		"no_name": {
+			path: "test_files/dsfolders/no_name",
+			want: config.Stack{
+				Config: config.Config{
+					Title:         "NONAME",
+					Name:          "",
+					Description:   "A test string for usage with this stuff.",
+					Duration:      5,
+					Project:       true,
+					Region:        true,
+					RegionType:    "functions",
+					RegionDefault: "us-central1",
+				},
+			},
+			err: fmt.Errorf("could retrieve name of stack: could not open local git directory: repository does not exist \nDeployStack author: fix this by adding a 'name' key and value to the deploystack config"),
+		},
+		"custom": {
+			path: "test_files/dsfolders/customs",
+			want: config.Stack{
+				Config: config.Config{
+					Title:         "TESTCONFIG",
+					Name:          "test",
+					Description:   "A test string for usage with this stuff.",
+					Duration:      5,
+					Project:       false,
+					Region:        false,
+					RegionType:    "",
+					RegionDefault: "",
+					CustomSettings: []config.Custom{
+						{Name: "nodes", Description: "Nodes", Default: "3"},
+					},
+				},
+			},
+			err: nil,
+		},
+		"custom_options": {
+			path: "test_files/dsfolders/customs_options",
+			want: config.Stack{
+				Config: config.Config{
+					Title:         "TESTCONFIG",
+					Name:          "test",
+					Description:   "A test string for usage with this stuff.",
+					Duration:      5,
+					Project:       false,
+					Region:        false,
+					RegionType:    "",
+					RegionDefault: "",
+
+					CustomSettings: []config.Custom{
+						{
+							Name:        "nodes",
+							Description: "Nodes",
+							Default:     "3",
+							Options:     []string{"1", "2", "3"},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			oldWD, _ := os.Getwd()
+			os.Chdir(tc.path)
+
+			s, err := Init()
+
+			if tc.err == nil {
+				if err != nil {
+					t.Fatalf("expected: no error got: %+v", err)
+				}
+			}
+
+			if errors.Is(err, tc.err) {
+				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
+					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
+				}
+			}
+
+			os.Chdir(oldWD)
+
+			compareValues("Name", tc.want.Config.Name, s.Config.Name, t)
+			compareValues("Title", tc.want.Config.Title, s.Config.Title, t)
+			compareValues("Description", tc.want.Config.Description, s.Config.Description, t)
+			compareValues("Duration", tc.want.Config.Duration, s.Config.Duration, t)
+			compareValues("Project", tc.want.Config.Project, s.Config.Project, t)
+			compareValues("Region", tc.want.Config.Region, s.Config.Region, t)
+			compareValues("RegionType", tc.want.Config.RegionType, s.Config.RegionType, t)
+			compareValues("RegionDefault", tc.want.Config.RegionDefault, s.Config.RegionDefault, t)
+			for i, v := range s.Config.CustomSettings {
+				compareValues(v.Name, tc.want.Config.CustomSettings[i], v, t)
+			}
 		})
 	}
 }
