@@ -3,8 +3,8 @@ module github.com/GoogleCloudPlatform/deploystack
 go 1.20
 
 require (
-	github.com/GoogleCloudPlatform/deploystack/config v0.0.0-20230221202056-7c1a63410cf6
-	github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230221184722-2d2b928c6567
+	github.com/GoogleCloudPlatform/deploystack/config v1.2.0
+	github.com/GoogleCloudPlatform/deploystack/gcloud v1.2.0
 	github.com/GoogleCloudPlatform/deploystack/tui v0.0.0-20230221184722-2d2b928c6567
 	github.com/charmbracelet/bubbletea v0.23.2
 	google.golang.org/api v0.110.0
