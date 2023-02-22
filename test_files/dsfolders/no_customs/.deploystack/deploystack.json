@@ -1,0 +1,9 @@
+{	
+	"title":"TESTCONFIG",
+	"name":"test",
+	"duration":5,
+	"collect_project":true,
+	"collect_region":true,
+	"region_type":"functions",
+	"region_default":"us-central1"
+}

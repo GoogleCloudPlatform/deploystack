@@ -168,7 +168,7 @@ func TestReadConfig(t *testing.T) {
 			err:  errUnableToRead,
 		},
 		"no_custom": {
-			path: "../test_files/no_customs",
+			path: "../test_files/dsfolders/no_customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -183,7 +183,7 @@ func TestReadConfig(t *testing.T) {
 			err: nil,
 		},
 		"custom": {
-			path: "../test_files/customs",
+			path: "../test_files/dsfolders/customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -201,7 +201,7 @@ func TestReadConfig(t *testing.T) {
 			err: nil,
 		},
 		"custom_options": {
-			path: "../test_files/customs_options",
+			path: "../test_files/dsfolders/customs_options",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
