@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
@@ -60,13 +61,68 @@ func TestCacheContact(t *testing.T) {
 					t.Fatalf("expected no error,  got: %+v", err)
 				}
 			} else {
-				if _, err := os.Stat(contactfile); errors.Is(err, tc.err) {
+				if _, err := os.Stat(contactfile); err.Error() != tc.err.Error() {
 					t.Fatalf("expected %+v, got: %+v", tc.err, err)
 				}
 
 			}
 
 			os.Remove(contactfile)
+
+		})
+	}
+}
+
+func TestNewContactDataFromFile(t *testing.T) {
+	tests := map[string]struct {
+		in   string
+		want gcloud.ContactData
+		err  error
+	}{
+		"basic": {
+			in: "test_files/contact/contact.yaml",
+			want: gcloud.ContactData{
+				AllContacts: gcloud.DomainRegistrarContact{
+					Email: "test@example.com",
+					Phone: "+155555551212",
+					PostalAddress: gcloud.PostalAddress{
+						RegionCode:         "US",
+						PostalCode:         "94502",
+						AdministrativeArea: "CA",
+						Locality:           "San Francisco",
+						AddressLines:       []string{"345 Spear Street"},
+						Recipients:         []string{"Googler"},
+					},
+				},
+			},
+			err: nil,
+		},
+		"error": {
+			in:   "test_files/contact/noexists.yaml",
+			want: gcloud.ContactData{},
+			err:  fmt.Errorf("open test_files/contact/noexists.yaml: no such file or directory"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := NewContactDataFromFile(tc.in)
+
+			if tc.err == nil {
+
+				if err != nil {
+					t.Fatalf("expected no error,  got: %+v", err)
+				}
+
+				if !reflect.DeepEqual(tc.want, got) {
+					t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+				}
+
+			} else {
+				if err.Error() != tc.err.Error() {
+					t.Fatalf("expected %+v, got: %+v", tc.err, err)
+				}
+			}
 
 		})
 	}
