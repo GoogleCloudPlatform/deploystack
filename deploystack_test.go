@@ -15,63 +15,59 @@
 package deploystack
 
 import (
-	"encoding/json"
-	"log"
-	"math/rand"
+	"errors"
+	"fmt"
 	"os"
-	"reflect"
 	"testing"
-	"time"
 
-	"google.golang.org/api/option"
+	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 )
 
-var (
-	projectID = ""
-	creds     map[string]string
-)
-
-func TestMain(m *testing.M) {
-	var err error
-	opts = option.WithCredentialsFile("creds.json")
-
-	dat, err := os.ReadFile("creds.json")
-	if err != nil {
-		log.Fatalf("unable to handle the json config file: %v", err)
+func TestCacheContact(t *testing.T) {
+	tests := map[string]struct {
+		in  gcloud.ContactData
+		err error
+	}{
+		"basic": {
+			in: gcloud.ContactData{
+				AllContacts: gcloud.DomainRegistrarContact{
+					Email: "test@example.com",
+					Phone: "+155555551212",
+					PostalAddress: gcloud.PostalAddress{
+						RegionCode:         "US",
+						PostalCode:         "94502",
+						AdministrativeArea: "CA",
+						Locality:           "San Francisco",
+						AddressLines:       []string{"345 Spear Street"},
+						Recipients:         []string{"Googler"},
+					},
+				},
+			},
+			err: nil,
+		},
+		"err": {
+			in:  gcloud.ContactData{},
+			err: fmt.Errorf("stat contact.yaml: no such file or directory"),
+		},
 	}
 
-	json.Unmarshal(dat, &creds)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			CacheContact(tc.in)
 
-	projectID = creds["project_id"]
-	if err != nil {
-		log.Fatalf("could not get environment project id: %s", err)
+			if tc.err == nil {
+				if _, err := os.Stat(contactfile); errors.Is(err, os.ErrNotExist) {
+					t.Fatalf("expected no error,  got: %+v", err)
+				}
+			} else {
+				if _, err := os.Stat(contactfile); errors.Is(err, tc.err) {
+					t.Fatalf("expected %+v, got: %+v", tc.err, err)
+				}
+
+			}
+
+			os.Remove(contactfile)
+
+		})
 	}
-	code := m.Run()
-	os.Exit(code)
-}
-
-func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
-	if !reflect.DeepEqual(want, got) {
-		t.Fatalf("%s: expected: \n|%v|\ngot: \n|%v|", label, want, got)
-	}
-}
-
-func randSeq(n int) string {
-	rand.Seed(time.Now().Unix())
-
-	letters := []rune("abcdefghijklmnopqrstuvwxyz")
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
-func remove(l []string, item string) []string {
-	for i, other := range l {
-		if other == item {
-			return append(l[:i], l[i+1:]...)
-		}
-	}
-	return l
 }
