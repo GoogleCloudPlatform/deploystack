@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.2.2...v1.2.3) (2023-02-22)
+
+
+### Bug Fixes
+
+* add test for contact writing ([5927477](https://github.com/GoogleCloudPlatform/deploystack/commit/59274779d0c9b5dd6da2f00bb07c5ce2641948a0))
+* added test for checking for contacts ([5d9c940](https://github.com/GoogleCloudPlatform/deploystack/commit/5d9c940b277fba756bdb5f579f41c99a3e835a2a))
+* adding test for Caching the domain contact ([8475386](https://github.com/GoogleCloudPlatform/deploystack/commit/847538682f3e029118ccbe7be306ae376bf6fb50))
+* adding test for init ([a034b4d](https://github.com/GoogleCloudPlatform/deploystack/commit/a034b4d20bc6b715d3eca37a3aa8cb126e7d9a2e))
+
 ## [1.2.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.2.1...v1.2.2) (2023-02-21)
 
 

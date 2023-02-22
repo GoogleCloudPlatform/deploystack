@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/GoogleCloudPlatform/deploystack/compare/config/v1.2.0...config/v1.2.1) (2023-02-22)
+
+
+### Bug Fixes
+
+* adding test for init ([a034b4d](https://github.com/GoogleCloudPlatform/deploystack/commit/a034b4d20bc6b715d3eca37a3aa8cb126e7d9a2e))
+
 ## [1.2.0](https://github.com/GoogleCloudPlatform/deploystack/compare/config-v1.1.1...config/v1.2.0) (2023-02-21)
 
 
