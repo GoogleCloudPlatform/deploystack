@@ -127,3 +127,48 @@ func TestNewContactDataFromFile(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckForContact(t *testing.T) {
+	tests := map[string]struct {
+		in   string
+		want gcloud.ContactData
+	}{
+		"basic": {
+			in: "test_files/contact/contact.yaml",
+			want: gcloud.ContactData{
+				AllContacts: gcloud.DomainRegistrarContact{
+					Email: "test@example.com",
+					Phone: "+155555551212",
+					PostalAddress: gcloud.PostalAddress{
+						RegionCode:         "US",
+						PostalCode:         "94502",
+						AdministrativeArea: "CA",
+						Locality:           "San Francisco",
+						AddressLines:       []string{"345 Spear Street"},
+						Recipients:         []string{"Googler"},
+					},
+				},
+			},
+		},
+
+		"empty": {
+			in:   contactfile,
+			want: gcloud.ContactData{},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			oldContactFile := contactfile
+			contactfile = tc.in
+
+			got := CheckForContact()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+
+			contactfile = oldContactFile
+		})
+	}
+}
