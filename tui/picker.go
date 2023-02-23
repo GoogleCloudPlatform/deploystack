@@ -36,13 +36,14 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	str := fmt.Sprintf("%2d. %s", index+1, i.label)
+	str := fmt.Sprintf("%2d. %-50s", index+1, i.label)
 
 	fn := itemStyle.Render
 	if index == m.Index() {
 		color := selectedItemStyle.background.code()
 		fn = func(s string) string {
-			return selectedItemStyle.Render(color + "> " + s)
+			defaultItemStyle := lipgloss.NewStyle().Bold(true)
+			return selectedItemStyle.Render(color + "> " + defaultItemStyle.Render(s) + clear)
 		}
 	}
 
@@ -66,7 +67,7 @@ type picker struct {
 func newPicker(listLabel, spinnerLabel, key, defaultValue string, preProcessor tea.Cmd) picker {
 	p := picker{}
 
-	l := list.New([]list.Item{}, itemDelegate{}, 0, 20)
+	l := list.New([]list.Item{}, itemDelegate{}, 0, 19)
 	l.Title = listLabel
 	l.Styles.Title = titleStyle.style
 	l.Styles.PaginationStyle = paginationStyle
@@ -97,15 +98,20 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 		return items, selectedIndex
 	}
 
+	defaultIndex := 0
 	newItems := []list.Item{}
 	defaultItem := item{}
 	createItem := item{}
 	returnItems := []list.Item{}
 
-	for _, v := range items {
+	for i, v := range items {
 		item := v.(item)
 		if item.value == defaultValue || item.label == defaultValue || defaultValue == item.value+"|"+item.label {
 			defaultItem = item
+			text := defaultItem.label + " (Default Value)"
+			defaultItem.label = text
+			items[i] = defaultItem
+			defaultIndex = i
 			continue
 		}
 		if strings.Contains(item.label, "Create New Project") {
@@ -113,6 +119,10 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 			continue
 		}
 		newItems = append(newItems, item)
+	}
+
+	if len(items) <= 10 {
+		return items, defaultIndex
 	}
 
 	createAdded := 0
@@ -124,9 +134,6 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 	defaultAdded := 0
 	if defaultItem.value != "" {
 		defaultAdded++
-		text := defaultItem.label + " (Default Value)"
-		defaultItemStyle := lipgloss.NewStyle().Bold(true)
-		defaultItem.label = defaultItemStyle.Render(text)
 
 		returnItems = append(returnItems, defaultItem)
 	}

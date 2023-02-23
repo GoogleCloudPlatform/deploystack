@@ -64,8 +64,8 @@ func TestPreprocessors(t *testing.T) {
 		"getZones": {
 			f:        getZones,
 			count:    3,
-			label1st: "asia-east1-b",
-			value1st: "asia-east1-b",
+			label1st: "asia-east1-a",
+			value1st: "asia-east1-a",
 			settings: map[string]string{"region": "asia-east1"},
 		},
 
