@@ -8,17 +8,17 @@
                                                                                                          
      87 items                                                                                            
                                                                                                          
-   [0;37m[0;46m  [0;46m>  1. Create New Project                                                                          [0m  
-   [0;37m     2. aiab-test-project[0m                                                                             
-   [0;37m     3. bucketsite-test[0m                                                                               
-   [0;37m     4. cloud-logging[0m                                                                                 
-   [0;37m     5. cloudicons[0m                                                                                    
-   [0;37m     6. coldfusion-demo[0m                                                                               
-   [0;37m     7. coldfusion-demo-2[0m                                                                             
-   [0;37m     8. coltsays[0m                                                                                      
-   [0;37m     9. cost-sentry-experiments[0m                                                                       
-   [0;37m    10. deploy-terraform[0m                                                                              
-   [0;37m    11. deploystack-terraform[0m                                                                         
+   [0;37m[0;46m  [0;46m> [1m 1. Create New Project                                [0m[0m                                          [0m  
+   [0;37m     2. aiab-test-project                                 [0m                                            
+   [0;37m     3. bucketsite-test                                   [0m                                            
+   [0;37m     4. cloud-logging                                     [0m                                            
+   [0;37m     5. cloudicons                                        [0m                                            
+   [0;37m     6. coldfusion-demo                                   [0m                                            
+   [0;37m     7. coldfusion-demo-2                                 [0m                                            
+   [0;37m     8. coltsays                                          [0m                                            
+   [0;37m     9. cost-sentry-experiments                           [0m                                            
+   [0;37m    10. deploy-terraform                                  [0m                                            
+   [0;37m    11. deploystack-terraform                             [0m                                            
                                                                                                          
        1/8                                                                                               
                                                                                                          

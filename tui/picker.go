@@ -98,15 +98,20 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 		return items, selectedIndex
 	}
 
+	defaultIndex := 0
 	newItems := []list.Item{}
 	defaultItem := item{}
 	createItem := item{}
 	returnItems := []list.Item{}
 
-	for _, v := range items {
+	for i, v := range items {
 		item := v.(item)
 		if item.value == defaultValue || item.label == defaultValue || defaultValue == item.value+"|"+item.label {
 			defaultItem = item
+			text := defaultItem.label + " (Default Value)"
+			defaultItem.label = text
+			items[i] = defaultItem
+			defaultIndex = i
 			continue
 		}
 		if strings.Contains(item.label, "Create New Project") {
@@ -114,6 +119,10 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 			continue
 		}
 		newItems = append(newItems, item)
+	}
+
+	if len(items) <= 10 {
+		return items, defaultIndex
 	}
 
 	createAdded := 0
@@ -125,8 +134,6 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 	defaultAdded := 0
 	if defaultItem.value != "" {
 		defaultAdded++
-		text := defaultItem.label + " (Default Value)"
-		defaultItem.label = text
 
 		returnItems = append(returnItems, defaultItem)
 	}
