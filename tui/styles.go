@@ -361,7 +361,7 @@ var (
 
 	docStyle = newDsStyle().
 			Foreground(basicText).
-			Padding(0, 2)
+			Padding(0, 2).BorderStyle(lipgloss.NormalBorder()).Height(30).Width(110)
 
 	promptStyle = newDsStyle().
 			Bold(true).

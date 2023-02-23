@@ -112,7 +112,7 @@ func Run(s *config.Stack, useMock bool) {
 	q.Save("contact", deploystack.CheckForContact())
 	q.InitializeUI()
 
-	p := tea.NewProgram(q.Start(), tea.WithAltScreen())
+	p := tea.NewProgram(q.Start())
 	if _, err := p.Run(); err != nil {
 		Fatal(err)
 	}
