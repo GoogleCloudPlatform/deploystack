@@ -21,6 +21,5 @@
                                                                                                                                                     
                                                                                                                                                     
                                                                                                                                                     
-                                                                                                                                                    
        ↑/k up • ↓/j down • / filter • q quit • ? more                                                                                               
                                                                                                        [0m                                             [0m

@@ -18,9 +18,8 @@
    [0;37m     8. coltsays                                          [0m                                            
    [0;37m     9. cost-sentry-experiments                           [0m                                            
    [0;37m    10. deploy-terraform                                  [0m                                            
-   [0;37m    11. deploystack-terraform                             [0m                                            
                                                                                                          
-       1/8                                                                                               
+       1/9                                                                                               
                                                                                                          
        ↑/k up • ↓/j down • / filter • q quit • ? more                                                    
                                                                                                        [0m  [0m
