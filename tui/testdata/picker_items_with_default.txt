@@ -8,10 +8,10 @@
                                                                                                                                                     
      4 items                                                                                                                                        
                                                                                                                                                     
-   [0;37m[0;46m  [0;46m>  1. [1mChoice3 (Default Value)[0m                                                                     [0m                                             
-   [0;37m     2. Choice[0m                                                                                                                                   
-   [0;37m     3. Choice1[0m                                                                                                                                  
-   [0;37m     4. Choice2[0m                                                                                                                                  
+   [0;37m     1. Choice                                            [0m                                                                                       
+   [0;37m     2. Choice1                                           [0m                                                                                       
+   [0;37m     3. Choice2                                           [0m                                                                                       
+   [0;37m[0;46m  [0;46m> [1m 4. Choice3 (Default Value)                           [0m[0m                                          [0m                                             
                                                                                                                                                     
                                                                                                                                                     
                                                                                                                                                     

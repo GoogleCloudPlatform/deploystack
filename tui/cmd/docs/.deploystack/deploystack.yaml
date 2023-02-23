@@ -23,7 +23,7 @@ collect_billing_account: false
 region_type: "run"
 region_default: "us-central1"
 collect_zone: true
-register_domain: true
+# register_domain: true
 # You can even include comments in this yaml
 hard_settings:
   basename: "three-tier-app"
