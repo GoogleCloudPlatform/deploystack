@@ -1,10 +1,11 @@
 Hide
-Set Framerate 10
+Set Framerate 20
 Output demo.gif
-Set Width 800
-Set Height 600
+Output golden.ascii
+# Set Width 400
+# Set Height 300
 Sleep 1s
-Type "go run tui/cmd/docs/main.go"
+Type "DEBUG=true ./docs"
 Show
 Sleep 500ms
 Enter
