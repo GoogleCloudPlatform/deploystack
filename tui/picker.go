@@ -67,7 +67,7 @@ type picker struct {
 func newPicker(listLabel, spinnerLabel, key, defaultValue string, preProcessor tea.Cmd) picker {
 	p := picker{}
 
-	l := list.New([]list.Item{}, itemDelegate{}, 0, 20)
+	l := list.New([]list.Item{}, itemDelegate{}, 0, 19)
 	l.Title = listLabel
 	l.Styles.Title = titleStyle.style
 	l.Styles.PaginationStyle = paginationStyle
