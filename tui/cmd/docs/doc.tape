@@ -5,7 +5,7 @@ Output golden.ascii
 # Set Width 400
 # Set Height 300
 Sleep 1s
-Type "DEBUG=true ./docs"
+Type "DEBUG=true go run main.go"
 Show
 Sleep 500ms
 Enter
