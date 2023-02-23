@@ -332,6 +332,8 @@ func (m mock) ZoneList(project, region string) ([]string, error) {
 		}
 	}
 
+	sort.Strings(r)
+
 	return r, nil
 }
 
