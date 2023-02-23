@@ -36,13 +36,14 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	str := fmt.Sprintf("%2d. %s", index+1, i.label)
+	str := fmt.Sprintf("%2d. %-50s", index+1, i.label)
 
 	fn := itemStyle.Render
 	if index == m.Index() {
 		color := selectedItemStyle.background.code()
 		fn = func(s string) string {
-			return selectedItemStyle.Render(color + "> " + s)
+			defaultItemStyle := lipgloss.NewStyle().Bold(true)
+			return selectedItemStyle.Render(color + "> " + defaultItemStyle.Render(s) + clear)
 		}
 	}
 
@@ -125,8 +126,7 @@ func positionDefault(items []list.Item, defaultValue string) ([]list.Item, int) 
 	if defaultItem.value != "" {
 		defaultAdded++
 		text := defaultItem.label + " (Default Value)"
-		defaultItemStyle := lipgloss.NewStyle().Bold(true)
-		defaultItem.label = defaultItemStyle.Render(text)
+		defaultItem.label = text
 
 		returnItems = append(returnItems, defaultItem)
 	}
