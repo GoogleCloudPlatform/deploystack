@@ -11,10 +11,10 @@ interfaces for collecting information from users for use with DeployStack.
 Quick TLDR omitting testing, which you should totally do but for development and
 whatnot you can just do this.
 
-1. Clone this project.
+1. Create a Folder to hold your stack.
 1. Add your `main.tf` file
-1. Edit the `deploystack.json` file
-1. Edit the `deploystack.txt` file
+1. Create a .deploystack folder
+1. Add a `deploystack.yaml` file
 
 Running `./deploystack install` should spin up the goapp and collect the config items the
 stack needs to run through the deployment
@@ -26,15 +26,9 @@ Running `./deploystack uninstall` will destory the whole thing.
 Authors are required to make or edit 4 files.
 
 - `main.tf`
-- `deploystack.json`
-- `deploystack.txt`
-- `test`
+- `.deploystack/deploystack.yaml`
+- `.deploystack/test`
 
-The following files need to be included but shoudln't need to be edited at all:
-
-- `deploystack`
-- `main.go`
-- `test.yaml`
 
 ### `main.tf`
 
@@ -60,56 +54,10 @@ variable "zone" {
 }
 ```
 
-### `deploystack.json`
+### `deploystack.yaml`
 
 This config will be read by the golang helper to prompt the user to create a
 tfvars file that will drive the terraform script.
-
-```json
-{
-  "title": "Basic Title",
-  "duration": 5,
-  "collect_project": true,
-  "collect_region": true,
-  "region_type": "functions",
-  "region_default": "us-central1",
-  "collect_zone": true,
-  "hard_settings": {
-    "basename": "appprefix"
-  },
-  "custom_settings": [
-    {
-      "name": "nodes",
-      "description": "Please enter the number of nodes",
-      "options": [
-				"roles/reviewer|Project Reviewer",
-				"roles/owner|Project Owner",
-				"roles/vison.reader|Cloud Vision Reader"
-		  ],
-	  "default" : "roles/owner|Project Owner"
-    }
-  ],
-  "projects": {
-    "allow_duplicates": false,
-    "items": [
-      {
-        "variable_name": "project_id",
-        "user_prompt": "Choose a project to use for this application",
-        "set_as_default": true
-      },
-      {
-        "variable_name": "project_id_2",
-        "user_prompt": "Choose a second project to use for this application",
-        "set_as_default": false
-      }
-    ]
-  }
-}
-```
-
-### `deploystack.yaml`
-
-You can also use a yaml file if you are using the .deploystack folder setup. 
 
 ```yaml
 title: Basic Title
@@ -140,6 +88,9 @@ projects:
     set_as_default: false
 ```
 
+_JSON is also allowed _
+
+
 #### DeployStack Config Settings
 
 
@@ -147,6 +98,7 @@ projects:
 | ---------------        | ------- | ------------------------------------------------------------------------------------ |
 | title                  | string  | You know what a title is                                                             |
 | duration               | number  | An estimate as to how long this installation takes                                   |
+| description            | string  | A text explanation of the stack. Useful in yaml config, as it can contain formatting.|
 | collect_project        | boolean | Whether or not to walk the user through picking or creating a project.               |
 | collect_region         | boolean | Whether or not to walk the user through picking a regions                            |
 | register_domain        | boolean | Whether or not to walk the user through registering a domain                         |
@@ -163,6 +115,7 @@ projects:
 | path_scripts           | string  | Path that DeployStack should look for scripts that can be injected into DeployStack routine.  |
 | custom_settings        |         |  **Documentation Below** Custom Settings are collections of settings that we would like to prompt a user for.  |
 | projects               |         |  **Documentation Below** Projects are a list of projects with settings that will surface the project selector interface for.  |
+| products               |         |  **Documentation Below** Products are a list of products or other labels for structured documentation  |
 
 #### Custom Settings Options
 
@@ -189,79 +142,91 @@ projects:
 | set_as_default         | string  | Whether or not to set this as the default project for the user                       |
 
 
+#### Product Settings Options
+
+| Name                   | Type    | Description                                                                                |
+| -------- | ------- | -------------------------------------------------------------------------------------------------------- |
+| product  | string  | The name of a product or other label for part of a solution.  Used to add structured documentation.      |
+| info     | string  | The description of the product or other label.                                                           |
+
+
 ### UI Controls
 
 #### Header
-```json
-  "title":"BASICLB",
-  "duration":5,
+```yaml
+title: "A Sample Stack"
+name: "sample"
+duration: 9 
+documentation_link: "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack"
+products :
+- info: "VM template" 
+  product: "Instance Template"   
+- info: "Clustering" 
+  product: "Managed Instance Group"   
+- info: "Load Balancing" 
+  product: "Load Balancer"       
+description:  | 
+  This is additional stuff that will go here and be formatted. 
+  * You can add a bullet list
+  * That's totally cool
 ```
 
-```txt
-This process will create the following:
-
-	* Frontend - Cloud Run Service 
-	* Middleware - Cloud Run Service
-	* Backend - Cloud Sql MySQL instance 
-	* Cache - Cloud Memorystore
-	* Secrets - Cloud Secret Manager
-
-All of these will spin up configured in a 3 tier application that delievers a
-todo app to show all of these pieces working together.  
-```
 ![UI for Project Selector](assets/ui_header.png)
 
 
 #### Project Selector
-```json
-  "collect_project":true
+```yaml
+collect_project: true
 ```
-![UI for Project Selector](assets/ui_choose_project.png)
+![UI for Project Selector](assets/ui_choose_project.gif)
 
 #### Region Selector
-```json
-  "collect_region":true,
-  "region_type":"functions",
-  "region_default":"us-central1",
+```yaml
+collect_region: true
+region_type: "run"
+region_default: "us-central1"
 ```
-![UI for Region Selector](assets/ui_change_region.png)
+![UI for Region Selector](assets/ui_change_region.gif)
 
 #### Zone Selector
-```json
-  "collect_zone":true
+```yaml
+collect_zone: true
 ```
-![UI for Zone Selector](assets/ui_choose_zone.png)
+![UI for Zone Selector](assets/ui_change_zone.gif)
 
 
 #### Custom Settings - no options
-```json
-"name":"nodes",
-"description":"Please enter the number of nodes",
-"default": "3"
+```yaml
+custom_settings:
+  - name : "nodes"
+    description: "Please enter the number of nodes"
+    default: 3
 ```
 ![UI for Custom Settings with no options](assets/ui_custom_no_options.png)
 
 #### Custom Settings - options
-```json
-"name":"nodes",
-"description":"Please enter the number of nodes",
-"default": "3"
-"options": ["1", "2", "3"]
+```yaml
+custom_settings:
+  - name : "nodes2"
+    description: "Please enter the number of nodes"
+    default: 3
+    options: ["1", "2", "3"]
 ```
 ![UI for Custom Settings with options](assets/ui_custom_options.png)
 
 
 #### Domain Registration
-```json
-  "register_domain":true
+```yaml
+register_domain: truee
 ```
-![UI for Domain Registration](assets/ui_register_domain.png)
+![UI for Domain Registration](assets/ui_register_domain.gif)
 
 
-### `deploystack.txt`
+### `messages/description.txt`
 
-This file allows you to add a formatted description to the configuration to
-print out to the user. Json files don't do well with newlines.
+DEPRECATED: This file allows you to add a formatted description to the configuration to
+print out to the user. Json files don't do well with newlines. Using Description in
+deploystack.yaml is now prefered
 
 ### `test`
 
