@@ -20,20 +20,19 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
 // Stack represents the input config and output settings for this DeployStack
 type Stack struct {
-	Settings map[string]string
+	Settings Settings
 	Config   Config
 }
 
 // NewStack returns an initialized Stack
 func NewStack() Stack {
 	s := Stack{}
-	s.Settings = make(map[string]string)
+	s.Settings = Settings{}
 	return s
 }
 
@@ -170,38 +169,43 @@ func (s *Stack) FindAndReadRequired() error {
 }
 
 // AddSetting stores a setting key/value pair.
-func (s Stack) AddSetting(key, value string) {
-	k := strings.ToLower(key)
-	s.Settings[k] = value
+func (s *Stack) AddSetting(key, value string) {
+	s.Settings.Add(key, value)
 }
 
 // GetSetting returns a setting value.
-func (s Stack) GetSetting(key string) string {
-	return s.Settings[key]
+func (s *Stack) GetSetting(key string) string {
+	set := s.Settings.Find(key)
+
+	if set != nil {
+		return set.Value
+	}
+
+	return ""
 }
 
 // DeleteSetting removes a setting value.
-func (s Stack) DeleteSetting(key string) {
-	delete(s.Settings, key)
+func (s *Stack) DeleteSetting(key string) {
+	log.Printf("key : %+v ", key)
+	for i, v := range s.Settings {
+		if v.Name == key {
+			s.Settings = append(s.Settings[:i], s.Settings[i+1:]...)
+		}
+	}
+
 }
 
 // Terraform returns all of the settings as a Terraform variables format.
 func (s Stack) Terraform() string {
 	result := strings.Builder{}
 
-	keys := []string{}
-	for i := range s.Settings {
-		keys = append(keys, i)
-	}
+	s.Settings.Sort()
 
-	sort.Strings(keys)
-
-	for _, v := range keys {
-		if len(v) < 1 {
+	for _, v := range s.Settings {
+		if v.Name == "" {
 			continue
 		}
-		label := strings.ToLower(strings.ReplaceAll(v, " ", "_"))
-		val := s.Settings[v]
+		label := strings.ToLower(strings.ReplaceAll(v.Name, " ", "_"))
 
 		if label == "project_name" {
 			continue
@@ -211,14 +215,14 @@ func (s Stack) Terraform() string {
 			continue
 		}
 
-		if len(val) < 1 {
+		if len(v.Value) < 1 {
 			continue
 		}
 
-		if val[0:1] == "[" {
+		if v.Value[0:1] == "[" {
 			sb := strings.Builder{}
 			sb.WriteString("[")
-			tmp := strings.ReplaceAll(val, "[", "")
+			tmp := strings.ReplaceAll(v.Value, "[", "")
 			tmp = strings.ReplaceAll(tmp, "]", "")
 			sl := strings.Split(tmp, ",")
 
@@ -237,7 +241,12 @@ func (s Stack) Terraform() string {
 			continue
 		}
 
-		result.WriteString(fmt.Sprintf("%s=\"%s\"\n", label, val))
+		if v.Type == "string" || v.Type == "" {
+			result.WriteString(fmt.Sprintf("%s=\"%s\"\n", label, v.Value))
+			continue
+		}
+
+		result.WriteString(fmt.Sprintf("%s=%s\n", label, v.Value))
 
 	}
 
