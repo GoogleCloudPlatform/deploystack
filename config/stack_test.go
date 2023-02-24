@@ -195,6 +195,24 @@ set=["item1","item2"]
 	}
 }
 
+func TestStackTFvarsWithTypes(t *testing.T) {
+	s := NewStack()
+	s.AddSetting("project", "testproject")
+	s.AddSettingWithType("boolean", "true", "boolean")
+	s.AddSetting("set", "[item1,item2]")
+	got := s.Terraform()
+
+	want := `boolean=true
+project="testproject"
+set=["item1","item2"]
+`
+
+	if got != want {
+		fmt.Println(diff.Diff(want, got))
+		t.Fatalf("expected: %v, got: %v", want, got)
+	}
+}
+
 func TestTerraformFile(t *testing.T) {
 	tests := map[string]struct {
 		filename string
@@ -247,8 +265,8 @@ func TestStackAddSettings(t *testing.T) {
 				{key: "test_project", value: "project_name"},
 			},
 			want: Settings{
-				Setting{Name: "test1", Value: "value1"},
-				Setting{Name: "test_project", Value: "project_name"},
+				Setting{Name: "test1", Value: "value1", Type: "string"},
+				Setting{Name: "test_project", Value: "project_name", Type: "string"},
 			},
 		},
 	}

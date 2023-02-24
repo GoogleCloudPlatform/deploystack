@@ -31,7 +31,8 @@ type Config struct {
 	RegionDefault        string            `json:"region_default" yaml:"region_default"`
 	Zone                 bool              `json:"collect_zone" yaml:"collect_zone"`
 	HardSet              map[string]string `json:"hard_settings" yaml:"hard_settings"`
-	CustomSettings       []Custom          `json:"custom_settings" yaml:"custom_settings"`
+	CustomSettings       Customs           `json:"custom_settings" yaml:"custom_settings"`
+	AuthorSettings       Settings          `json:"author_settings" yaml:"author_settings"`
 	ConfigureGCEInstance bool              `json:"configure_gce_instance" yaml:"configure_gce_instance"`
 	DocumentationLink    string            `json:"documentation_link" yaml:"documentation_link"`
 	PathTerraform        string            `json:"path_terraform" yaml:"path_terraform"`
@@ -42,6 +43,31 @@ type Config struct {
 		Info    string `json:"info" yaml:"info"`
 		Product string `json:"product" yaml:"product"`
 	} `json:"products" yaml:"products"`
+}
+
+func (c *Config) convertHardset() {
+	for i, v := range c.HardSet {
+		c.AuthorSettings.AddWithType(i, v, "string")
+	}
+	// Blow hardset away so that if anywhere is looking for them, it fails.
+	c.HardSet = nil
+}
+
+func (c *Config) defaultAuthorSettings() {
+	for i, v := range c.AuthorSettings {
+		if v.Type == "" {
+			v.Type = "string"
+			c.AuthorSettings[i] = v
+		}
+
+	}
+}
+
+// GetAuthorSettings delivers the combined Hardset and AuthorSettings variables
+func (c *Config) GetAuthorSettings() Settings {
+	c.convertHardset()
+	c.AuthorSettings.Sort()
+	return c.AuthorSettings
 }
 
 // ComputeName uses the git repo in the working directory to compute the
@@ -136,11 +162,30 @@ func (s *Settings) Add(key, value string) {
 	if set != nil {
 		set.Name = key
 		set.Value = value
+		set.Type = "string"
 		s.Replace(*set)
 		return
 	}
 
-	set = &Setting{Name: k, Value: value}
+	set = &Setting{Name: k, Value: value, Type: "string"}
+	(*s) = append((*s), *set)
+	return
+}
+
+// AddWithType either creates a new setting or updates the existing one with type
+func (s *Settings) AddWithType(key, value, ttype string) {
+	k := strings.ToLower(key)
+
+	set := s.Find(key)
+	if set != nil {
+		set.Name = key
+		set.Value = value
+		set.Type = ttype
+		s.Replace(*set)
+		return
+	}
+
+	set = &Setting{Name: k, Value: value, Type: ttype}
 	(*s) = append((*s), *set)
 	return
 }
