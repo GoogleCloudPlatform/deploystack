@@ -288,7 +288,49 @@ func TestSettingSort(t *testing.T) {
 	}
 }
 
-func TestReplace(t *testing.T) {
+func TestSettingsAdd(t *testing.T) {
+	tests := map[string]struct {
+		in    Settings
+		key   string
+		value string
+		want  *Setting
+	}{
+		"not set yet": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+				Setting{Name: "another", Value: "thing"},
+			},
+			key:   "once",
+			value: "with feeling",
+			want:  &Setting{Name: "once", Value: "with feeling"},
+		},
+		"already set": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+				Setting{Name: "another", Value: "thing"},
+				Setting{Name: "once", Value: "more"},
+			},
+			key:   "once",
+			value: "with feeling",
+			want:  &Setting{Name: "once", Value: "with feeling"},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc.in.Add(tc.key, tc.value)
+
+			got := tc.in.Find(tc.key)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestSettingsReplace(t *testing.T) {
 	tests := map[string]struct {
 		in    Settings
 		want  Settings
@@ -323,6 +365,71 @@ func TestReplace(t *testing.T) {
 
 			if !reflect.DeepEqual(tc.want, tc.in) {
 				t.Fatalf("expected: \n%+v, \ngot: \n%+v", tc.want, tc.in)
+			}
+		})
+	}
+}
+
+func TestBasic(t *testing.T) {
+	tests := map[string]struct {
+		in   Settings
+		q    string
+		want Settings
+	}{
+		"basic": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+				Setting{Name: "another", Value: "thing"},
+				Setting{Name: "once", Value: "more"},
+			},
+			q: "test",
+			want: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.in.Search(tc.q)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestCustomsGet(t *testing.T) {
+	tests := map[string]struct {
+		in   Customs
+		key  string
+		want Custom
+	}{
+		"basic": {
+			in: Customs{
+				Custom{Name: "nodes", Description: "test", Default: "3"},
+				Custom{Name: "role", Description: "test", Default: "Viewer"},
+			},
+			key:  "role",
+			want: Custom{Name: "role", Description: "test", Default: "Viewer"},
+		},
+		"nil": {
+			in: Customs{
+				Custom{Name: "nodes", Description: "test", Default: "3"},
+				Custom{Name: "role", Description: "test", Default: "Viewer"},
+			},
+			key:  "role_not_here",
+			want: Custom{},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.in.Get(tc.key)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}
 		})
 	}
