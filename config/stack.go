@@ -165,12 +165,20 @@ func (s *Stack) FindAndReadRequired() error {
 
 	s.Config = config
 
+	s.Config.convertHardset()
+	s.Config.defaultAuthorSettings()
+
 	return nil
 }
 
 // AddSetting stores a setting key/value pair.
 func (s *Stack) AddSetting(key, value string) {
 	s.Settings.Add(key, value)
+}
+
+// AddSettingWithType stores a setting key/value pair with type.
+func (s *Stack) AddSettingWithType(key, value, ttype string) {
+	s.Settings.AddWithType(key, value, ttype)
 }
 
 // GetSetting returns a setting value.
