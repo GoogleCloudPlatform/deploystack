@@ -16,7 +16,6 @@ package tui
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -244,72 +243,70 @@ func (s settingsTable) render() string {
 	doc := strings.Builder{}
 	wSetting := 0
 	wValue := 0
-	keys := []string{}
-	for i := range s.stack.Settings {
-		keys = append(keys, i)
-	}
-	sort.Strings(keys)
+
+	s.stack.Settings.Sort()
 
 	rows := []table.Row{}
 
-	if value, ok := s.stack.Settings["stack_name"]; ok && len(value) > 0 {
+	if s := s.stack.Settings.Find("stack_name"); s != nil && len(s.Value) > 0 {
 		rows = append(rows, table.Row{
 			titleStyle.Render("Stack Name"),
-			strong.Render(value),
+			strong.Render(s.Value),
 		})
 	}
 
-	if value, ok := s.stack.Settings["project_name"]; ok && len(value) > 0 {
+	if s := s.stack.Settings.Find("project_name"); s != nil && len(s.Value) > 0 {
 		rows = append(rows, table.Row{
 			titleStyle.Render("Project Name"),
-			strong.Render(value),
+			strong.Render(s.Value),
 		})
 	}
 
-	if value, ok := s.stack.Settings["project_id"]; ok && len(value) > 0 {
+	if s := s.stack.Settings.Find("project_id"); s != nil && len(s.Value) > 0 {
 		rows = append(rows, table.Row{
 			titleStyle.Render("Project ID"),
-			strong.Render(value),
+			strong.Render(s.Value),
 		})
 	}
 
-	if value, ok := s.stack.Settings["project_number"]; ok && len(value) > 0 {
+	if s := s.stack.Settings.Find("project_number"); s != nil && len(s.Value) > 0 {
 		rows = append(rows, table.Row{
 			titleStyle.Render("Project Number"),
-			strong.Render(value),
+			strong.Render(s.Value),
 		})
 	}
 
-	for _, setting := range keys {
+	for _, setting := range s.stack.Settings {
 
-		rawValue := s.stack.Settings[setting]
+		rawValue := setting.Value
 		value := strong.Render(strings.TrimSpace(rawValue))
+
 		if len(rawValue) > 45 {
 			value = strong.Render(rawValue[:45] + "...")
 		}
 
-		if len(setting) > wSetting {
-			wSetting = len(setting)
+		if len(setting.Name) > wSetting {
+			wSetting = len(setting.Name)
 		}
 
 		if len(value) > wValue {
 			wValue = len(value)
 		}
 
-		if setting == "project_id" ||
-			setting == "project_number" ||
-			setting == "project_name" ||
-			setting == "stack_name" {
+		if setting.Name == "project_id" ||
+			setting.Name == "project_number" ||
+			setting.Name == "project_name" ||
+			setting.Name == "stack_name" {
 			continue
 		}
 		if len(value) < 1 {
 			continue
 		}
 
-		settingRaw := strings.TrimSpace(setting)
-		settingRaw = strings.ReplaceAll(settingRaw, "_", " ")
-		settingRaw = strings.ReplaceAll(settingRaw, "-", " ")
-		formatted := cases.Title(language.English).String(settingRaw)
+		nameRaw := strings.TrimSpace(setting.Name)
+		nameRaw = strings.ReplaceAll(nameRaw, "_", " ")
+		nameRaw = strings.ReplaceAll(nameRaw, "-", " ")
+		formatted := cases.Title(language.English).String(nameRaw)
 		rows = append(rows, table.Row{titleStyle.Render(formatted), value})
 
 	}
@@ -323,7 +320,7 @@ func (s settingsTable) render() string {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(false),
-		table.WithHeight(len(keys)),
+		table.WithHeight(len(s.stack.Settings)),
 	)
 
 	t.SetStyles(tableStyle)

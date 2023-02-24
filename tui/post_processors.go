@@ -228,10 +228,11 @@ func registerDomain(consent string, q *Queue) tea.Cmd {
 			}
 		}
 
-		for i := range q.stack.Settings {
-			if strings.Contains(i, "domain_") {
-				q.stack.DeleteSetting(i)
-			}
+		domainSettings := q.stack.Settings.Search("domain_")
+
+		for _, v := range domainSettings {
+			q.stack.DeleteSetting(v.Name)
+
 		}
 
 		return successMsg{}
