@@ -229,3 +229,111 @@ func TestTerraformFile(t *testing.T) {
 		})
 	}
 }
+
+func TestStackAddSettings(t *testing.T) {
+	tests := map[string]struct {
+		in []struct {
+			key   string
+			value string
+		}
+		want Settings
+	}{
+		"basic": {
+			in: []struct {
+				key   string
+				value string
+			}{
+				{key: "test1", value: "value1"},
+				{key: "test_project", value: "project_name"},
+			},
+			want: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			got := NewStack()
+			for _, v := range tc.in {
+				got.AddSetting(v.key, v.value)
+			}
+
+			if !reflect.DeepEqual(tc.want, got.Settings) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got.Settings)
+			}
+		})
+	}
+}
+
+func TestStackDeleteSettings(t *testing.T) {
+	tests := map[string]struct {
+		in         Settings
+		want       Settings
+		deletekeys []string
+	}{
+		"basic": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+				Setting{Name: "another", Value: "thing"},
+				Setting{Name: "once", Value: "more"},
+			},
+			deletekeys: []string{"another", "once"},
+			want: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			got := NewStack()
+			got.Settings = tc.in
+
+			for _, v := range tc.deletekeys {
+				got.DeleteSetting(v)
+			}
+
+			if !reflect.DeepEqual(tc.want, got.Settings) {
+				t.Fatalf("expected: \n%+v, \ngot: \n%+v", tc.want, got.Settings)
+			}
+		})
+	}
+}
+
+func TestStackGetSettings(t *testing.T) {
+	tests := map[string]struct {
+		in   Settings
+		key  string
+		want string
+	}{
+		"basic": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+				Setting{Name: "another", Value: "thing"},
+				Setting{Name: "once", Value: "more"},
+			},
+			key:  "test1",
+			want: "value1",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			s := NewStack()
+			s.Settings = tc.in
+			got := s.GetSetting(tc.key)
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: \n%+v, \ngot: \n%+v", tc.want, got)
+			}
+		})
+	}
+}

@@ -255,3 +255,75 @@ func TestReadConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestSettingSort(t *testing.T) {
+	tests := map[string]struct {
+		in         Settings
+		want       Settings
+		deletekeys []string
+	}{
+		"basic": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+				Setting{Name: "another", Value: "thing"},
+				Setting{Name: "once", Value: "more"},
+			},
+			want: Settings{
+				Setting{Name: "another", Value: "thing"},
+				Setting{Name: "once", Value: "more"},
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc.in.Sort()
+			if !reflect.DeepEqual(tc.want, tc.in) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, tc.in)
+			}
+		})
+	}
+}
+
+func TestReplace(t *testing.T) {
+	tests := map[string]struct {
+		in    Settings
+		want  Settings
+		key   string
+		value string
+	}{
+		"basic": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+				Setting{Name: "another", Value: "thing"},
+				Setting{Name: "once", Value: "more"},
+			},
+			key:   "once",
+			value: "withFeeling",
+			want: Settings{
+				Setting{Name: "another", Value: "thing"},
+				Setting{Name: "once", Value: "withFeeling"},
+				Setting{Name: "test1", Value: "value1"},
+				Setting{Name: "test_project", Value: "project_name"},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			s := Setting{Name: tc.key, Value: tc.value}
+			tc.in.Replace(s)
+
+			tc.in.Sort()
+			tc.want.Sort()
+
+			if !reflect.DeepEqual(tc.want, tc.in) {
+				t.Fatalf("expected: \n%+v, \ngot: \n%+v", tc.want, tc.in)
+			}
+		})
+	}
+}
