@@ -134,6 +134,8 @@ func (s *Settings) Add(key, value string) {
 
 	set := s.Find(key)
 	if set != nil {
+		set.Name = key
+		set.Value = value
 		s.Replace(*set)
 		return
 	}
@@ -152,13 +154,25 @@ func (s *Settings) Sort() {
 
 // Replace will look for a setting with the same name, and overwrite the value
 func (s *Settings) Replace(set Setting) {
-
 	for i, v := range *s {
 		if v.Name == set.Name {
 			(*s)[i] = set
 		}
 	}
 
+}
+
+// Search returns all settings whose names contain a particular string
+func (s *Settings) Search(q string) Settings {
+	result := Settings{}
+
+	for _, v := range *s {
+		if strings.Contains(v.Name, q) {
+			result = append(result, v)
+		}
+	}
+
+	return result
 }
 
 // Find locates a setting in the slice

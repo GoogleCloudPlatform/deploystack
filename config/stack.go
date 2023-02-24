@@ -186,7 +186,6 @@ func (s *Stack) GetSetting(key string) string {
 
 // DeleteSetting removes a setting value.
 func (s *Stack) DeleteSetting(key string) {
-	log.Printf("key : %+v ", key)
 	for i, v := range s.Settings {
 		if v.Name == key {
 			s.Settings = append(s.Settings[:i], s.Settings[i+1:]...)
