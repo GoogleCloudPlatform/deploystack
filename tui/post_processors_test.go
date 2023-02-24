@@ -469,7 +469,11 @@ func TestValidateGCEConfiguration(t *testing.T) {
 		value string
 	}{
 		// "nowebserver":  {in: "n", msg: successMsg{unset: true}, value: ""},
-		"yeswebserver": {in: "y", msg: successMsg{unset: true}, value: gcloud.HTTPServerTags},
+		"yeswebserver": {
+			in:    "y",
+			msg:   successMsg{unset: true},
+			value: gcloud.HTTPServerTags,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

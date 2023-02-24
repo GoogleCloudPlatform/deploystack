@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"gopkg.in/src-d/go-git.v4"
@@ -117,13 +118,83 @@ type Projects struct {
 	AllowDuplicates bool      `json:"allow_duplicates"  yaml:"allow_duplicates"`
 }
 
+// Setting is a item that will be translated to a varaible in a terraform file
+type Setting struct {
+	Name  string `json:"name"  yaml:"name"`
+	Value string `json:"value"  yaml:"value"`
+	Type  string `json:"type"  yaml:"type"`
+}
+
+// Settings are a collection of setting
+type Settings []Setting
+
+// Add either creates a new setting or updates the existing one
+func (s *Settings) Add(key, value string) {
+	k := strings.ToLower(key)
+
+	set := s.Find(key)
+	if set != nil {
+		set.Name = key
+		set.Value = value
+		s.Replace(*set)
+		return
+	}
+
+	set = &Setting{Name: k, Value: value}
+	(*s) = append((*s), *set)
+	return
+}
+
+// Sort sorts the slice according to Setting.Name ascendings
+func (s *Settings) Sort() {
+	sort.Slice(*s, func(i, j int) bool {
+		return (*s)[i].Name < (*s)[j].Name
+	})
+}
+
+// Replace will look for a setting with the same name, and overwrite the value
+func (s *Settings) Replace(set Setting) {
+	for i, v := range *s {
+		if v.Name == set.Name {
+			(*s)[i] = set
+		}
+	}
+
+}
+
+// Search returns all settings whose names contain a particular string
+func (s *Settings) Search(q string) Settings {
+	result := Settings{}
+
+	for _, v := range *s {
+		if strings.Contains(v.Name, q) {
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
+
+// Find locates a setting in the slice
+func (s *Settings) Find(key string) *Setting {
+	k := strings.ToLower(key)
+
+	for _, v := range *s {
+		if v.Name == k {
+			return &v
+		}
+	}
+
+	return nil
+}
+
 // Custom represents a custom setting that we would like to collect from a user
 // We will collect these settings from the user before continuing.
 type Custom struct {
+	Setting
 	Name           string   `json:"name"  yaml:"name"`
 	Description    string   `json:"description"  yaml:"description"`
 	Default        string   `json:"default"  yaml:"default"`
-	Value          string   `json:"value"  yaml:"value"`
 	Options        []string `json:"options"  yaml:"options"`
 	PrependProject bool     `json:"prepend_project"  yaml:"prepend_project"`
 	Validation     string   `json:"validation,omitempty"  yaml:"validation,omitempty"`
