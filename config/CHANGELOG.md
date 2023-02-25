@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/GoogleCloudPlatform/deploystack/compare/config/v1.2.1...config/v1.3.0) (2023-02-24)
+
+
+### Features
+
+* added new type of settings under the covers ([a21db57](https://github.com/GoogleCloudPlatform/deploystack/commit/a21db574eddf1ba49e727faf9171abbd14d47147))
+
+
+### Bug Fixes
+
+* added more to the new setting features to work with tui ([0ca0104](https://github.com/GoogleCloudPlatform/deploystack/commit/0ca010434226093cfaa85f85b1f463b945c569e2))
+
 ## [1.2.1](https://github.com/GoogleCloudPlatform/deploystack/compare/config/v1.2.0...config/v1.2.1) (2023-02-22)
 
 
