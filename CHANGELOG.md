@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.2.3...v1.3.0) (2023-02-24)
+
+
+### Features
+
+* added new type of settings under the covers ([a21db57](https://github.com/GoogleCloudPlatform/deploystack/commit/a21db574eddf1ba49e727faf9171abbd14d47147))
+* updated tui to work with new configuration settings ([6a5a17a](https://github.com/GoogleCloudPlatform/deploystack/commit/6a5a17ac6fc097dcd563a5a5a0638972769b9e5d))
+
+
+### Bug Fixes
+
+* added more to the new setting features to work with tui ([0ca0104](https://github.com/GoogleCloudPlatform/deploystack/commit/0ca010434226093cfaa85f85b1f463b945c569e2))
+* list items limited to 50 chars and defaults now display correctly ([46b2e3b](https://github.com/GoogleCloudPlatform/deploystack/commit/46b2e3b8288c432e6ebff4dfefd756e9040dd38f))
+* make default options display normally if there are less than 10 of them. ([0cc9aa6](https://github.com/GoogleCloudPlatform/deploystack/commit/0cc9aa60a1fd71e18c7ca31ed96a801780abfc51))
+* reduced the size of lists to 10 ([0182c5b](https://github.com/GoogleCloudPlatform/deploystack/commit/0182c5b992b6d359f80ab8e0340b798f17f3aa6a))
+
 ## [1.2.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.2.2...v1.2.3) (2023-02-22)
 
 
