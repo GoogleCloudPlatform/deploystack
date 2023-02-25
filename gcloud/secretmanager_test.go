@@ -17,6 +17,7 @@ package gcloud
 import "testing"
 
 func TestSecretCreate(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string

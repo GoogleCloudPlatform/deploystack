@@ -24,6 +24,7 @@ import (
 )
 
 func TestGetProjectNumbers(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 
 	tests := map[string]struct {
@@ -47,6 +48,7 @@ func TestGetProjectNumbers(t *testing.T) {
 }
 
 func TestCheckProject(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 
 	tests := map[string]struct {
@@ -68,6 +70,7 @@ func TestCheckProject(t *testing.T) {
 }
 
 func TestGetProjectParent(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input string
@@ -96,6 +99,7 @@ func TestGetProjectParent(t *testing.T) {
 }
 
 func TestGetProjects(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		filepath string
@@ -153,6 +157,7 @@ func TestGetProjects(t *testing.T) {
 }
 
 func TestCreateProject(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input   string
@@ -211,6 +216,7 @@ func TestCreateProject(t *testing.T) {
 }
 
 func TestGetProject(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	expected := projectID
 

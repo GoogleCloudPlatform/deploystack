@@ -21,6 +21,7 @@ import (
 )
 
 func TestGetRunRegions(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	rRegions, err := regionsListHelper("test_files/gcloudout/regions_run.txt")
 	if err != nil {
