@@ -26,6 +26,12 @@ collect_zone: true
 # You can even include comments in this yaml
 hard_settings:
   basename: "three-tier-app"
+author_settings:
+  - name: tags
+    type : list
+    list: 
+    - "item1"
+    - "item2"  
 custom_settings:
   - name : "roles"
     description: "Please enter the role"

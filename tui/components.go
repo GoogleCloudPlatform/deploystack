@@ -278,7 +278,8 @@ func (s settingsTable) render() string {
 
 	for _, setting := range s.stack.Settings {
 
-		rawValue := setting.Value
+		rawValue := setting.TFvarsValue()
+		rawValue = strings.Trim(rawValue, "\"")
 		value := strong.Render(strings.TrimSpace(rawValue))
 
 		if len(rawValue) > 45 {
