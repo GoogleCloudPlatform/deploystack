@@ -115,6 +115,7 @@ func TestDomainRegistrarContactReadYAML(t *testing.T) {
 }
 
 func TestDomainIsAvailable(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		domain    string
@@ -163,6 +164,7 @@ func TestDomainIsAvailable(t *testing.T) {
 }
 
 func TestDomainIsVerified(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		domain  string

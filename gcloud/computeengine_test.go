@@ -30,6 +30,7 @@ import (
 )
 
 func TestGetComputeRegions(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	cRegions, err := regionsListHelper("test_files/gcloudout/regions_compute.txt")
 	if err != nil {
@@ -60,6 +61,7 @@ func TestGetComputeRegions(t *testing.T) {
 }
 
 func TestZones(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
@@ -109,6 +111,7 @@ func TestFormatMBToGB(t *testing.T) {
 }
 
 func TestGetMachineTypes(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	uscaTypes, err := typefileHelper("test_files/gcloudout/types_uscentral1a.txt")
 	if err != nil {
@@ -198,6 +201,7 @@ func typefileHelper(file string) (*compute.MachineTypeList, error) {
 }
 
 func TestGetListOfDiskFamilies(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input *compute.ImageList
@@ -249,6 +253,7 @@ func TestGetListOfDiskFamilies(t *testing.T) {
 }
 
 func TestGetListOfImageTypesByFamily(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input           *compute.ImageList
@@ -304,6 +309,7 @@ func TestGetListOfImageTypesByFamily(t *testing.T) {
 }
 
 func TestGetListOfMachineeTypesByFamily(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input  *compute.MachineTypeList
@@ -370,6 +376,7 @@ func TestGetListOfMachineeTypesByFamily(t *testing.T) {
 }
 
 func TestGetListOfMachineTypeFamily(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		input *compute.MachineTypeList
@@ -460,6 +467,7 @@ func getLatestImageByProjectFromFile(imgs []*compute.Image, imageproject, imagef
 }
 
 func TestImages(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	dat, err := os.ReadFile("test_files/gcloudout/images.json")
 	if err != nil {

@@ -17,6 +17,7 @@ package gcloud
 import "testing"
 
 func TestBucketCreate(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
@@ -42,6 +43,7 @@ func TestBucketCreate(t *testing.T) {
 }
 
 func TestObjectCreate(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
