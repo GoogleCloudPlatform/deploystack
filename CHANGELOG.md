@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.3.0...v1.4.0) (2023-02-25)
+
+
+### Features
+
+* added authorsettings to replace hardsettings ([553979b](https://github.com/GoogleCloudPlatform/deploystack/commit/553979bf7520655c8467ce4ea4c6817f06447a4f))
+
+
+### Bug Fixes
+
+* made settings compatible with calling packages ([9131b4c](https://github.com/GoogleCloudPlatform/deploystack/commit/9131b4c8db61f0b35312060bbba6dd7c494054a6))
+* made tui compatible with changes to config ([0ba76e4](https://github.com/GoogleCloudPlatform/deploystack/commit/0ba76e4dcf5270b9ac1cc71ceb96fcc395d5fa3b))
+
 ## [1.3.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.2.3...v1.3.0) (2023-02-24)
 
 
