@@ -386,6 +386,47 @@ func TestSettingsAdd(t *testing.T) {
 	}
 }
 
+func TestSettingsAddComplete(t *testing.T) {
+	tests := map[string]struct {
+		in   Settings
+		set  Setting
+		want *Setting
+	}{
+		"not set yet": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1", Type: "string"},
+				Setting{Name: "test_project", Value: "project_name", Type: "string"},
+				Setting{Name: "another", Value: "thing", Type: "string"},
+			},
+			set:  Setting{Name: "once", Value: "with feeling", Type: "string"},
+			want: &Setting{Name: "once", Value: "with feeling", Type: "string"},
+		},
+		"already set": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1", Type: "string"},
+				Setting{Name: "test_project", Value: "project_name", Type: "string"},
+				Setting{Name: "another", Value: "thing", Type: "string"},
+				Setting{Name: "once", Value: "more", Type: "string"},
+			},
+			set:  Setting{Name: "once", Value: "with feeling", Type: "string"},
+			want: &Setting{Name: "once", Value: "with feeling", Type: "string"},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc.in.AddComplete(tc.set)
+
+			got := tc.in.Find(tc.set.Name)
+
+			if !reflect.DeepEqual(tc.want, got) {
+				diff := deep.Equal(tc.want, got)
+				t.Errorf("compare failed: %v", diff)
+			}
+		})
+	}
+}
+
 func TestSettingsReplace(t *testing.T) {
 	tests := map[string]struct {
 		in    Settings
