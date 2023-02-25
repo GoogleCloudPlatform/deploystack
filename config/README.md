@@ -33,11 +33,14 @@ The subpackage manages all of the configuration details for DeployStack.
 
 #### Author Settings Options
 
-| Name  | Type   | Description                                                                             |
-|-------|--------|-----------------------------------------------------------------------------------------|
-| name  | string | The name of the variable                                                                |
-| value | string | The value of the varible as a string                                                    |
-| type  | string | A Terraform type that will be set in the terraform.tfvars file when deploystack is done: string, number, bool, list, map  |
+| Name  | Type               | Description                                                                                                              |
+|-------|--------------------|--------------------------------------------------------------------------------------------------------------------------|
+| name  | string             | The name of the variable                                                                                                 |
+| value | string             | The value of the varible as a string                                                                                     |
+| type  | string             | A Terraform type that will be set in the terraform.tfvars file when deploystack is done: string, number, bool, list, map |
+| list  | []string           | If type is list, you populate this with an array to populate the eventual setting - leave value blank                    |
+| map   | map[string]string] | If type is map, you populate this with an map to populate the eventual setting - leave value blank                       |
+
 
 
 #### Custom Settings Options
