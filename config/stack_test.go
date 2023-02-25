@@ -158,40 +158,81 @@ func TestFindAndReadRequired(t *testing.T) {
 	}
 }
 
-func TestStackTFvarsWithProjectNAme(t *testing.T) {
-	s := NewStack()
-	s.AddSetting("project", "testproject")
-	s.AddSetting("boolean", "true")
-	s.AddSetting("project_name", "dontshow")
-	s.AddSetting("set", "[item1,item2]")
-	got := s.Terraform()
-
-	want := `boolean="true"
-project="testproject"
-set=["item1","item2"]
-`
-
-	if got != want {
-		fmt.Println(diff.Diff(want, got))
-		t.Fatalf("expected: %v, got: %v", want, got)
-	}
-}
-
 func TestStackTFvars(t *testing.T) {
-	s := NewStack()
-	s.AddSetting("project", "testproject")
-	s.AddSetting("boolean", "true")
-	s.AddSetting("set", "[item1,item2]")
-	got := s.Terraform()
-
-	want := `boolean="true"
+	tests := map[string]struct {
+		in   Settings
+		want string
+	}{
+		"basic": {
+			in: Settings{
+				Setting{Name: "project", Value: "testproject", Type: "string"},
+				Setting{Name: "boolean", Value: "true", Type: "string"},
+				Setting{Name: "set", Value: "[item1,item2]", Type: "string"},
+			},
+			want: `boolean="true"
 project="testproject"
 set=["item1","item2"]
-`
+`,
+		},
+		"with basic types": {
+			in: Settings{
+				Setting{Name: "project", Value: "testproject", Type: "string"},
+				Setting{Name: "boolean", Value: "true", Type: "boolean"},
+				Setting{Name: "number", Value: "3", Type: "number"},
+				Setting{Name: "set", Value: "[item1,item2]", Type: "string"},
+			},
+			want: `boolean=true
+number=3
+project="testproject"
+set=["item1","item2"]
+`,
+		},
+		"with complext types": {
+			in: Settings{
+				Setting{Name: "project", Value: "testproject", Type: "string"},
+				Setting{Name: "boolean", Value: "true", Type: "boolean"},
+				Setting{Name: "number", Value: "3", Type: "number"},
+				Setting{Name: "set", List: []string{"item1", "item2"}, Type: "list"},
+				Setting{Name: "object", Map: map[string]string{"nickname": "item2", "email": "item2@example.com"}, Type: "map"},
+			},
+			want: `boolean=true
+number=3
+object={email="item2@example.com",nickname="item2"}
+project="testproject"
+set=["item1","item2"]
+`,
+		},
+		"ingnore fields": {
+			in: Settings{
+				Setting{Name: "project", Value: "testproject", Type: "string"},
+				Setting{Name: "boolean", Value: "true", Type: "boolean"},
+				Setting{Name: "project_name", Value: "dontshow", Type: "string"},
+				Setting{Name: "stack_name", Value: "dontshow", Type: "string"},
+				Setting{Name: "", Value: "empty", Type: "string"},
+				Setting{Name: "empty", Value: "", Type: "string"},
+				Setting{Name: "set", List: []string{"item1", "item2"}, Type: "list"},
+				Setting{Name: "object", Map: map[string]string{"nickname": "item2", "email": "item2@example.com"}, Type: "map"},
+			},
+			want: `boolean=true
+object={email="item2@example.com",nickname="item2"}
+project="testproject"
+set=["item1","item2"]
+`,
+		},
+	}
 
-	if got != want {
-		fmt.Println(diff.Diff(want, got))
-		t.Fatalf("expected: %v, got: %v", want, got)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			s := NewStack()
+			s.Settings = tc.in
+			got := s.Terraform()
+			if !reflect.DeepEqual(got, tc.want) {
+				fmt.Printf("Case :%s\n", name)
+				fmt.Println(diff.Diff(got, tc.want))
+				t.Fatalf("Output Text different than expected")
+			}
+		})
 	}
 }
 
@@ -247,8 +288,8 @@ func TestStackAddSettings(t *testing.T) {
 				{key: "test_project", value: "project_name"},
 			},
 			want: Settings{
-				Setting{Name: "test1", Value: "value1"},
-				Setting{Name: "test_project", Value: "project_name"},
+				Setting{Name: "test1", Value: "value1", Type: "string"},
+				Setting{Name: "test_project", Value: "project_name", Type: "string"},
 			},
 		},
 	}

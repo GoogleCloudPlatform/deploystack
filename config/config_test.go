@@ -6,6 +6,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/go-test/deep"
 )
 
 func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
@@ -34,7 +36,7 @@ func TestConfig(t *testing.T) {
 				RegionType:        "run",
 				RegionDefault:     "us-central1",
 				Zone:              true,
-				HardSet:           map[string]string{"basename": "three-tier-app"},
+				AuthorSettings:    Settings{Setting{Name: "basename", Value: "three-tier-app", Type: "string"}},
 				PathTerraform:     ".",
 				PathMessages:      "messages",
 				PathScripts:       "scripts",
@@ -54,7 +56,7 @@ func TestConfig(t *testing.T) {
 				RegionType:        "run",
 				RegionDefault:     "us-central1",
 				Zone:              true,
-				HardSet:           map[string]string{"basename": "three-tier-app"},
+				AuthorSettings:    Settings{Setting{Name: "basename", Value: "three-tier-app", Type: "string"}},
 				PathTerraform:     "terraform",
 				PathMessages:      ".deploystack/messages",
 				PathScripts:       ".deploystack/scripts",
@@ -70,6 +72,18 @@ func TestConfig(t *testing.T) {
 						},
 					},
 				},
+			},
+			descPath: ".deploystack/messages/description.txt",
+		},
+		"withAuthorSettings": {
+			pwd: "withauthorsettings",
+			want: Config{
+				Title:          "Three Tier App (TODO)",
+				Duration:       9,
+				AuthorSettings: Settings{Setting{Name: "basename", Value: "three-tier-app", Type: "string"}},
+				PathTerraform:  "terraform",
+				PathMessages:   ".deploystack/messages",
+				PathScripts:    ".deploystack/scripts",
 			},
 			descPath: ".deploystack/messages/description.txt",
 		},
@@ -99,12 +113,54 @@ func TestConfig(t *testing.T) {
 			tc.want.Description = string(dat)
 
 			if !reflect.DeepEqual(tc.want, s.Config) {
-				t.Fatalf("expected: %+v, got: %+v", tc.want, s.Config)
+				diff := deep.Equal(s.Config, tc.want)
+				t.Errorf("compare failed: %v", diff)
+				// t.Fatalf("expected: \n%+v, \ngot: \n%+v", tc.want, s.Config)
 			}
 		})
 		if err := os.Chdir(wd); err != nil {
 			t.Errorf("failed to reset the wd: %v", err)
 		}
+	}
+}
+
+func TestConfigSetAuthorSettings(t *testing.T) {
+	tests := map[string]struct {
+		in   Config
+		want Settings
+	}{
+		"Original": {
+			in: Config{
+				HardSet: map[string]string{"basename": "three-tier-app"},
+			},
+			want: Settings{
+				{Name: "basename", Value: "three-tier-app", Type: "string"},
+			},
+		},
+
+		"Mix": {
+			in: Config{
+				HardSet: map[string]string{"basename": "three-tier-app"},
+				AuthorSettings: Settings{
+					{Name: "nodes", Value: "3", Type: "numeric"},
+				},
+			},
+			want: Settings{
+				{Name: "basename", Value: "three-tier-app", Type: "string"},
+				{Name: "nodes", Value: "3", Type: "numeric"},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			got := tc.in.GetAuthorSettings()
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
 	}
 }
 
@@ -297,24 +353,24 @@ func TestSettingsAdd(t *testing.T) {
 	}{
 		"not set yet": {
 			in: Settings{
-				Setting{Name: "test1", Value: "value1"},
-				Setting{Name: "test_project", Value: "project_name"},
-				Setting{Name: "another", Value: "thing"},
+				Setting{Name: "test1", Value: "value1", Type: "string"},
+				Setting{Name: "test_project", Value: "project_name", Type: "string"},
+				Setting{Name: "another", Value: "thing", Type: "string"},
 			},
 			key:   "once",
 			value: "with feeling",
-			want:  &Setting{Name: "once", Value: "with feeling"},
+			want:  &Setting{Name: "once", Value: "with feeling", Type: "string"},
 		},
 		"already set": {
 			in: Settings{
-				Setting{Name: "test1", Value: "value1"},
-				Setting{Name: "test_project", Value: "project_name"},
-				Setting{Name: "another", Value: "thing"},
-				Setting{Name: "once", Value: "more"},
+				Setting{Name: "test1", Value: "value1", Type: "string"},
+				Setting{Name: "test_project", Value: "project_name", Type: "string"},
+				Setting{Name: "another", Value: "thing", Type: "string"},
+				Setting{Name: "once", Value: "more", Type: "string"},
 			},
 			key:   "once",
 			value: "with feeling",
-			want:  &Setting{Name: "once", Value: "with feeling"},
+			want:  &Setting{Name: "once", Value: "with feeling", Type: "string"},
 		},
 	}
 
@@ -325,6 +381,47 @@ func TestSettingsAdd(t *testing.T) {
 			got := tc.in.Find(tc.key)
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestSettingsAddComplete(t *testing.T) {
+	tests := map[string]struct {
+		in   Settings
+		set  Setting
+		want *Setting
+	}{
+		"not set yet": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1", Type: "string"},
+				Setting{Name: "test_project", Value: "project_name", Type: "string"},
+				Setting{Name: "another", Value: "thing", Type: "string"},
+			},
+			set:  Setting{Name: "once", Value: "with feeling", Type: "string"},
+			want: &Setting{Name: "once", Value: "with feeling", Type: "string"},
+		},
+		"already set": {
+			in: Settings{
+				Setting{Name: "test1", Value: "value1", Type: "string"},
+				Setting{Name: "test_project", Value: "project_name", Type: "string"},
+				Setting{Name: "another", Value: "thing", Type: "string"},
+				Setting{Name: "once", Value: "more", Type: "string"},
+			},
+			set:  Setting{Name: "once", Value: "with feeling", Type: "string"},
+			want: &Setting{Name: "once", Value: "with feeling", Type: "string"},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc.in.AddComplete(tc.set)
+
+			got := tc.in.Find(tc.set.Name)
+
+			if !reflect.DeepEqual(tc.want, got) {
+				diff := deep.Equal(tc.want, got)
+				t.Errorf("compare failed: %v", diff)
 			}
 		})
 	}

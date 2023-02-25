@@ -26,6 +26,7 @@ import (
 )
 
 func TestGenerateFunctionSignedURL(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
@@ -54,6 +55,7 @@ func TestGenerateFunctionSignedURL(t *testing.T) {
 }
 
 func TestGetFunctionRegions(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	fRegions, err := regionsListHelper("test_files/gcloudout/regions_functions.txt")
 	if err != nil {
@@ -85,6 +87,7 @@ func TestGetFunctionRegions(t *testing.T) {
 
 // TODO: Spend time fixing this.
 func TestCloudFunctionCreate(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project  string

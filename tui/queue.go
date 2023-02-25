@@ -250,8 +250,11 @@ func (q *Queue) ProcessConfig() error {
 
 	s := q.stack
 
-	for i, v := range s.Config.HardSet {
-		s.AddSetting(i, v)
+	sets := s.Config.GetAuthorSettings()
+
+	for _, v := range sets {
+		s.AddSettingComplete(v)
+
 	}
 
 	project = s.GetSetting("project_id")

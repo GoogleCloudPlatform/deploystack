@@ -22,6 +22,7 @@ import (
 )
 
 func TestTriggerCreate(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string

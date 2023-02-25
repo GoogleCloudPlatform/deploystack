@@ -26,6 +26,7 @@ import (
 )
 
 func TestGetBillingAccounts(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 
 	buildtestfile := "test_files/gcloudout/billing_accounts.json"
@@ -82,6 +83,7 @@ func TestGetBillingAccounts(t *testing.T) {
 }
 
 func TestLinkProjectToBillingAccount(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		project string
