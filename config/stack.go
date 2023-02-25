@@ -176,9 +176,10 @@ func (s *Stack) AddSetting(key, value string) {
 	s.Settings.Add(key, value)
 }
 
-// AddSettingWithType stores a setting key/value pair with type.
-func (s *Stack) AddSettingWithType(key, value, ttype string) {
-	s.Settings.AddWithType(key, value, ttype)
+// AddSettingComplete passes a completely intact setting to the underlying
+// setting structure
+func (s *Stack) AddSettingComplete(set Setting) {
+	s.Settings.AddComplete(set)
 }
 
 // GetSetting returns a setting value.
@@ -212,7 +213,7 @@ func (s Stack) Terraform() string {
 		if v.Name == "" {
 			continue
 		}
-		label := strings.ToLower(strings.ReplaceAll(v.Name, " ", "_"))
+		label := v.TFvarsName()
 
 		if label == "project_name" {
 			continue
@@ -222,38 +223,11 @@ func (s Stack) Terraform() string {
 			continue
 		}
 
-		if len(v.Value) < 1 {
+		if len(v.Value) == 0 && len(v.List) == 0 && v.Map == nil {
 			continue
 		}
 
-		if v.Value[0:1] == "[" {
-			sb := strings.Builder{}
-			sb.WriteString("[")
-			tmp := strings.ReplaceAll(v.Value, "[", "")
-			tmp = strings.ReplaceAll(tmp, "]", "")
-			sl := strings.Split(tmp, ",")
-
-			for i, v := range sl {
-				sl[i] = fmt.Sprintf("\"%s\"", v)
-			}
-
-			delimtext := strings.Join(sl, ",")
-
-			sb.WriteString(delimtext)
-			sb.WriteString("]")
-			set := sb.String()
-			set = strings.ReplaceAll(set, "\"\"", "")
-
-			result.WriteString(fmt.Sprintf("%s=%s\n", label, set))
-			continue
-		}
-
-		if v.Type == "string" || v.Type == "" {
-			result.WriteString(fmt.Sprintf("%s=\"%s\"\n", label, v.Value))
-			continue
-		}
-
-		result.WriteString(fmt.Sprintf("%s=%s\n", label, v.Value))
+		result.WriteString(v.TFVars())
 
 	}
 

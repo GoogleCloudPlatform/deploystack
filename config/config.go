@@ -47,7 +47,7 @@ type Config struct {
 
 func (c *Config) convertHardset() {
 	for i, v := range c.HardSet {
-		c.AuthorSettings.AddWithType(i, v, "string")
+		c.AuthorSettings.AddComplete(Setting{Name: i, Value: v, Type: "string"})
 	}
 	// Blow hardset away so that if anywhere is looking for them, it fails.
 	c.HardSet = nil
@@ -146,13 +146,80 @@ type Projects struct {
 
 // Setting is a item that will be translated to a varaible in a terraform file
 type Setting struct {
-	Name  string `json:"name"  yaml:"name"`
-	Value string `json:"value"  yaml:"value"`
-	Type  string `json:"type"  yaml:"type"`
+	Name  string            `json:"name"  yaml:"name"`
+	Value string            `json:"value"  yaml:"value"`
+	Type  string            `json:"type"  yaml:"type"`
+	List  []string          `json:"list"  yaml:"list"`
+	Map   map[string]string `json:"map"  yaml:"map"`
+}
+
+// TFVars emits the name value combination here in away that terraform excepts
+// in a tfvars file
+func (s *Setting) TFVars() string {
+	return fmt.Sprintf("%s=%s\n", s.TFvarsName(), s.TFvarsValue())
+}
+
+// TFvarsName formats the name for the tfvars format
+func (s Setting) TFvarsName() string {
+	name := strings.ToLower(strings.ReplaceAll(s.Name, " ", "_"))
+	return name
+}
+
+// TFvarsValue formats the value for the tfvars format
+func (s Setting) TFvarsValue() string {
+	result := ""
+	// If we used the workaround for lists in strings, convert it to a list
+	// under the covers
+	if s.Value != "" && s.Value[0:1] == "[" {
+		replacer := strings.NewReplacer("[", "", "]", "")
+		s.List = strings.Split(replacer.Replace(s.Value), ",")
+		s.Type = "list"
+		s.Value = ""
+	}
+
+	switch s.Type {
+	case "string", "":
+		result = fmt.Sprintf("\"%s\"", s.Value)
+	case "list":
+		tmp := []string{}
+		for _, v := range s.List {
+			tmp = append(tmp, fmt.Sprintf("\"%s\"", v))
+		}
+		str := strings.Join(tmp, ",")
+
+		result = fmt.Sprintf("[%s]", str)
+	case "map":
+		tmp := []string{}
+
+		for i, v := range s.Map {
+			tmp = append(tmp, fmt.Sprintf("%s=\"%s\"", i, v))
+		}
+
+		sort.Strings(tmp)
+		str := strings.Join(tmp, ",")
+		result = fmt.Sprintf("{%s}", str)
+	default:
+		result = s.Value
+	}
+
+	return result
 }
 
 // Settings are a collection of setting
 type Settings []Setting
+
+// AddComplete adds an whole setting to the settings control
+func (s *Settings) AddComplete(set Setting) {
+
+	setting := s.Find(set.Name)
+	if setting != nil {
+		s.Replace(set)
+		return
+	}
+
+	(*s) = append((*s), set)
+	return
+}
 
 // Add either creates a new setting or updates the existing one
 func (s *Settings) Add(key, value string) {
@@ -168,24 +235,6 @@ func (s *Settings) Add(key, value string) {
 	}
 
 	set = &Setting{Name: k, Value: value, Type: "string"}
-	(*s) = append((*s), *set)
-	return
-}
-
-// AddWithType either creates a new setting or updates the existing one with type
-func (s *Settings) AddWithType(key, value, ttype string) {
-	k := strings.ToLower(key)
-
-	set := s.Find(key)
-	if set != nil {
-		set.Name = key
-		set.Value = value
-		set.Type = ttype
-		s.Replace(*set)
-		return
-	}
-
-	set = &Setting{Name: k, Value: value, Type: ttype}
 	(*s) = append((*s), *set)
 	return
 }
