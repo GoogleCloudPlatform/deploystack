@@ -19,12 +19,13 @@ The subpackage manages all of the configuration details for DeployStack.
 |                        |         | Options: compute, run, functions                                                     |
 | region_default         | string  | The highlighted and default choice for region.                                       |
 | collect_zone           | string  | Whether or not to walk the user through picking a zone                               |
-| hard_settings          |         | Hard Settings are for key value pairs to hardset and not get from the user.          |
+| hard_settings          |         | **Deprecated** *Use author_settings below* Hard Settings are for key value pairs to hardset and not get from the user.          |
 |                        |         | `"basename":"appprefix"`                                                             |
 | prepend_project        | bool    | Whether or not to prepend the project id to the default value. Useful for resources like buckets that have to have globally unique names.                       |
 | path_terraform         | string  | Path that DeployStack should regard as the terraform folder.   |
 | path_messages          | string  | Path that DeployStack should look for messages, description and success.   |
 | path_scripts           | string  | Path that DeployStack should look for scripts that can be injected into DeployStack routine.  |
+| author_settings        |         |  **Documentation Below** Author Settings are collections of settings that we would **not** like to prompt a user for.  |
 | custom_settings        |         |  **Documentation Below** Custom Settings are collections of settings that we would like to prompt a user for.  |
 | projects               |         |  **Documentation Below** Projects are a list of projects with settings that will surface the project selector interface for.  |
 | products               |         |  **Documentation Below** Products are a list of products or other labels for structured documentation  |
