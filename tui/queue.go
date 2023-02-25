@@ -253,7 +253,8 @@ func (q *Queue) ProcessConfig() error {
 	sets := s.Config.GetAuthorSettings()
 
 	for _, v := range sets {
-		s.AddSetting(v.Name, v.Value)
+		s.AddSettingComplete(v)
+
 	}
 
 	project = s.GetSetting("project_id")
