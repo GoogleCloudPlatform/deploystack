@@ -15,30 +15,15 @@
 package main
 
 import (
-	"os"
-
 	"github.com/GoogleCloudPlatform/deploystack"
-	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
 )
 
 func main() {
 
-	wd, err := os.Getwd()
+	err := deploystack.Precheck()
 	if err != nil {
 		tui.Fatal(err)
-	}
-
-	reports, err := config.FindConfigReports(wd)
-	if err != nil {
-		tui.Fatal(err)
-	}
-
-	if len(reports) > 1 {
-		stackPath := tui.PreCheck(reports)
-		if err := os.Chdir(stackPath); err != nil {
-			tui.Fatal(err)
-		}
 	}
 
 	s, err := deploystack.Init()
