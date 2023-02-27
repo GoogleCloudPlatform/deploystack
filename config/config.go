@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -307,4 +308,60 @@ func (cs Customs) Get(name string) Custom {
 	}
 
 	return Custom{}
+}
+
+// Report is collection of data about multiple configs in the same root
+// used for multi stack repos
+type Report struct {
+	Path   string
+	WD     string
+	Config Config
+}
+
+// NewReport Generates a new config report for a given file
+func NewReport(file string) (Report, error) {
+	result := Report{Path: file}
+
+	result.WD = strings.ReplaceAll(filepath.Dir(file), "/.deploystack", "")
+
+	dat, err := os.ReadFile(file)
+	if err != nil {
+		return result, err
+	}
+
+	switch filepath.Ext(file) {
+	case ".json":
+		result.Config, err = NewConfigJSON(dat)
+		if err != nil {
+			return result, err
+		}
+	case ".yaml":
+		result.Config, err = NewConfigYAML(dat)
+		if err != nil {
+			return result, err
+		}
+	}
+
+	return result, nil
+}
+
+// FindConfigReports walks through a directory and finds all of the configs in
+// the folder
+func FindConfigReports(dir string) ([]Report, error) {
+
+	var result []Report
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+
+		if info.Name() == "deploystack.json" || info.Name() == "deploystack.yaml" {
+			cr, err := NewReport(path)
+			if err != nil {
+				return err
+			}
+
+			result = append(result, cr)
+		}
+		return nil
+	})
+	return result, err
+
 }
