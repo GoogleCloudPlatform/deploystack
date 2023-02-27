@@ -4,9 +4,9 @@ go 1.20
 
 require (
 	cloud.google.com/go/domains v0.8.0
-	github.com/GoogleCloudPlatform/deploystack v1.1.3
-	github.com/GoogleCloudPlatform/deploystack/config v0.0.0-20230221221222-a9ff58db1f28
-	github.com/GoogleCloudPlatform/deploystack/gcloud v0.0.0-20230221184722-2d2b928c6567
+	github.com/GoogleCloudPlatform/deploystack v1.4.1
+	github.com/GoogleCloudPlatform/deploystack/config v1.4.0
+	github.com/GoogleCloudPlatform/deploystack/gcloud v1.2.0
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.6.0
@@ -16,7 +16,7 @@ require (
 	golang.org/x/term v0.5.0
 	golang.org/x/text v0.7.0
 	google.golang.org/api v0.110.0
-	google.golang.org/genproto v0.0.0-20230221151758-ace64dc21148
+	google.golang.org/genproto v0.0.0-20230227214838-9b19f0bdc514
 )
 
 require (
@@ -32,6 +32,7 @@ require (
 	github.com/aymanbagabas/go-osc52 v1.2.1 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
+	github.com/go-test/deep v1.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
