@@ -15,19 +15,23 @@
 package tui
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func TestPreprocessors(t *testing.T) {
+	testdata := ""
 	tests := map[string]struct {
 		f        func(q *Queue) tea.Cmd
 		count    int
 		label1st string
 		value1st string
 		settings map[string]string
+		cache    map[string]interface{}
 	}{
 		"getDiskTypes": {
 			f:        getDiskTypes,
@@ -115,6 +119,28 @@ func TestPreprocessors(t *testing.T) {
 				"instance-image-family":  "centos-7",
 			},
 		},
+
+		"handleReports": {
+			f:        handleReports,
+			count:    2,
+			settings: map[string]string{},
+			label1st: "Minimal JSON",
+			value1st: "/minimaljson",
+			cache: map[string]interface{}{
+				"reports": []config.Report{
+					{
+						WD:     fmt.Sprintf("%s/minimaljson", testdata),
+						Path:   fmt.Sprintf("%s/minimaljson/.deploystack/deploystack.json", testdata),
+						Config: config.Config{Title: "Minimal JSON"},
+					},
+					{
+						WD:     fmt.Sprintf("%s/minimalyaml", testdata),
+						Path:   fmt.Sprintf("%s/minimalyaml/.deploystack/deploystack.yaml", testdata),
+						Config: config.Config{Title: "Minimal YAML"},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -124,6 +150,12 @@ func TestPreprocessors(t *testing.T) {
 			if tc.settings != nil {
 				for i, v := range tc.settings {
 					q.stack.AddSetting(i, v)
+				}
+			}
+
+			if tc.cache != nil {
+				for i, v := range tc.cache {
+					q.Save(i, v)
 				}
 			}
 
