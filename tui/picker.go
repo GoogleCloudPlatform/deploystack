@@ -155,7 +155,6 @@ func (p picker) Init() tea.Cmd {
 func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case []list.Item:
-
 		p.state = "displaying"
 		items := []list.Item(msg)
 
@@ -209,7 +208,6 @@ func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				// TODO: see if you can figure out a test for these untested bits
-
 				if p.postProcessor != nil {
 					if p.state != "querying" {
 						p.state = "querying"

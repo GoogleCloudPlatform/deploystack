@@ -510,3 +510,27 @@ func TestValidateGCEConfiguration(t *testing.T) {
 		})
 	}
 }
+
+func TestStackSelection(t *testing.T) {
+	tests := map[string]struct {
+		input string
+		want  string
+	}{
+		"Basic": {"examplePath", "examplePath"},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+
+			cmd := handleStackSelection(tc.input, &q)
+			cmd()
+
+			got := q.Get("stack").(string)
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}

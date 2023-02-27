@@ -368,3 +368,11 @@ func prependProject(value string, q *Queue) tea.Cmd {
 		return successMsg{msg: "prependProject"}
 	}
 }
+
+func handleStackSelection(stack string, q *Queue) tea.Cmd {
+	q.Save("stack", stack)
+
+	return func() tea.Msg {
+		return successMsg{}
+	}
+}

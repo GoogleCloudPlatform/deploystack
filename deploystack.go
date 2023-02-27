@@ -23,6 +23,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
+	"github.com/GoogleCloudPlatform/deploystack/tui"
 	"google.golang.org/api/option"
 	"gopkg.in/yaml.v2"
 )
@@ -50,6 +51,29 @@ func Init() (*config.Stack, error) {
 	}
 
 	return &s, nil
+}
+
+// Precheck handles the logic around switching working directories for multiple
+// stacks in one repo
+func Precheck() error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	reports, err := config.FindConfigReports(wd)
+	if err != nil {
+		return err
+	}
+
+	if len(reports) > 1 {
+		stackPath := tui.PreCheck(reports)
+		if err := os.Chdir(stackPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // NewContactDataFromFile generates a new ContactData from a cached yaml file
