@@ -1,0 +1,61 @@
+debug 2023/02/27 14:10:58 ListItem: made it here
+debug 2023/02/27 14:11:48 ListItem: made it here
+debug 2023/02/27 14:11:50 enter: made it here
+debug 2023/02/27 14:13:19 ListItem: made it here
+debug 2023/02/27 14:13:20 enter: made it here
+debug 2023/02/27 14:13:20 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:13:20 p.postProcessor: true 
+debug 2023/02/27 14:13:20 got here
+debug 2023/02/27 14:15:10 ListItem: made it here
+debug 2023/02/27 14:15:11 enter: made it here
+debug 2023/02/27 14:15:11 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:15:11 p.postProcessor: true 
+debug 2023/02/27 14:15:11 got here
+debug 2023/02/27 14:17:36 ListItem: made it here
+debug 2023/02/27 14:17:43 enter: made it here
+debug 2023/02/27 14:17:43 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:17:43 p.postProcessor: true 
+debug 2023/02/27 14:17:43 got here
+debug 2023/02/27 14:17:43 Got here:
+debug 2023/02/27 14:18:25 ListItem: made it here
+debug 2023/02/27 14:18:25 enter: made it here
+debug 2023/02/27 14:18:25 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:18:25 p.postProcessor: true 
+debug 2023/02/27 14:18:25 got here
+debug 2023/02/27 14:18:25 Got here:
+debug 2023/02/27 14:19:00 ListItem: made it here
+debug 2023/02/27 14:19:01 enter: made it here
+debug 2023/02/27 14:19:01 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:19:01 p.postProcessor: true 
+debug 2023/02/27 14:19:01 got here
+debug 2023/02/27 14:19:01 Got here:
+debug 2023/02/27 14:19:31 ListItem: made it here
+debug 2023/02/27 14:19:32 enter: made it here
+debug 2023/02/27 14:19:32 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:19:32 p.postProcessor: true 
+debug 2023/02/27 14:19:32 got here
+debug 2023/02/27 14:19:32 Got here: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1
+debug 2023/02/27 14:20:34 ListItem: made it here
+debug 2023/02/27 14:20:35 enter: made it here
+debug 2023/02/27 14:20:35 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:20:35 p.postProcessor: true 
+debug 2023/02/27 14:20:35 got here
+debug 2023/02/27 14:20:35 Got here: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1
+debug 2023/02/27 14:31:30 ListItem: made it here
+debug 2023/02/27 14:31:31 enter: made it here
+debug 2023/02/27 14:31:31 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:31:31 p.postProcessor: true 
+debug 2023/02/27 14:31:31 got here
+debug 2023/02/27 14:31:31 Got here: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1
+debug 2023/02/27 14:32:55 ListItem: made it here
+debug 2023/02/27 14:32:56 enter: made it here
+debug 2023/02/27 14:32:56 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:32:56 p.postProcessor: true 
+debug 2023/02/27 14:32:56 got here
+debug 2023/02/27 14:32:56 Got here: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1
+debug 2023/02/27 14:33:13 ListItem: made it here
+debug 2023/02/27 14:33:14 enter: made it here
+debug 2023/02/27 14:33:14 p.value: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1 
+debug 2023/02/27 14:33:14 p.postProcessor: true 
+debug 2023/02/27 14:33:14 got here
+debug 2023/02/27 14:33:14 Got here: /Users/tpryan/go/src/github.com/GoogleCloudPlatform/deploystack/tui/cmd/multi/example1
