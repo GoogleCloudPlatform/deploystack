@@ -132,14 +132,6 @@ func Run(s *config.Stack, useMock bool) {
 
 // PreCheck handles presenting a choice to a user amongst multiple stacks
 func PreCheck(reports []config.Report) string {
-	if len(os.Getenv("DEBUG")) > 0 {
-		f, err := tea.LogToFile("debug.log", "debug")
-		if err != nil {
-			fmt.Println("fatal:", err)
-			os.Exit(1)
-		}
-		defer f.Close()
-	}
 
 	q := NewQueue(nil, GetMock(0))
 	q.Save("reports", reports)
