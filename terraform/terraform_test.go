@@ -212,6 +212,15 @@ func TestNewBlocks(t *testing.T) {
 			Text: `data "google_project" "project" {
 }`,
 		},
+		Block{
+			Name:  "project",
+			Type:  "google_project",
+			Kind:  "data",
+			Start: 37,
+			File:  "testdata/extracttest/main.tf",
+			Text: `data "google_project" "project" {
+}`,
+		},
 	}
 
 	for i := 0; i < len(*got); i++ {
