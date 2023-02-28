@@ -186,6 +186,6 @@ func Fatal(err error) {
 		fmt.Println(titleStyle.Render("DeployStack"))
 		fmt.Println(msg.Render())
 	}
-
+	fmt.Printf(clear)
 	os.Exit(1)
 }
