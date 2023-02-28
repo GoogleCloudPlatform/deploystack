@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -467,7 +468,7 @@ func TestSettingsReplace(t *testing.T) {
 	}
 }
 
-func TestBasic(t *testing.T) {
+func TestSettingsSearch(t *testing.T) {
 	tests := map[string]struct {
 		in   Settings
 		q    string
@@ -525,6 +526,103 @@ func TestCustomsGet(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := tc.in.Get(tc.key)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestNewConfigReport(t *testing.T) {
+	wd, err := filepath.Abs("../")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+	testdata := fmt.Sprintf("%s/test_files/configs/multi", wd)
+
+	tests := map[string]struct {
+		in   string
+		want Report
+		err  error
+	}{
+		"basic-yaml": {
+			in: fmt.Sprintf("%s/minimalyaml/.deploystack/deploystack.yaml", testdata),
+			want: Report{
+				WD:     fmt.Sprintf("%s/minimalyaml", testdata),
+				Path:   fmt.Sprintf("%s/minimalyaml/.deploystack/deploystack.yaml", testdata),
+				Config: Config{Title: "Minimal YAML"},
+			},
+			err: nil,
+		},
+		"basic-json": {
+			in: fmt.Sprintf("%s/minimaljson/.deploystack/deploystack.json", testdata),
+			want: Report{
+				WD:     fmt.Sprintf("%s/minimaljson", testdata),
+				Path:   fmt.Sprintf("%s/minimaljson/.deploystack/deploystack.json", testdata),
+				Config: Config{Title: "Minimal JSON"},
+			},
+			err: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := NewReport(tc.in)
+
+			if tc.err == nil {
+				if err != nil {
+					t.Fatalf("expected no error, got %s", err)
+				}
+			}
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestFindConfigReports(t *testing.T) {
+
+	wd, err := filepath.Abs("../")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+	testdata := fmt.Sprintf("%s/test_files/configs/multi", wd)
+
+	tests := map[string]struct {
+		in   string
+		want []Report
+		err  error
+	}{
+		"basic": {
+			in: testdata,
+			want: []Report{
+				{
+					WD:     fmt.Sprintf("%s/minimaljson", testdata),
+					Path:   fmt.Sprintf("%s/minimaljson/.deploystack/deploystack.json", testdata),
+					Config: Config{Title: "Minimal JSON"},
+				},
+				{
+					WD:     fmt.Sprintf("%s/minimalyaml", testdata),
+					Path:   fmt.Sprintf("%s/minimalyaml/.deploystack/deploystack.yaml", testdata),
+					Config: Config{Title: "Minimal YAML"},
+				},
+			},
+			err: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := FindConfigReports(testdata)
+
+			if tc.err == nil {
+				if err != nil {
+					t.Fatalf("expected no error, got %s", err)
+				}
+			}
+
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}

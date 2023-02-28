@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -100,6 +101,23 @@ func getRegions(q *Queue) tea.Cmd {
 			items = append(items, item{
 				value: strings.TrimSpace(v),
 				label: strings.TrimSpace(v),
+			})
+		}
+
+		return items
+	}
+}
+
+func handleReports(q *Queue) tea.Cmd {
+	return func() tea.Msg {
+		reports := q.Get("reports").([]config.Report)
+
+		items := []list.Item{}
+		for _, v := range reports {
+
+			items = append(items, item{
+				value: strings.TrimSpace(v.WD),
+				label: strings.TrimSpace(v.Config.Title),
 			})
 		}
 

@@ -22,7 +22,6 @@ import (
 	"os"
 
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
-	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -109,7 +108,6 @@ func Run(s *config.Stack, useMock bool) {
 		q = NewQueue(s, GetMock(1))
 	}
 
-	q.Save("contact", deploystack.CheckForContact())
 	q.InitializeUI()
 
 	p := tea.NewProgram(q.Start(), tea.WithAltScreen())
@@ -122,7 +120,6 @@ func Run(s *config.Stack, useMock bool) {
 	}
 
 	s.TerraformFile("terraform.tfvars")
-	deploystack.CacheContact(q.Get("contact"))
 
 	fmt.Print("\n\n")
 	fmt.Print(titleStyle.Render("Deploystack"))
@@ -131,6 +128,41 @@ func Run(s *config.Stack, useMock bool) {
 	fmt.Print("\n")
 	fmt.Print(strong.Render("Installation will proceed with these settings"))
 	fmt.Print(q.getSettings())
+}
+
+// PreCheck handles presenting a choice to a user amongst multiple stacks
+func PreCheck(reports []config.Report) string {
+
+	q := NewQueue(nil, GetMock(0))
+	q.Save("reports", reports)
+
+	appHeader := newHeader(appTitle, "Multiple Stacks Detected")
+	firstPage := newPicker("Please pick a stack to use", "Finding stacks", "stack", "", handleReports(&q))
+	firstPage.showProgress = false
+	firstPage.omitFromSettings = true
+	firstPage.addPostProcessor(handleStackSelection)
+
+	q.header = appHeader
+	q.add(&firstPage)
+
+	p := tea.NewProgram(q.Start(), tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		Fatal(err)
+	}
+	response := q.Get("stack").(string)
+
+	fmt.Print("\n\n")
+	fmt.Print(titleStyle.Render("Deploystack"))
+	fmt.Print("\n")
+	fmt.Print(subTitleStyle.Render("Stack has been chosen"))
+	fmt.Print("\n")
+	fmt.Print(strong.Render("Installation will proceed with this stack:"))
+	fmt.Print("\n")
+	fmt.Print(response)
+	fmt.Print("\n")
+
+	return response
+
 }
 
 // Fatal stops processing of Deploystack and halts the calling process. All
@@ -154,6 +186,6 @@ func Fatal(err error) {
 		fmt.Println(titleStyle.Render("DeployStack"))
 		fmt.Println(msg.Render())
 	}
-
+	fmt.Printf(clear)
 	os.Exit(1)
 }
