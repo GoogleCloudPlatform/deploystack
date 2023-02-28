@@ -1,0 +1,23 @@
+google_bigquery_dataset:
+  label: google_bigquery_dataset
+  product: BigQuery
+  test_config: 
+    test_type: bq
+    test_command: bq ls | grep -c 
+    label_field: table_id
+    expected: 1
+    todo: Double check this set of options for test
+  api_calls: 
+  - google.cloud.bigquery.[version].DatasetService.InsertDataset
+google_bigquery_table:
+  label: google_bigquery_table
+  product: BigQuery
+  test_config: 
+    test_type: bq
+    test_command: bq ls | grep -c 
+    label_field: dataset_id
+    todo: Double check this set of options for test
+  api_calls: 
+  - google.cloud.bigquery.[version].TableService.InsertTable
+  - google.cloud.bigquery.[version].TableService.UpdateTable
+  - google.cloud.bigquery.[version].TableService.PatchTable

@@ -33,3 +33,6 @@ module "project-services" {
     "compute.googleapis.com"
   ]
 }
+
+data "google_project" "project" {
+}
