@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0](https://github.com/GoogleCloudPlatform/deploystack/compare/tui/v1.4.0...tui/v1.5.0) (2023-02-28)
+
+
+### Features
+
+* added ability for more than one stack to exist in the same repo ([959b797](https://github.com/GoogleCloudPlatform/deploystack/commit/959b797478114da0d8d08e336605645f3bd02e56))
+
+
+### Bug Fixes
+
+* added an example for multi stack repos ([52ca81f](https://github.com/GoogleCloudPlatform/deploystack/commit/52ca81f34895b6a9a5b0ecc6e3941d9155ffaa1a))
+* debugging might be screwing things up here. ([177cc54](https://github.com/GoogleCloudPlatform/deploystack/commit/177cc54fa769e927e76814feb28f1fca3d70b6c3))
+* trying to correct a problem where Deploystack stops the terminal from working ([9b1d95e](https://github.com/GoogleCloudPlatform/deploystack/commit/9b1d95e1c57c3a9141280401518c74c14ed90811))
+
 ## [1.4.0](https://github.com/GoogleCloudPlatform/deploystack/compare/tui/v1.3.0...tui/v1.4.0) (2023-02-25)
 
 

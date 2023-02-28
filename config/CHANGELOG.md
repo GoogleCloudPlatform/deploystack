@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/GoogleCloudPlatform/deploystack/compare/config/v1.4.0...config/v1.5.0) (2023-02-28)
+
+
+### Features
+
+* added multi stack detection to config operations. ([a81267f](https://github.com/GoogleCloudPlatform/deploystack/commit/a81267ffa4abe07afae1f3942f6bc96e636b44e1))
+
 ## [1.4.0](https://github.com/GoogleCloudPlatform/deploystack/compare/config/v1.3.0...config/v1.4.0) (2023-02-25)
 
 
