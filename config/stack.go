@@ -119,13 +119,32 @@ func (s *Stack) findTFFolder(c Config) (string, error) {
 		return c.PathTerraform, nil
 	}
 
-	path := "terraform"
+	result := "terraform"
 
-	if _, err := os.Stat(path); err == nil {
-		return path, nil
+	if _, err := os.Stat(result); err == nil {
+		return result, nil
 	}
 
-	return ".", nil
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	err = filepath.Walk(wd, func(path string, info os.FileInfo, err error) error {
+
+		if info.Name() == "main.tf" {
+			result = path
+
+			result = filepath.Dir(result)
+
+			result, err = filepath.Rel(wd, result)
+
+			return err
+		}
+		return nil
+	})
+
+	return result, nil
 }
 
 // FindAndReadRequired finds and reads in a Config from a json file.

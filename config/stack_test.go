@@ -90,6 +90,58 @@ func TestFindAndReadConfig(t *testing.T) {
 	}
 }
 
+func TestFindTFFolder(t *testing.T) {
+	wd, err := filepath.Abs(".")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+	testdata := fmt.Sprintf("%s/test_files/terraform", wd)
+	tests := map[string]struct {
+		in   string
+		want string
+		err  error
+	}{
+		"toplevel": {
+			in:   "toplevel",
+			want: ".",
+		},
+		"secondlevel": {
+			in:   "secondlevel",
+			want: "terraform",
+		},
+		"notterraform": {
+			in:   "notterraform",
+			want: "other",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			oldWD, err := os.Getwd()
+			if err != nil {
+				t.Fatalf("expected no error, got: %+v", err)
+			}
+
+			if err := os.Chdir(fmt.Sprintf("%s/%s", testdata, tc.in)); err != nil {
+				t.Fatalf("expected no error, got: %+v", err)
+			}
+			defer os.Chdir(oldWD)
+
+			stack := NewStack()
+
+			got, err := stack.findTFFolder(stack.Config)
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected no error, got: %+v", err)
+			}
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestFindAndReadRequired(t *testing.T) {
 	testdata := "test_files/configs"
 
