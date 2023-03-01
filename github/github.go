@@ -19,6 +19,7 @@ package github
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -133,12 +134,12 @@ func NewMetaFromLocal(path string) (Meta, error) {
 	s := config.NewStack()
 
 	if err := s.FindAndReadRequired(); err != nil {
-		return d, fmt.Errorf("could not read config file: %s", err)
+		log.Printf("could not read config file: %s", err)
 	}
 
 	b, err := terraform.Extract(s.Config.PathTerraform)
 	if err != nil {
-		return d, fmt.Errorf("couldn't extract from TF file: %s", err)
+		log.Printf("couldn't extract from TF file: %s", err)
 	}
 
 	d.Terraform = *b
