@@ -1,29 +1,5 @@
 # Changelog
 
-## [1.5.4](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.3...v2.0.0) (2023-03-02)
-
-### Features
-
-* moving functionality for cloning github repos from GoogleCloud to main package ([a9ac5f5](https://github.com/GoogleCloudPlatform/deploystack/commit/a9ac5f58678038932e9361b9ac49d230e8695e82))
-
-
-### Bug Fixes
-
-* absorbing some of the features we removed from github ([32e4ddb](https://github.com/GoogleCloudPlatform/deploystack/commit/32e4ddb8f6ab05a7db1cd1a80d43ed63b8890ffe))
-* added Dockerfile for running DeployStack locally ([c2d45cd](https://github.com/GoogleCloudPlatform/deploystack/commit/c2d45cda92e10988fa6553be39481bca90ba17e0))
-* changing github to be simpler more general purpose ([3a2c058](https://github.com/GoogleCloudPlatform/deploystack/commit/3a2c058249fd32ec6f7d0b4451f57dbaa5249566))
-* more test data ([a0eeac6](https://github.com/GoogleCloudPlatform/deploystack/commit/a0eeac68b50ae3de7213b166f421b27d50920363))
-* pull down repos ([0b495a3](https://github.com/GoogleCloudPlatform/deploystack/commit/0b495a3980bde4f19e655fec8c02299cf76e70ce))
-* renaming bits ([5d8b247](https://github.com/GoogleCloudPlatform/deploystack/commit/5d8b2472f1b16891c6dfb9c03bb6be9e61cf5e56))
-* Taskfile erred when there wasn't a script header. ([ebf0ab1](https://github.com/GoogleCloudPlatform/deploystack/commit/ebf0ab1a80591aed8e4443030a5bb30e49cee28d))
-
-## [1.5.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.2...v1.5.3) (2023-03-02)
-
-
-### Bug Fixes
-
-* cloud shell always thinks it's in dark mode ([5f36947](https://github.com/GoogleCloudPlatform/deploystack/commit/5f369479376aa285ac9061151c1f22b8058ff5fa))
-
 ## [1.5.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.1...v1.5.2) (2023-03-01)
 
 
