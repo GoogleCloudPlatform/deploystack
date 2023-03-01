@@ -19,6 +19,7 @@ package github
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -101,14 +102,14 @@ func (g Github) Clone(path string) error {
 
 // NewMeta downloads a github repo and parses the DeployStack and Terraform
 // information from the stack.
-func NewMeta(repo, path string) (Meta, error) {
+func NewMeta(repo, path, dspath string) (Meta, error) {
 	g := NewGithub(repo)
 
 	if err := g.Clone(path); err != nil {
 		return Meta{}, fmt.Errorf("cannot clone repo: %s", err)
 	}
 
-	d, err := NewMetaFromLocal(g.RepoPath(path))
+	d, err := NewMetaFromLocal(g.RepoPath(path) + dspath)
 	if err != nil {
 		return Meta{}, fmt.Errorf("cannot parse deploystack into: %s", err)
 	}
@@ -133,15 +134,18 @@ func NewMetaFromLocal(path string) (Meta, error) {
 	s := config.NewStack()
 
 	if err := s.FindAndReadRequired(); err != nil {
-		return d, fmt.Errorf("could not read config file: %s", err)
+		log.Printf("could not read config file: %s", err)
 	}
 
 	b, err := terraform.Extract(s.Config.PathTerraform)
 	if err != nil {
-		return d, fmt.Errorf("couldn't extract from TF file: %s", err)
+		log.Printf("couldn't extract from TF file: %s", err)
 	}
 
-	d.Terraform = *b
+	if b != nil {
+		d.Terraform = *b
+	}
+
 	d.DeployStack = s.Config
 
 	if err := os.Chdir(orgpwd); err != nil {
