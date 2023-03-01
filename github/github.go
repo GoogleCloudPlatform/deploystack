@@ -142,7 +142,10 @@ func NewMetaFromLocal(path string) (Meta, error) {
 		log.Printf("couldn't extract from TF file: %s", err)
 	}
 
-	d.Terraform = *b
+	if *b != nil {
+		d.Terraform = *b
+	}
+
 	d.DeployStack = s.Config
 
 	if err := os.Chdir(orgpwd); err != nil {
