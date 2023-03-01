@@ -133,7 +133,7 @@ func TestNewMeta(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			os.RemoveAll(tc.want.LocalPath)
-			got, err := NewMeta(tc.repo, tc.path)
+			got, err := NewMeta(tc.repo, tc.path, "")
 			if err != nil {
 				t.Fatalf("expected: no error, got: %v", err)
 			}
