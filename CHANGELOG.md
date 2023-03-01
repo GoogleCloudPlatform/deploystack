@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.0...v1.5.1) (2023-03-01)
+
+
+### Bug Fixes
+
+* don't throw errors if stuff isn't there log it. ([cd7da57](https://github.com/GoogleCloudPlatform/deploystack/commit/cd7da57db43625b95a49fca4603712ca94b4d170))
+* export terraform file information ([289c988](https://github.com/GoogleCloudPlatform/deploystack/commit/289c988653b96d5b1085d232241c1578443539db))
+* make sure nil pointers don't break us. ([ef3d435](https://github.com/GoogleCloudPlatform/deploystack/commit/ef3d435507e21fab2ad3ece6e4e11d0ecfd69aa3))
+* setting up to be able to handle multiple stacks per repo ([5250188](https://github.com/GoogleCloudPlatform/deploystack/commit/525018825f7a8992b99a9f5f86c2045c367c56fd))
+
 ## [1.5.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.4.1...v1.5.0) (2023-02-28)
 
 
