@@ -52,8 +52,8 @@ type Block struct {
 	Kind  string            `json:"kind" yaml:"kind"`
 	Type  string            `json:"type" yaml:"type"`
 	Attr  map[string]string `json:"attr" yaml:"attr"`
-	file  string
-	start int
+	File  string            `json:"file" yaml:"file"`
+	Start int               `json:"start" yaml:"start"`
 }
 
 // NewResourceBlock converts a parsed Terraform Resource to a Block
@@ -63,8 +63,8 @@ func NewResourceBlock(t *tfconfig.Resource) (Block, error) {
 	b.Name = t.Name
 	b.Type = t.Type
 	b.Kind = t.Mode.String()
-	b.start = t.Pos.Line
-	b.file = t.Pos.Filename
+	b.Start = t.Pos.Line
+	b.File = t.Pos.Filename
 	b.Text, err = getResourceText(t.Pos.Filename, t.Pos.Line)
 	if err != nil {
 		return b, fmt.Errorf("could not extract text from Resource: %s", err)
@@ -80,8 +80,8 @@ func NewVariableBlock(t *tfconfig.Variable) (Block, error) {
 	b.Name = t.Name
 	b.Type = t.Type
 	b.Kind = "variable"
-	b.start = t.Pos.Line
-	b.file = t.Pos.Filename
+	b.Start = t.Pos.Line
+	b.File = t.Pos.Filename
 	b.Text, err = getResourceText(t.Pos.Filename, t.Pos.Line)
 	if err != nil {
 		return b, fmt.Errorf("could not extract text from Variable: %s", err)
@@ -96,8 +96,8 @@ func NewModuleBlock(t *tfconfig.ModuleCall) (Block, error) {
 	b.Name = t.Name
 	b.Type = t.Source
 	b.Kind = "module"
-	b.start = t.Pos.Line
-	b.file = t.Pos.Filename
+	b.Start = t.Pos.Line
+	b.File = t.Pos.Filename
 	b.Text, err = getResourceText(t.Pos.Filename, t.Pos.Line)
 	if err != nil {
 		return b, fmt.Errorf("could not extract text from Module: %s", err)
@@ -207,7 +207,7 @@ func NewBlocks(mod *tfconfig.Module) (*Blocks, error) {
 	}
 
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].start < result[j].start
+		return result[i].Start < result[j].Start
 	})
 
 	return &result, nil
