@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.1...v1.5.2) (2023-03-01)
+
+
+### Bug Fixes
+
+* tweaked find terraform behavior to be smarter ([1086322](https://github.com/GoogleCloudPlatform/deploystack/commit/1086322feaa93d71ee95d01e03f4ecb69771f1b7))
+
 ## [1.5.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.0...v1.5.1) (2023-03-01)
 
 
