@@ -51,8 +51,8 @@ func TestExtract2(t *testing.T) {
 }`,
 					Kind:  "managed",
 					Type:  "google_compute_snapshot",
-					file:  fmt.Sprintf("%s/main.tf", testdata),
-					start: 15,
+					File:  fmt.Sprintf("%s/main.tf", testdata),
+					Start: 15,
 				},
 				Block{
 					Name: "project_id",
@@ -61,8 +61,8 @@ func TestExtract2(t *testing.T) {
 }`,
 					Kind:  "variable",
 					Type:  "string",
-					file:  fmt.Sprintf("%s/variables.tf", testdata),
-					start: 15,
+					File:  fmt.Sprintf("%s/variables.tf", testdata),
+					Start: 15,
 				},
 				Block{
 					Name: "project-services",
@@ -80,15 +80,15 @@ func TestExtract2(t *testing.T) {
 }`,
 					Kind:  "module",
 					Type:  "terraform-google-modules/project-factory/google//modules/project_services",
-					file:  fmt.Sprintf("%s/main.tf", testdata),
-					start: 24,
+					File:  fmt.Sprintf("%s/main.tf", testdata),
+					Start: 24,
 				},
 				Block{
 					Name:  "project",
 					Type:  "google_project",
 					Kind:  "data",
-					start: 37,
-					file:  fmt.Sprintf("%s/main.tf", testdata),
+					Start: 37,
+					File:  fmt.Sprintf("%s/main.tf", testdata),
 					Text: `data "google_project" "project" {
 }`,
 				},
@@ -134,12 +134,12 @@ func TestExtract2(t *testing.T) {
 					t.Fatalf("type expected: %+v, got: %+v", tc.want[i].Type, (*got)[i].Type)
 				}
 
-				if tc.want[i].file != (*got)[i].file {
-					t.Fatalf("file expected: %+v, got: %+v", tc.want[i].file, (*got)[i].file)
+				if tc.want[i].File != (*got)[i].File {
+					t.Fatalf("file expected: %+v, got: %+v", tc.want[i].File, (*got)[i].File)
 				}
 
-				if tc.want[i].start != (*got)[i].start {
-					t.Fatalf("start expected: %+v, got: %+v", tc.want[i].start, (*got)[i].start)
+				if tc.want[i].Start != (*got)[i].Start {
+					t.Fatalf("start expected: %+v, got: %+v", tc.want[i].Start, (*got)[i].Start)
 				}
 
 			}
@@ -171,8 +171,8 @@ func TestNewBlocks(t *testing.T) {
 }`,
 			Kind:  "managed",
 			Type:  "google_compute_snapshot",
-			file:  "testdata/extracttest/main.tf",
-			start: 15,
+			File:  "testdata/extracttest/main.tf",
+			Start: 15,
 		},
 		Block{
 			Name: "project_id",
@@ -181,8 +181,8 @@ func TestNewBlocks(t *testing.T) {
 }`,
 			Kind:  "variable",
 			Type:  "string",
-			file:  "testdata/extracttest/variables.tf",
-			start: 15,
+			File:  "testdata/extracttest/variables.tf",
+			Start: 15,
 		},
 		Block{
 			Name: "project-services",
@@ -200,15 +200,15 @@ func TestNewBlocks(t *testing.T) {
 }`,
 			Kind:  "module",
 			Type:  "terraform-google-modules/project-factory/google//modules/project_services",
-			file:  "testdata/extracttest/main.tf",
-			start: 24,
+			File:  "testdata/extracttest/main.tf",
+			Start: 24,
 		},
 		Block{
 			Name:  "project",
 			Type:  "google_project",
 			Kind:  "data",
-			start: 37,
-			file:  "testdata/extracttest/main.tf",
+			Start: 37,
+			File:  "testdata/extracttest/main.tf",
 			Text: `data "google_project" "project" {
 }`,
 		},
@@ -233,12 +233,12 @@ func TestNewBlocks(t *testing.T) {
 			t.Fatalf("type expected: %+v, got: %+v", want[i].Type, (*got)[i].Type)
 		}
 
-		if want[i].file != (*got)[i].file {
-			t.Fatalf("file expected: %+v, got: %+v", want[i].file, (*got)[i].file)
+		if want[i].File != (*got)[i].File {
+			t.Fatalf("file expected: %+v, got: %+v", want[i].File, (*got)[i].File)
 		}
 
-		if want[i].start != (*got)[i].start {
-			t.Fatalf("start expected: %+v, got: %+v", want[i].start, (*got)[i].start)
+		if want[i].Start != (*got)[i].Start {
+			t.Fatalf("start expected: %+v, got: %+v", want[i].Start, (*got)[i].Start)
 		}
 
 	}
@@ -264,8 +264,8 @@ variable "project_id" {
 }`,
 			Kind:  "variable",
 			Type:  "string",
-			file:  "testdata/variables/variables.tf",
-			start: 15,
+			File:  "testdata/variables/variables.tf",
+			Start: 15,
 		},
 	}
 
@@ -285,12 +285,12 @@ variable "project_id" {
 		t.Fatalf("expected: %+v, got: %+v", want[0].Type, (*got)[0].Type)
 	}
 
-	if want[0].file != (*got)[0].file {
-		t.Fatalf("expected: %+v, got: %+v", want[0].file, (*got)[0].file)
+	if want[0].File != (*got)[0].File {
+		t.Fatalf("expected: %+v, got: %+v", want[0].File, (*got)[0].File)
 	}
 
-	if want[0].start != (*got)[0].start {
-		t.Fatalf("expected: %+v, got: %+v", want[0].start, (*got)[0].start)
+	if want[0].Start != (*got)[0].Start {
+		t.Fatalf("expected: %+v, got: %+v", want[0].Start, (*got)[0].Start)
 	}
 }
 
@@ -319,8 +319,8 @@ resource "google_compute_snapshot" "snapshot" {
 }`,
 			Kind:  "managed",
 			Type:  "google_compute_snapshot",
-			file:  "testdata/resources/main.tf",
-			start: 15,
+			File:  "testdata/resources/main.tf",
+			Start: 15,
 		},
 	}
 
@@ -341,12 +341,12 @@ resource "google_compute_snapshot" "snapshot" {
 		t.Fatalf("Type expected: %+v, got: %+v", want[0].Type, (*got)[0].Type)
 	}
 
-	if want[0].file != (*got)[0].file {
-		t.Fatalf("file expected: %+v, got: %+v", want[0].file, (*got)[0].file)
+	if want[0].File != (*got)[0].File {
+		t.Fatalf("file expected: %+v, got: %+v", want[0].File, (*got)[0].File)
 	}
 
-	if want[0].start != (*got)[0].start {
-		t.Fatalf("start expected: %+v, got: %+v", want[0].start, (*got)[0].start)
+	if want[0].Start != (*got)[0].Start {
+		t.Fatalf("start expected: %+v, got: %+v", want[0].Start, (*got)[0].Start)
 	}
 }
 
@@ -379,8 +379,8 @@ module "project-services" {
 }`,
 			Kind:  "module",
 			Type:  "terraform-google-modules/project-factory/google//modules/project_services",
-			file:  "testdata/modules/main.tf",
-			start: 15,
+			File:  "testdata/modules/main.tf",
+			Start: 15,
 		},
 	}
 
@@ -400,12 +400,12 @@ module "project-services" {
 		t.Fatalf("expected: %+v, got: %+v", want[0].Type, (*got)[0].Type)
 	}
 
-	if want[0].file != (*got)[0].file {
-		t.Fatalf("expected: %+v, got: %+v", want[0].file, (*got)[0].file)
+	if want[0].File != (*got)[0].File {
+		t.Fatalf("expected: %+v, got: %+v", want[0].File, (*got)[0].File)
 	}
 
-	if want[0].start != (*got)[0].start {
-		t.Fatalf("expected: %+v, got: %+v", want[0].start, (*got)[0].start)
+	if want[0].Start != (*got)[0].Start {
+		t.Fatalf("expected: %+v, got: %+v", want[0].Start, (*got)[0].Start)
 	}
 }
 
