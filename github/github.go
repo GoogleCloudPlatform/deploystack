@@ -102,14 +102,14 @@ func (g Github) Clone(path string) error {
 
 // NewMeta downloads a github repo and parses the DeployStack and Terraform
 // information from the stack.
-func NewMeta(repo, path string) (Meta, error) {
+func NewMeta(repo, path, dspath string) (Meta, error) {
 	g := NewGithub(repo)
 
 	if err := g.Clone(path); err != nil {
 		return Meta{}, fmt.Errorf("cannot clone repo: %s", err)
 	}
 
-	d, err := NewMetaFromLocal(g.RepoPath(path))
+	d, err := NewMetaFromLocal(g.RepoPath(path) + dspath)
 	if err != nil {
 		return Meta{}, fmt.Errorf("cannot parse deploystack into: %s", err)
 	}
@@ -142,7 +142,7 @@ func NewMetaFromLocal(path string) (Meta, error) {
 		log.Printf("couldn't extract from TF file: %s", err)
 	}
 
-	if *b != nil {
+	if b != nil {
 		d.Terraform = *b
 	}
 
