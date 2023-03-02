@@ -1,11 +1,6 @@
 # Changelog
 
-## [2.0.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.3...v2.0.0) (2023-03-02)
-
-
-### ⚠ BREAKING CHANGES
-
-* changing github to be simpler more general purpose
+## [1.5.4](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.3...v2.0.0) (2023-03-02)
 
 ### Features
 
