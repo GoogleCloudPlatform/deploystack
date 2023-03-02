@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/GoogleCloudPlatform/deploystack/compare/github/v1.6.1...github/v2.0.0) (2023-03-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* changing github to be simpler more general purpose
+
+### Bug Fixes
+
+* changing github to be simpler more general purpose ([3a2c058](https://github.com/GoogleCloudPlatform/deploystack/commit/3a2c058249fd32ec6f7d0b4451f57dbaa5249566))
+
 ## [1.6.1](https://github.com/GoogleCloudPlatform/deploystack/compare/github/v1.6.0...github/v1.6.1) (2023-03-01)
 
 
