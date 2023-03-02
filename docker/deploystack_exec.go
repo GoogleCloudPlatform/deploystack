@@ -23,8 +23,8 @@ import (
 
 	_ "embed"
 
+	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
-	"github.com/GoogleCloudPlatform/deploystack/v2"
 )
 
 //go:embed versionTUI
