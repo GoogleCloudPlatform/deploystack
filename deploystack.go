@@ -214,3 +214,49 @@ func (d Meta) ShortNameUnderscore() string {
 	r = strings.ReplaceAll(r, "-", "_")
 	return r
 }
+
+// DownloadRepo takes a name of a GoogleCloudPlatform repo or a
+// GoogleCloudPlatform/deploystack-[name] repo, and downloads it into a unique
+// folder name, and outputs that name
+func DownloadRepo(name, path string) (string, error) {
+	candidate := fmt.Sprintf("%s/%s", path, name)
+	dir := UniquePath(candidate)
+	return dir, CloneByName(name, dir)
+
+}
+
+// UniquePath returns either the input candidate path if it does not exist,
+// or a path like the input candidate with increasing nubmers appended to it
+// until the ouput name is a path that does not exist
+func UniquePath(candidate string) string {
+	if _, err := os.Stat(candidate); os.IsNotExist(err) {
+		return candidate
+	}
+	i := 1
+	for {
+		attempted := fmt.Sprintf("%s_%d", candidate, i)
+		if _, err := os.Stat(attempted); os.IsNotExist(err) {
+			return attempted
+		}
+		i++
+	}
+}
+
+// CloneByName clones a github repo owned by GoogleCloudPlatform just by the
+// name of the repo, if it fails and the repo name does not have "deploystack-"
+// in it, it will try adding it, so that short names will work.
+func CloneByName(name, path string) error {
+	gh := github.Repo{Name: name, Owner: "GoogleCloudPlatform", Branch: "main"}
+
+	err := gh.Clone(path)
+	if err != nil {
+		// This allows using a shortened name of the repo as the label here.
+		if !strings.Contains(name, "deploystack-") {
+			gh.Name = fmt.Sprintf("deploystack-%s", name)
+			err = gh.Clone(path)
+		}
+	}
+
+	return err
+
+}
