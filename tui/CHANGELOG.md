@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/GoogleCloudPlatform/deploystack/compare/tui/v1.5.0...tui/v1.5.1) (2023-03-02)
+
+
+### Bug Fixes
+
+* cloud shell always thinks it's in dark mode ([5f36947](https://github.com/GoogleCloudPlatform/deploystack/commit/5f369479376aa285ac9061151c1f22b8058ff5fa))
+
 ## [1.5.0](https://github.com/GoogleCloudPlatform/deploystack/compare/tui/v1.4.0...tui/v1.5.0) (2023-02-28)
 
 
