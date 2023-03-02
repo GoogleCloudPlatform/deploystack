@@ -18,22 +18,26 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	_ "embed"
 
-	"github.com/GoogleCloudPlatform/deploystack"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
+	"github.com/GoogleCloudPlatform/deploystack/v2"
 )
 
-//go:embed dsVersion
-var dsVersion string
+//go:embed versionTUI
+var versionDS string
 
-//go:embed dsTUIVersion
-var dsTUIVersion string
+//go:embed versionTUI
+var versionTUI string
 
-//go:embed dsGcloudVersion
-var dsGcloudVersion string
+//go:embed versionGcloud
+var versionGcloud string
+
+//go:embed versionConfig
+var versionConfig string
 
 //go:embed buildTime
 var buildTime string
@@ -42,14 +46,33 @@ func main() {
 	verify := flag.Bool("verify", false, "Whether or not to be in verify mode")
 	name := flag.Bool("name", false, "Whether or not to be in drop the name of the stack")
 	version := flag.Bool("version", false, "Shows version information")
+	repo := flag.String("repo", "", "The name only of a Google Cloud Platform repo to download")
 
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("deploystack:        %s\n", strings.TrimSpace(dsVersion))
-		fmt.Printf("deploystack/tui:    %s\n", strings.TrimSpace(dsTUIVersion))
-		fmt.Printf("deploystack/gcloud: %s\n", strings.TrimSpace(dsGcloudVersion))
+		fmt.Printf("deploystack:        %s\n", strings.TrimSpace(versionDS))
+		fmt.Printf("deploystack/tui:    %s\n", strings.TrimSpace(versionTUI))
+		fmt.Printf("deploystack/gcloud: %s\n", strings.TrimSpace(versionGcloud))
+		fmt.Printf("deploystack/config: %s\n", strings.TrimSpace(versionConfig))
 		fmt.Printf("buildTime:          %s\n", strings.TrimSpace(buildTime))
+		return
+	}
+
+	if *repo != "" {
+		wd, err := os.Getwd()
+		if err != nil {
+			tui.Fatal(err)
+		}
+		dir, err := deploystack.DownloadRepo(*repo, wd)
+		if err != nil {
+			tui.Fatal(err)
+		}
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			tui.Fatal(err)
+		}
+
+		fmt.Printf("%s\n", dir)
 		return
 	}
 
