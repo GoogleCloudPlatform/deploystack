@@ -18,153 +18,75 @@ package github
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/deploystack/config"
-	"github.com/GoogleCloudPlatform/deploystack/terraform"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
-// Meta is a datastructure that combines the Deploystack, github and Terraform
-// bits of metadata about a stack.
-type Meta struct {
-	DeployStack config.Config
-	Terraform   terraform.Blocks `json:"terraform" yaml:"terraform"`
-	Github      Github           `json:"github" yaml:"github"`
-	LocalPath   string           `json:"localpath" yaml:"localpath"`
-}
-
-// Github contains the details of a github repo for the purpose of downloading
-type Github struct {
-	Repo   string `json:"repo" yaml:"repo"`
+// Repo contains the details of a github repo for the purpose of downloading
+type Repo struct {
+	Name   string `json:"name" yaml:"name"`
+	Owner  string `json:"owner" yaml:"owner"`
 	Branch string `json:"branch" yaml:"branch"`
 }
 
-// NewGithub generates Github from a url that might contain branch information
-func NewGithub(repo string) Github {
-	result := Github{}
-	result.Repo = repo
+func (r Repo) URL() string {
+	return fmt.Sprintf("https://github.com/%s/%s", r.Owner, r.Name)
+}
+
+func (r Repo) ReferenceName() string {
+	return fmt.Sprintf("refs/heads/%s", r.Branch)
+}
+
+// NewRepo generates Github from a url that might contain branch information
+func NewRepo(repo string) Repo {
+	result := Repo{}
+
 	result.Branch = "main"
+
+	input := strings.ReplaceAll(repo, "https://github.com/", "")
+
+	sl := strings.Split(input, "/")
+	result.Owner = sl[0]
+	result.Name = sl[1]
 
 	if strings.Contains(repo, "/tree/") {
 		end := strings.Index(repo, "/tree/")
-		result.Repo = repo[:end]
 		result.Branch = repo[end+6:]
 	}
 
 	return result
 }
 
-// RepoPath Returns the path that the github content will be cached at
-func (g Github) RepoPath(path string) string {
-	result := filepath.Base(g.Repo)
-	result = strings.ReplaceAll(result, "deploystack-", "")
-	result = fmt.Sprintf("%s/repo/%s", path, result)
+// Path returns where this repo should exist locally given the input path
+func (r Repo) Path(path string) string {
+	result := filepath.Base(r.Name)
+	result = fmt.Sprintf("%s/%s", path, result)
 	return result
 }
 
 // Clone performs a git clone to the directory of our choosing
-func (g Github) Clone(path string) error {
-	localPath := g.RepoPath(path)
-
-	if _, err := os.Stat(localPath); os.IsNotExist(err) {
-		fname := filepath.Join(os.TempDir(), "stdout")
-		old := os.Stdout            // keep backup of the real stdout
-		temp, _ := os.Create(fname) // create temp file
-		defer temp.Close()
-		os.Stdout = temp
+func (r Repo) Clone(path string) error {
+	log.Printf("Clone called %+v %s", r, path)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
 		_, err = git.PlainClone(
-			localPath,
+			path,
 			false,
 			&git.CloneOptions{
-				URL:           g.Repo,
-				ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", g.Branch)),
-				Progress:      temp,
+				URL:           r.URL(),
+				ReferenceName: plumbing.ReferenceName(r.ReferenceName()),
+				Progress:      nil,
 			})
 
 		if err != nil {
-			os.Stdout = old
-			out, _ := ioutil.ReadFile(fname)
-			fmt.Printf("git response: \n%s\n", string(out))
-			return fmt.Errorf("cannot get repo: %s", err)
+			return fmt.Errorf("cannot get repo (%s) : %s", r.URL(), err)
 		}
 
-		os.Stdout = old
 	}
 
 	return nil
-}
-
-// NewMeta downloads a github repo and parses the DeployStack and Terraform
-// information from the stack.
-func NewMeta(repo, path, dspath string) (Meta, error) {
-	g := NewGithub(repo)
-
-	if err := g.Clone(path); err != nil {
-		return Meta{}, fmt.Errorf("cannot clone repo: %s", err)
-	}
-
-	d, err := NewMetaFromLocal(g.RepoPath(path) + dspath)
-	if err != nil {
-		return Meta{}, fmt.Errorf("cannot parse deploystack into: %s", err)
-	}
-	d.Github = g
-	d.LocalPath = g.RepoPath(path)
-
-	return d, nil
-}
-
-// NewMetaFromLocal allows project to point at local directories for info
-// as well as pulling down from github
-func NewMetaFromLocal(path string) (Meta, error) {
-	d := Meta{}
-	orgpwd, err := os.Getwd()
-	if err != nil {
-		return d, fmt.Errorf("could not get the wd: %s", err)
-	}
-	if err := os.Chdir(path); err != nil {
-		return d, fmt.Errorf("could not change the wd: %s", err)
-	}
-
-	s := config.NewStack()
-
-	if err := s.FindAndReadRequired(); err != nil {
-		log.Printf("could not read config file: %s", err)
-	}
-
-	b, err := terraform.Extract(s.Config.PathTerraform)
-	if err != nil {
-		log.Printf("couldn't extract from TF file: %s", err)
-	}
-
-	if b != nil {
-		d.Terraform = *b
-	}
-
-	d.DeployStack = s.Config
-
-	if err := os.Chdir(orgpwd); err != nil {
-		return d, fmt.Errorf("could not change the wd back: %s", err)
-	}
-	return d, nil
-}
-
-// ShortName retrieves the shortname of whatever we are calling this stack
-func (d Meta) ShortName() string {
-	r := filepath.Base(d.Github.Repo)
-	r = strings.ReplaceAll(r, "deploystack-", "")
-	return r
-}
-
-// ShortNameUnderscore retrieves the shortname of whatever we are calling
-// this stack replacing hyphens with underscores
-func (d Meta) ShortNameUnderscore() string {
-	r := d.ShortName()
-	r = strings.ReplaceAll(r, "-", "_")
-	return r
 }
