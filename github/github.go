@@ -18,7 +18,6 @@ package github
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -71,7 +70,6 @@ func (r Repo) Path(path string) string {
 
 // Clone performs a git clone to the directory of our choosing
 func (r Repo) Clone(path string) error {
-	log.Printf("Clone called %+v %s", r, path)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		_, err = git.PlainClone(
 			path,
