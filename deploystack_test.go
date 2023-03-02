@@ -17,18 +17,105 @@ package deploystack
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
+	"github.com/GoogleCloudPlatform/deploystack/github"
 )
 
 func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
 		t.Fatalf("%s: expected: \n|%v|\ngot: \n|%v|", label, want, got)
 	}
+}
+
+func TestPrecheck(t *testing.T) {
+	wd, err := filepath.Abs(".")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+
+	testdata := fmt.Sprintf("%s/test_files/configs", wd)
+	tests := map[string]struct {
+		wd   string
+		want string
+	}{
+		"single": {
+			wd:   fmt.Sprintf("%s/preferred", testdata),
+			want: "",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			oldWD, _ := os.Getwd()
+			err := os.Chdir(tc.wd)
+			if err != nil {
+				t.Fatalf("error changing wd: %s", err)
+			}
+
+			out := captureOutput(func() {
+				Precheck()
+			})
+
+			if !strings.Contains(tc.want, string(out)) {
+				t.Fatalf("expected to contain: %+v, got: %+v", tc.want, string(out))
+			}
+
+			os.Chdir(oldWD)
+		})
+	}
+}
+func TestPrecheckMulti(t *testing.T) {
+	// Precheck exits if it is called in testing with mutliple stacks
+	// so make throwing the exit the test
+
+	if os.Getenv("BE_CRASHER") == "1" {
+		wd, err := filepath.Abs(".")
+		if err != nil {
+			t.Fatalf("error setting up environment for testing %v", err)
+		}
+
+		testdata := fmt.Sprintf("%s/test_files/configs", wd)
+		path := fmt.Sprintf("%s/multi", testdata)
+		oldWD, _ := os.Getwd()
+		if err := os.Chdir(path); err != nil {
+			t.Fatalf("error changing wd: %s", err)
+		}
+
+		Precheck()
+		os.Chdir(oldWD)
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestPrecheckMulti")
+	cmd.Env = append(os.Environ(), "BE_CRASHER=1")
+	err := cmd.Run()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		return
+	}
+	t.Fatalf("process ran with err %v, want exit status 1", err)
+
+}
+
+func captureOutput(f func()) string {
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	f()
+
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = rescueStdout
+	return string(out)
 }
 
 func TestCacheContact(t *testing.T) {
@@ -180,27 +267,6 @@ func TestCheckForContact(t *testing.T) {
 	}
 }
 
-func TestBasic(t *testing.T) {
-	tests := map[string]struct {
-		in   string
-		want string
-	}{
-		"basic": {
-			in:   "test",
-			want: "test",
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := tc.in
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
-			}
-		})
-	}
-}
-
 func TestInit(t *testing.T) {
 	errUnableToRead := errors.New("unable to read config file: ")
 	tests := map[string]struct {
@@ -323,6 +389,234 @@ func TestInit(t *testing.T) {
 			for i, v := range s.Config.CustomSettings {
 				compareValues(v.Name, tc.want.Config.CustomSettings[i], v, t)
 			}
+		})
+	}
+}
+
+func TestShortName(t *testing.T) {
+	tests := map[string]struct {
+		in   string
+		want string
+	}{
+		"deploystack-repo":     {in: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry", want: "cost-sentry"},
+		"non-deploystack-repo": {in: "https://github.com/tpryan/microservices-demo", want: "microservices-demo"},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			m := Meta{}
+			m.Github.Name = tc.in
+
+			got := m.ShortName()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestShortNameUnderscore(t *testing.T) {
+	tests := map[string]struct {
+		in   string
+		want string
+	}{
+		"deploystack-repo":     {in: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry", want: "cost_sentry"},
+		"non-deploystack-repo": {in: "https://github.com/tpryan/microservices-demo", want: "microservices_demo"},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			m := Meta{}
+			m.Github.Name = tc.in
+
+			got := m.ShortNameUnderscore()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestNewMeta(t *testing.T) {
+	wd, err := filepath.Abs(".")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+
+	testdata := fmt.Sprintf("%s/test_files/repos", wd)
+	tests := map[string]struct {
+		repo string
+		path string
+		want Meta
+	}{
+		"defaultbranch": {
+			repo: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry",
+			path: testdata,
+			want: Meta{
+				Github: github.Repo{
+					Name:   "deploystack-cost-sentry",
+					Owner:  "GoogleCloudPlatform",
+					Branch: "main",
+				},
+				LocalPath: fmt.Sprintf("%s/deploystack-cost-sentry", testdata)},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := NewMeta(tc.repo, tc.path, "")
+			if err != nil {
+				t.Fatalf("expected: no error, got: %v", err)
+			}
+			if !reflect.DeepEqual(tc.want.Github.Name, got.Github.Name) {
+				t.Fatalf("expected: %v, got: %v", tc.want.Github.Name, got.Github.Name)
+			}
+
+			if !reflect.DeepEqual(tc.want.Github.Branch, got.Github.Branch) {
+				t.Fatalf("expected: %v, got: %v", tc.want.Github.Branch, got.Github.Branch)
+			}
+
+			if !reflect.DeepEqual(tc.want.LocalPath, got.LocalPath) {
+				t.Fatalf("expected: %v, got: %v", tc.want.LocalPath, got.LocalPath)
+			}
+
+			os.RemoveAll(got.LocalPath)
+		})
+	}
+}
+
+func TestGetRepo(t *testing.T) {
+	wd, err := filepath.Abs(".")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+
+	testdata := fmt.Sprintf("%s/test_files/repoforgithub", wd)
+	tests := map[string]struct {
+		repo string
+		path string
+		want string
+		err  error
+	}{
+		"deploystack-nosql-client-server": {
+			repo: "deploystack-nosql-client-server",
+			path: testdata,
+			want: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
+		},
+		"nosql-client-server": {
+			repo: "nosql-client-server",
+			path: testdata,
+			want: fmt.Sprintf("%s/nosql-client-server", testdata),
+		},
+
+		"deploystack-cost-sentry": {
+			repo: "deploystack-cost-sentry",
+			path: testdata,
+			want: fmt.Sprintf("%s/deploystack-cost-sentry_1", testdata),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			got, err := DownloadRepo(tc.repo, tc.path)
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected: no error got: %+v", err)
+			}
+
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+
+			if _, err := os.Stat(tc.want); os.IsNotExist(err) {
+				t.Fatalf("expected: %s to exist it does not", err)
+			}
+
+			err = os.RemoveAll(tc.want)
+			if err != nil {
+				t.Logf(err.Error())
+			}
+
+		})
+	}
+}
+
+func TestGetAcceptableDir(t *testing.T) {
+	wd, err := filepath.Abs(".")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+	testdata := fmt.Sprintf("%s/test_files/repoforgithub", wd)
+
+	tests := map[string]struct {
+		in   string
+		want string
+	}{
+		"doesnotexist": {
+			in:   fmt.Sprintf("%s/testfolder", testdata),
+			want: fmt.Sprintf("%s/testfolder", testdata),
+		},
+		"exists": {
+			in:   fmt.Sprintf("%s/alreadyexists", testdata),
+			want: fmt.Sprintf("%s/alreadyexists_2", testdata),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := UniquePath(tc.in)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestCloneFromRepo(t *testing.T) {
+
+	wd, err := filepath.Abs(".")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+
+	testdata := fmt.Sprintf("%s/test_files/repoforgithub", wd)
+	tests := map[string]struct {
+		repo string
+		path string
+		want string
+		err  error
+	}{
+		"deploystack-nosql-client-server": {
+			repo: "deploystack-nosql-client-server",
+			path: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
+			want: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
+		},
+		"nosql-client-server": {
+			repo: "nosql-client-server",
+			path: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
+			want: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			err := CloneByName(tc.repo, tc.path)
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected: no error got: %+v", err)
+			}
+
+			if _, err := os.Stat(tc.want); os.IsNotExist(err) {
+				t.Fatalf("expected: %s to exist it does not", err)
+			}
+
+			err = os.RemoveAll(tc.path)
+			if err != nil {
+				t.Logf(err.Error())
+			}
+
 		})
 	}
 }

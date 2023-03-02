@@ -1,3 +1,4 @@
+#!/bin/sh
 DIR="../../test_files/gcloudout"
 
 gcloud projects list --format="value(name)" > $DIR/projects.txt

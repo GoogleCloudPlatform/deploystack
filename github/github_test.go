@@ -15,69 +15,99 @@
 package github
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
-func TestShortName(t *testing.T) {
+func TestClone(t *testing.T) {
+	wd, err := filepath.Abs(".")
+	if err != nil {
+		t.Fatalf("error setting up environment for testing %v", err)
+	}
+
+	testdata := fmt.Sprintf("%s/test_files", wd)
+
 	tests := map[string]struct {
-		in   string
-		want string
+		in   Repo
+		path string
+		err  error
 	}{
-		"deploystack-repo":     {in: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry", want: "cost-sentry"},
-		"non-deploystack-repo": {in: "https://github.com/tpryan/microservices-demo", want: "microservices-demo"},
+		"basic": {
+			in: Repo{
+				Name:   "deploystack-nosql-client-server",
+				Owner:  "GoogleCloudPlatform",
+				Branch: "main",
+			},
+			path: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
+		},
+		"error": {
+			in: Repo{
+				Name:   "deploystack-nosql-client-server-not-exist",
+				Owner:  "GoogleCloudPlatform",
+				Branch: "main",
+			},
+			path: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
+			err:  fmt.Errorf("cannot get repo"),
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			m := Meta{}
-			m.Github.Repo = tc.in
+			err := tc.in.Clone(tc.path)
 
-			got := m.ShortName()
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
+			if tc.err == nil && err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if tc.err != nil {
+				if !strings.Contains(err.Error(), tc.err.Error()) {
+					t.Fatalf("expected: %v, got: %v", tc.err, err)
+				}
+				t.Skip()
+			}
+
+			if _, err := os.Stat(tc.path + "/.git"); os.IsNotExist(err) {
+				t.Errorf("expected: %s to exist it does not", err)
+			}
+
+			err = os.RemoveAll(tc.path)
+			if err != nil {
+				t.Logf(err.Error())
 			}
 		})
 	}
 }
 
-func TestShortNameUnderscore(t *testing.T) {
+func TestNewRepo(t *testing.T) {
 	tests := map[string]struct {
 		in   string
-		want string
+		want Repo
 	}{
-		"deploystack-repo":     {in: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry", want: "cost_sentry"},
-		"non-deploystack-repo": {in: "https://github.com/tpryan/microservices-demo", want: "microservices_demo"},
+		"defaultbranch": {
+			in: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry",
+			want: Repo{
+				Name:   "deploystack-cost-sentry",
+				Owner:  "GoogleCloudPlatform",
+				Branch: "main",
+			}},
+		"otherbranch": {
+			in: "https://github.com/tpryan/microservices-demo/tree/deploystack-enable",
+			want: Repo{
+				Name:   "microservices-demo",
+				Owner:  "tpryan",
+				Branch: "deploystack-enable",
+			}},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			m := Meta{}
-			m.Github.Repo = tc.in
-
-			got := m.ShortNameUnderscore()
+			got := NewRepo(tc.in)
 			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
-			}
-		})
-	}
-}
-
-func TestNewGithub(t *testing.T) {
-	tests := map[string]struct {
-		in   string
-		want Github
-	}{
-		"defaultbranch": {in: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry", want: Github{Repo: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry", Branch: "main"}},
-		"otherbranch":   {in: "https://github.com/tpryan/microservices-demo/tree/deploystack-enable", want: Github{Repo: "https://github.com/tpryan/microservices-demo", Branch: "deploystack-enable"}},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := NewGithub(tc.in)
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}
 		})
 	}
@@ -85,71 +115,36 @@ func TestNewGithub(t *testing.T) {
 
 func TestRepoPath(t *testing.T) {
 	tests := map[string]struct {
-		in   Github
+		in   Repo
 		path string
 		want string
 	}{
 		"defaultbranch": {
-			in: Github{
-				Repo:   "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry",
+			in: Repo{
+				Name:   "deploystack-cost-sentry",
+				Owner:  "GoogleCloudPlatform",
 				Branch: "main",
 			},
 			path: ".",
-			want: "./repo/cost-sentry",
+			want: "./deploystack-cost-sentry",
 		},
 		"otherbranch": {
-			in: Github{
-				Repo:   "https://github.com/tpryan/microservices-demo",
+			in: Repo{
+				Name:   "microservices-demo",
+				Owner:  "tpryan",
 				Branch: "deploystack-enable",
 			},
 			path: ".",
-			want: "./repo/microservices-demo",
+			want: "./microservices-demo",
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := tc.in.RepoPath(tc.path)
+			got := tc.in.Path(tc.path)
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}
-		})
-	}
-}
-
-func TestNewMeta(t *testing.T) {
-	tests := map[string]struct {
-		repo string
-		path string
-		want Meta
-	}{
-		"defaultbranch": {
-			repo: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry",
-			path: ".",
-			want: Meta{Github: Github{Repo: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry", Branch: "main"}, LocalPath: "./repo/cost-sentry"},
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			os.RemoveAll(tc.want.LocalPath)
-			got, err := NewMeta(tc.repo, tc.path, "")
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
-			}
-			if !reflect.DeepEqual(tc.want.Github.Repo, got.Github.Repo) {
-				t.Fatalf("expected: %v, got: %v", tc.want.Github.Repo, got.Github.Repo)
-			}
-
-			if !reflect.DeepEqual(tc.want.Github.Branch, got.Github.Branch) {
-				t.Fatalf("expected: %v, got: %v", tc.want.Github.Branch, got.Github.Branch)
-			}
-
-			if !reflect.DeepEqual(tc.want.LocalPath, got.LocalPath) {
-				t.Fatalf("expected: %v, got: %v", tc.want.LocalPath, got.LocalPath)
-			}
-
-			os.RemoveAll(got.LocalPath)
 		})
 	}
 }

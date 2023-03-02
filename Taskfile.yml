@@ -1,0 +1,116 @@
+version: "3"
+env:
+  CONTAINER: deploystack
+  TERRAFORM_VERSION: 1.3.9
+
+tasks:
+
+  docker:clean:
+    ignore_error: true
+    dir: docker
+    desc: Clean Docker related artifacts
+    cmds:
+      - docker stop {{.CONTAINER}}
+      - docker rm {{.CONTAINER}}
+  docker:build:
+    dir: docker
+    deps:
+      - docker:clean
+    desc: Build Docker image
+    cmds:
+      - docker build --build-arg TERRAFORM_VERSION={{.TERRAFORM_VERSION}} -t {{.CONTAINER}} .
+
+  docker:run:
+    deps:
+      - docker:build
+    desc: Run the docker image
+    cmds:
+      - |
+        docker run --platform linux/amd64 --rm -it --name {{.CONTAINER}} -v ~/.config:/root/.config  -d {{.CONTAINER}}
+        docker exec -it {{.CONTAINER}} bash  
+
+
+  update:
+    desc: Update files that tests depend on
+    dir: tools/test_files_updater
+    cmds:
+      - ./update
+
+  creds.json:
+    desc: Gets teh details for the creds file, assuming you have permission
+    cmds:
+      - |
+        gcloud secrets versions access latest --secret=creds \
+        --project={{.DEPLOYSTACK_TEST_PROJECT}} > creds.json
+
+  test:
+    desc: Run all tests
+    deps:
+      - deploystack:test
+      - tui:test
+      - gcloud:test
+      - github:test
+      - terraform:test
+      - config:test
+      - dstester:test
+
+  go:clean:
+   desc: Cleans the caches before running tests
+   run: once
+   cmds: 
+      - go clean -testcache
+  
+  deploystack:test:
+    desc: Tests the deploystack package
+    deps:
+      - go:clean
+    cmds: 
+      - go test .  -cover
+ 
+  tui:test:
+    desc: Tests the tui package
+    deps:
+      - go:clean
+    dir: tui
+    cmds: 
+      - go test .  -cover
+ 
+  gcloud:test:
+    desc: Tests the gcloud package
+    deps:
+      - go:clean
+    dir: gcloud
+    cmds: 
+      - go test .  -cover     
+ 
+  config:test:
+    desc: Tests the config package
+    deps:
+      - go:clean
+    dir: config
+    cmds: 
+      - go test .  -cover     
+ 
+  terraform:test:
+    desc: Tests the terraform package
+    deps:
+      - go:clean
+    dir: terraform
+    cmds: 
+      - go test .  -cover
+ 
+  github:test:
+    desc: Tests the github package
+    deps:
+      - go:clean
+    dir: github
+    cmds: 
+      - go test .  -cover 
+ 
+  dstester:test:
+    desc: Tests the dstester package
+    deps:
+      - go:clean
+    dir: dstester
+    cmds: 
+      - go test .  -cover         
