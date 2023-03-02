@@ -1,0 +1,99 @@
+function deploystackError(){
+  repo=$(git config --get remote.origin.url)
+
+
+  echo
+  echo "An error occured collecting the necessary information to run your Deploystack"
+  echo "application. Please try again."
+  echo 
+  echo "If the problem persists, please file an issue with the Github repo:"
+  echo "${repo/.git/}/issues"
+}
+
+FAILED=false
+
+case $1 in
+
+  "install")
+    if [ -f "$scriptsDIR/preinstall.sh" ]; then
+        $scriptsDIR/preinstall.sh
+    fi
+    DEBUG=true dsexec || FAILED=true
+
+    if $FAILED; then
+      deploystackError
+      exit 1
+    fi
+
+    results=$(dsexec -verify)
+    arr=($(echo "$results" | tr '|' '\n'))
+    terraformDIR=${arr[0]}
+    messagesDIR=${arr[1]}
+    scriptsDIR=${arr[2]}
+    stackname=$(dsexec -name)
+    user_agent=deploystack/$stackname
+    export TF_APPEND_USER_AGENT=$user_agent
+    export TF_LOG=debug
+    export TF_LOG_PATH=tfdebug.log
+
+   mv terraform.tfvars $terraformDIR
+
+
+   if [ -f "$scriptsDIR/preinit.sh" ]; then
+        $scriptsDIR/preinit.sh
+   fi
+
+    terraform -chdir="$terraformDIR" init
+
+    if [ -f "$scriptsDIR/postinit.sh" ]; then
+        $scriptsDIR/postinit.sh
+    fi
+
+    terraform -chdir="$terraformDIR" apply -auto-approve -var-file=terraform.tfvars || FAILED=true
+
+    if [ -f "$scriptsDIR/postapply.sh" ]; then
+        $scriptsDIR/postapply.sh
+    fi
+    
+    if $FAILED; then
+      deploystackError 
+      exit 1
+    fi
+
+    if [ -f "$scriptsDIR/postinstall.sh" ]; then
+        $scriptsDIR/postinstall.sh
+    fi
+
+    if [ -f "$messagesDIR/success.txt" ]; then
+        cat $messagesDIR/success.txt
+    fi
+    ;;
+
+  "uninstall")
+    results=$(dsexec -verify)
+    arr=($(echo "$results" | tr '|' '\n'))
+    terraformDIR=${arr[0]}
+    messagesDIR=${arr[1]}
+    scriptsDIR=${arr[2]}
+    stackname=$(dsexec -name)
+    user_agent=deploystack/$stackname
+    export TF_APPEND_USER_AGENT=$user_agent
+    export TF_LOG=debug
+    export TF_LOG_PATH=tfdebug.log
+
+    if [ -f "$scriptsDIR/predestroy.sh" ]; then
+        $scriptsDIR/predestroy.sh
+    fi
+    terraform -chdir="$terraformDIR" destroy -auto-approve -var-file=terraform.tfvars
+    if [ -f "$scriptsDIR/postdestroy.sh" ]; then
+        $scriptsDIR/postdestroy.sh
+    fi
+    ;;
+
+  *)
+    echo "DEPLOYSTACK"
+    echo "type 'deploystack install' to install this deploystack application" 
+    echo "or"
+    echo "type 'deploystack uninstall' to uninstall this deploystack application" 
+    ;;
+esac

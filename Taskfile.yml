@@ -1,6 +1,35 @@
 version: "3"
+env:
+  CONTAINER: deploystack
+  TERRAFORM_VERSION: 1.3.9
 
 tasks:
+
+  docker:clean:
+    ignore_error: true
+    dir: docker
+    desc: Clean Docker related artifacts
+    cmds:
+      - docker stop {{.CONTAINER}}
+      - docker rm {{.CONTAINER}}
+  docker:build:
+    dir: docker
+    deps:
+      - docker:clean
+    desc: Build Docker image
+    cmds:
+      - docker build --build-arg TERRAFORM_VERSION={{.TERRAFORM_VERSION}} -t {{.CONTAINER}} .
+
+  docker:run:
+    deps:
+      - docker:build
+    desc: Run the docker image
+    cmds:
+      - |
+        docker run --platform linux/amd64 --rm -it --name {{.CONTAINER}} -v ~/.config:/root/.config  -d {{.CONTAINER}}
+        docker exec -it {{.CONTAINER}} bash  
+
+
   update:
     desc: Update files that tests depend on
     dir: tools/test_files_updater
@@ -84,4 +113,4 @@ tasks:
       - go:clean
     dir: dstester
     cmds: 
-      - go test .  -cover                           
+      - go test .  -cover         
