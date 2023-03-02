@@ -114,3 +114,39 @@ tasks:
     dir: dstester
     cmds: 
       - go test .  -cover         
+
+
+  dsexec:clean:
+    desc: Cleans the generated files of the dsexec binary
+    ignore_error: true
+    dir: docker
+    cmds:
+      - rm dsexec
+      - rm go.mod
+      - rm go.sum
+      - rm buildTime
+      - rm versionDS
+      - rm versionGcloud
+      - rm versionTUI
+      - rm versionConfig
+      - rm -r -- ./*/
+
+  dsexec:build:
+    desc: Builds a local version of dsexec
+    dir: docker
+    deps:
+      - dsexec:clean
+      - go:clean
+    cmds:
+      - go mod init dsexec && go mod tidy
+      - ./version.sh
+      - go build -o dsexec deploystack_exec.go
+
+  dsexec:install:
+    desc: Installs a local version of dsexec
+    dir: docker
+    deps:
+      - dsexec:build
+    cmds:
+      - sudo cp dsexec /usr/local/bin/
+      - sudo cp deploystack /usr/local/bin/
