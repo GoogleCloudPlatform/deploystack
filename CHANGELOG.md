@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.2...v1.5.3) (2023-03-02)
+
+
+### Bug Fixes
+
+* cloud shell always thinks it's in dark mode ([5f36947](https://github.com/GoogleCloudPlatform/deploystack/commit/5f369479376aa285ac9061151c1f22b8058ff5fa))
+
 ## [1.5.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.1...v1.5.2) (2023-03-01)
 
 
