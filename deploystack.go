@@ -20,9 +20,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
+	"github.com/GoogleCloudPlatform/deploystack/github"
+	"github.com/GoogleCloudPlatform/deploystack/terraform"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
 	"google.golang.org/api/option"
 	"gopkg.in/yaml.v2"
@@ -130,4 +134,83 @@ func CacheContact(i interface{}) {
 			}
 		}
 	}
+}
+
+// Meta is a datastructure that combines the Deploystack, github and Terraform
+// bits of metadata about a stack.
+type Meta struct {
+	DeployStack config.Config
+	Terraform   terraform.Blocks `json:"terraform" yaml:"terraform"`
+	Github      github.Repo      `json:"github" yaml:"github"`
+	LocalPath   string           `json:"localpath" yaml:"localpath"`
+}
+
+// NewMeta downloads a github repo and parses the DeployStack and Terraform
+// information from the stack.
+func NewMeta(repo, path, dspath string) (Meta, error) {
+	g := github.NewRepo(repo)
+
+	log.Printf("cloning to path: %s", path)
+	if err := g.Clone(g.Path(path)); err != nil {
+		return Meta{}, fmt.Errorf("cannot clone repo: %s", err)
+	}
+
+	d, err := NewMetaFromLocal(g.Path(path) + dspath)
+	if err != nil {
+		return Meta{}, fmt.Errorf("cannot parse deploystack into: %s", err)
+	}
+	d.Github = g
+	d.LocalPath = g.Path(path)
+
+	return d, nil
+}
+
+// NewMetaFromLocal allows project to point at local directories for info
+// as well as pulling down from github
+func NewMetaFromLocal(path string) (Meta, error) {
+	d := Meta{}
+	orgpwd, err := os.Getwd()
+	if err != nil {
+		return d, fmt.Errorf("could not get the wd: %s", err)
+	}
+	if err := os.Chdir(path); err != nil {
+		return d, fmt.Errorf("could not change the wd: %s", err)
+	}
+
+	s := config.NewStack()
+
+	if err := s.FindAndReadRequired(); err != nil {
+		log.Printf("could not read config file: %s", err)
+	}
+
+	b, err := terraform.Extract(s.Config.PathTerraform)
+	if err != nil {
+		log.Printf("couldn't extract from TF file: %s", err)
+	}
+
+	if b != nil {
+		d.Terraform = *b
+	}
+
+	d.DeployStack = s.Config
+
+	if err := os.Chdir(orgpwd); err != nil {
+		return d, fmt.Errorf("could not change the wd back: %s", err)
+	}
+	return d, nil
+}
+
+// ShortName retrieves the shortname of whatever we are calling this stack
+func (d Meta) ShortName() string {
+	r := filepath.Base(d.Github.Name)
+	r = strings.ReplaceAll(r, "deploystack-", "")
+	return r
+}
+
+// ShortNameUnderscore retrieves the shortname of whatever we are calling
+// this stack replacing hyphens with underscores
+func (d Meta) ShortNameUnderscore() string {
+	r := d.ShortName()
+	r = strings.ReplaceAll(r, "-", "_")
+	return r
 }
