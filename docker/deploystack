@@ -89,6 +89,13 @@ case $1 in
         $scriptsDIR/postdestroy.sh
     fi
     ;;
+  "repo")
+    candidate=$2
+    folder=$(dsexec -repo $candidate)
+    cd $folder
+    deploystack install
+    ;;
+
 
   *)
     echo "DEPLOYSTACK"
