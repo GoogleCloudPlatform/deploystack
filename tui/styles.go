@@ -113,11 +113,16 @@ var backgroundColors = ansi16colors{
 }
 
 type dsAdaptiveColor struct {
-	light ansi16color
-	dark  ansi16color
+	light             ansi16color
+	dark              ansi16color
+	blankOnCloudShell bool
 }
 
 func (a dsAdaptiveColor) code() string {
+	if a.blankOnCloudShell && os.Getenv("GOOGLE_CLOUD_SHELL") != "" {
+		return clear
+	}
+
 	if termenv.HasDarkBackground() {
 		return a.dark.colorCode
 	}
@@ -156,7 +161,7 @@ func newDsStyle() dsStyle {
 	white := textColors.color("light grey")
 
 	r := dsStyle{style: lipgloss.NewStyle()}
-	r.foreground = dsAdaptiveColor{light: black, dark: white}
+	r.foreground = dsAdaptiveColor{light: black, dark: white, blankOnCloudShell: true}
 	r.background = dsAdaptiveColor{light: blankBG, dark: blankBG}
 	return r
 }
@@ -302,7 +307,7 @@ var (
 	grayWeak      = dsAdaptiveColor{light: textColors.color("dark grey"), dark: textColors.color("white")}
 	simClearColor = dsAdaptiveColor{light: textColors.color("bright white"), dark: textColors.colorByID(0)}
 	highlight     = dsAdaptiveColor{light: textColors.color("cyan"), dark: textColors.color("bright cyan")}
-	basicText     = dsAdaptiveColor{light: textColors.color("black"), dark: textColors.color("light grey")}
+	basicText     = dsAdaptiveColor{light: textColors.color("black"), dark: textColors.color("light grey"), blankOnCloudShell: true}
 	alert         = dsAdaptiveColor{light: textColors.color("red"), dark: textColors.color("bright red")}
 	completeColor = dsAdaptiveColor{light: textColors.color("dark grey"), dark: textColors.color("dark grey")}
 	pendingColor  = dsAdaptiveColor{light: textColors.color("cyan"), dark: textColors.color("bright cyan")}
@@ -366,7 +371,7 @@ var (
 	promptStyle = newDsStyle().
 			Bold(true).
 			Background(highlightBG).
-			Foreground(dsAdaptiveColor{textColors.color("white"), textColors.color("white")})
+			Foreground(dsAdaptiveColor{light: textColors.color("white"), dark: textColors.color("white")})
 
 	alertStyle = bodyStyle.Copy().
 			Foreground(alert)
