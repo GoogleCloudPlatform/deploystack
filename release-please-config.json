@@ -7,9 +7,9 @@
   "separate-pull-requests": false,
   "draft": false,
   "prerelease": false,
+  "release-as": "1.8.0",
   "packages": {
     ".": {
-      "release-as": "1.5.4"
     },
     "gcloud": {
       "component": "gcloud"
@@ -24,8 +24,7 @@
       "component": "terraform"
     },
     "github": {
-      "component": "github",
-      "release-as": "1.6.1"
+      "component": "github"
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
