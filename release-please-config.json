@@ -4,11 +4,12 @@
   "changelog-path": "CHANGELOG.md",
   "bump-minor-pre-major": false,
   "bump-patch-for-minor-pre-major": false,
-  "separate-pull-requests": true,
+  "separate-pull-requests": false,
   "draft": false,
   "prerelease": false,
   "packages": {
     ".": {
+      "release-as": "1.5.4"
     },
     "gcloud": {
       "component": "gcloud"
@@ -23,7 +24,8 @@
       "component": "terraform"
     },
     "github": {
-      "component": "github"
+      "component": "github",
+      "release-as": "1.6.1"
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
