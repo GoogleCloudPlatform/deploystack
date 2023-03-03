@@ -8,7 +8,9 @@ function deploystackError(){
   echo 
   echo "If the problem persists, please file an issue with the Github repo:"
   echo "${repo/.git/}/issues"
-
+  # Sometimes there's an issue where canceling out of DeployStack makes typing 
+  # in the terminal to disappear. This fixes that. 
+  stty sane
 }
 
 FAILED=false
