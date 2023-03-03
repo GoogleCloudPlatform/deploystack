@@ -38,3 +38,10 @@ tui/cmd/mock-all/debug.log
 tui/cmd/mock-all/contact.yaml
 cmd/multi/debug.log
 docker/go.mod
+docker/buildTime
+docker/dsexec
+docker/go.sum
+docker/versionConfig
+docker/versionDS
+docker/versionGcloud
+docker/versionTUI
