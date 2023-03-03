@@ -10,6 +10,12 @@ env:
 
 tasks:
 
+  docker:lint:
+    dir: docker
+    desc: Check on build details
+    cmds:
+      - ./linter.sh
+
   docker:clean:
     ignore_error: true
     dir: docker
@@ -21,6 +27,7 @@ tasks:
     dir: docker
     deps:
       - docker:clean
+      - docker:lint
     desc: Build Docker image
     cmds:
       - |
