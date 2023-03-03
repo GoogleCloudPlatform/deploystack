@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// The dsexec binary that runs on Cloud Shell to present all of the options to
+// users
 package main
 
 import (
