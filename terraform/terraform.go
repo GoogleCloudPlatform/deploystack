@@ -37,7 +37,7 @@ func Extract(path string) (*Blocks, error) {
 	}
 
 	b, err := NewBlocks(mod)
-	if dia.Err() != nil {
+	if err != nil {
 		return nil, fmt.Errorf("could not properly parse blocks %s", err)
 	}
 
@@ -126,16 +126,16 @@ func (b Block) NoDefault() bool {
 }
 
 func getResourceText(file string, start int) (string, error) {
-	dat, _ := os.ReadFile(file)
+
+	dat, err := os.ReadFile(file)
+	if err != nil {
+		return "", fmt.Errorf("could not get terraform file: %s", err)
+	}
 	sl := strings.Split(string(dat), "\n")
 
 	resultSl := []string{}
-
 	startpos := start - 1
-
-	end := len(sl) - 1
-
-	end = findClosingBracket(start, sl) + 1
+	end := findClosingBracket(start, sl) + 1
 
 	if startpos == 0 {
 		startpos = 1

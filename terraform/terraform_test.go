@@ -424,8 +424,8 @@ func TestFindClosingBracket(t *testing.T) {
 		content string
 		want    int
 	}{
-		"1": {start: 1, content: "", want: 0},
-		"2": {start: 4, content: `
+		"none": {start: 1, content: "", want: 0},
+		"regular usage": {start: 4, content: `
 
 		# Enabling services in your GCP project
 		variable "gcp_service_list" {
@@ -435,6 +435,16 @@ func TestFindClosingBracket(t *testing.T) {
 			"compute.googleapis.com",
 		  ]
 		}`, want: 9},
+		"broken": {start: 4, content: `
+
+		# Enabling services in your GCP project
+		variable "gcp_service_list" {
+		  description = "The list of apis necessary for the project"
+		  type        = list(string)
+		  default = [
+			"compute.googleapis.com",
+		  ]
+		`, want: 10},
 	}
 
 	for name, tc := range tests {
@@ -771,6 +781,330 @@ func TestGCPResourceGetProduct(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}
+		})
+	}
+}
+
+func TestGetResourceText(t *testing.T) {
+	tests := map[string]struct {
+		in     string
+		want   string
+		err    error
+		target string
+	}{
+		"basic": {
+			in:     "testdata/resources",
+			target: "google_compute_snapshot.snapshot",
+			want: `
+resource "google_compute_snapshot" "snapshot" {
+  project           = var.project_id
+  name              = "${var.basename}-snapshot"
+  source_disk       = google_compute_instance.exemplar.boot_disk[0].source
+  zone              = var.zone
+  storage_locations = ["${var.region}"]
+  depends_on        = [time_sleep.startup_completion]
+}`,
+		},
+		"begin at zero": {
+			in:     "testdata/resources_begin_at_zero",
+			target: "google_compute_snapshot.snapshot",
+			want: `resource "google_compute_snapshot" "snapshot" {
+  project           = var.project_id
+  name              = "${var.basename}-snapshot"
+  source_disk       = google_compute_instance.exemplar.boot_disk[0].source
+  zone              = var.zone
+  storage_locations = ["${var.region}"]
+  depends_on        = [time_sleep.startup_completion]
+}`,
+		},
+		"filenotfound": {
+			in:     "testdata/resources_not_exist",
+			target: "google_compute_snapshot.snapshot",
+			want:   ``,
+			err:    fmt.Errorf("could not get terraform file"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			mod, _ := tfconfig.LoadModule(tc.in)
+
+			r := mod.ManagedResources[tc.target]
+
+			var got string
+			var err error
+			if r == nil {
+				got, err = getResourceText(tc.in, 0)
+			} else {
+				got, err = getResourceText(r.Pos.Filename, r.Pos.Line)
+			}
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected:no error, got: %+v", err)
+			}
+
+			if tc.err != nil && !strings.Contains(err.Error(), tc.err.Error()) {
+				t.Fatalf("expected error: %s, got: %s", tc.err, err)
+			}
+
+			if !reflect.DeepEqual(tc.want, got) {
+				fmt.Println(diff.Diff(tc.want, got))
+				t.Fatalf("text doesn't match")
+			}
+		})
+	}
+}
+
+func TestBlocks(t *testing.T) {
+	tests := map[string]struct {
+		in   interface{}
+		want Block
+		err  error
+	}{
+		"resource-good": {
+			in: tfconfig.Resource{
+				Name: "snapshot",
+				Type: "google_compute_snapshot",
+				Mode: tfconfig.ManagedResourceMode,
+				Pos: tfconfig.SourcePos{
+					Filename: "testdata/resources/main.tf",
+					Line:     15,
+				},
+			},
+			want: Block{
+				Name:  "snapshot",
+				Type:  "google_compute_snapshot",
+				Kind:  "managed",
+				Start: 15,
+				File:  "testdata/resources/main.tf",
+				Text: `
+resource "google_compute_snapshot" "snapshot" {
+  project           = var.project_id
+  name              = "${var.basename}-snapshot"
+  source_disk       = google_compute_instance.exemplar.boot_disk[0].source
+  zone              = var.zone
+  storage_locations = ["${var.region}"]
+  depends_on        = [time_sleep.startup_completion]
+}`,
+			},
+		},
+		"resource-bad": {
+			in: tfconfig.Resource{
+				Name: "snapshot",
+				Type: "google_compute_snapshot",
+				Mode: tfconfig.ManagedResourceMode,
+				Pos: tfconfig.SourcePos{
+					Filename: "testdata/resources_notexist/main.tf",
+					Line:     15,
+				},
+			},
+			want: Block{
+				Name:  "snapshot",
+				Type:  "google_compute_snapshot",
+				Kind:  "managed",
+				Start: 15,
+				File:  "testdata/resources_notexist/main.tf"},
+			err: fmt.Errorf("could not extract text from Resource"),
+		},
+		"variable-good": {
+			in: tfconfig.Variable{
+				Name: "project_id",
+				Type: "string",
+				Pos: tfconfig.SourcePos{
+					Filename: "testdata/variables/variables.tf",
+					Line:     15,
+				},
+			},
+			want: Block{
+				Name:  "project_id",
+				Type:  "string",
+				Kind:  "variable",
+				Start: 15,
+				File:  "testdata/variables/variables.tf",
+				Text: `
+variable "project_id" {
+  type = string
+}`,
+			},
+		},
+		"variable-bad": {
+			in: tfconfig.Variable{
+				Name: "project_id",
+				Type: "string",
+				Pos: tfconfig.SourcePos{
+					Filename: "testdata/variables_not_exist/variables.tf",
+					Line:     15,
+				},
+			},
+			want: Block{
+				Name:  "project_id",
+				Type:  "string",
+				Kind:  "variable",
+				Start: 15,
+				File:  "testdata/variables_not_exist/variables.tf",
+			},
+			err: fmt.Errorf("could not extract text from Variable"),
+		},
+		"module-good": {
+			in: tfconfig.ModuleCall{
+				Name:   "project-services",
+				Source: "terraform-google-modules/project-factory/google//modules/project_services",
+				Pos: tfconfig.SourcePos{
+					Filename: "testdata/modules/main.tf",
+					Line:     15,
+				},
+			},
+			want: Block{
+				Name:  "project-services",
+				Type:  "terraform-google-modules/project-factory/google//modules/project_services",
+				Kind:  "module",
+				Start: 15,
+				File:  "testdata/modules/main.tf",
+				Text: `
+module "project-services" {
+  source                      = "terraform-google-modules/project-factory/google//modules/project_services"
+  version                     = "~> 13.0"
+  disable_services_on_destroy = false
+
+  project_id  = var.project_id
+  enable_apis = var.enable_apis
+
+  activate_apis = [
+    "compute.googleapis.com"
+  ]
+}`,
+			},
+		},
+		"module-bad": {
+			in: tfconfig.ModuleCall{
+				Name:   "project-services",
+				Source: "terraform-google-modules/project-factory/google//modules/project_services",
+				Pos: tfconfig.SourcePos{
+					Filename: "testdata/modules-not-exists/main.tf",
+					Line:     15,
+				},
+			},
+			want: Block{
+				Name:  "project-services",
+				Type:  "terraform-google-modules/project-factory/google//modules/project_services",
+				Kind:  "module",
+				Start: 15,
+				File:  "testdata/modules-not-exists/main.tf",
+			},
+			err: fmt.Errorf("could not extract text from Module"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var got Block
+			var err error
+
+			switch v := tc.in.(type) {
+			case tfconfig.Resource:
+				got, err = NewResourceBlock(&v)
+			case tfconfig.Variable:
+				got, err = NewVariableBlock(&v)
+			case tfconfig.ModuleCall:
+				got, err = NewModuleBlock(&v)
+			}
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected:no error, got: %+v", err)
+			}
+
+			if tc.err != nil && !strings.Contains(err.Error(), tc.err.Error()) {
+				t.Fatalf("expected error: %s, got: %s", tc.err, err)
+			}
+
+			if !reflect.DeepEqual(tc.want.Type, got.Type) {
+				t.Fatalf("Type expected: %+v, got: %+v", tc.want.Type, got.Type)
+			}
+
+			if !reflect.DeepEqual(tc.want.Kind, got.Kind) {
+				t.Fatalf("Kind expected: %+v, got: %+v", tc.want.Kind, got.Kind)
+			}
+
+			if !reflect.DeepEqual(tc.want.Start, got.Start) {
+				t.Fatalf("Start expected: %+v, got: %+v", tc.want.Start, got.Start)
+			}
+
+			if !reflect.DeepEqual(tc.want.File, got.File) {
+				t.Fatalf("File expected: %+v, got: %+v", tc.want.File, got.File)
+			}
+
+			if !reflect.DeepEqual(tc.want.Text, got.Text) {
+				fmt.Println(diff.Diff(tc.want.Text, got.Text))
+				t.Fatalf("text doesn't match")
+			}
+
+		})
+	}
+}
+
+func TestBadNewBlocks(t *testing.T) {
+	tests := map[string]struct {
+		in  tfconfig.Module
+		err error
+	}{
+		"module": {
+			in: tfconfig.Module{
+				ModuleCalls: map[string]*tfconfig.ModuleCall{
+					"t": {
+						Pos: tfconfig.SourcePos{
+							Filename: "testdata/modules-not-exists/main.tf",
+						},
+					},
+				},
+			},
+			err: fmt.Errorf("could not parse Module Calls"),
+		},
+		"resource": {
+			in: tfconfig.Module{
+				ManagedResources: map[string]*tfconfig.Resource{
+					"t": {
+						Pos: tfconfig.SourcePos{
+							Filename: "testdata/resources_notexist/main.tf",
+						},
+					},
+				},
+			},
+			err: fmt.Errorf("could not parse ManagedResources"),
+		},
+		"variable": {
+			in: tfconfig.Module{
+				Variables: map[string]*tfconfig.Variable{
+					"t": {
+						Pos: tfconfig.SourcePos{
+							Filename: "testdata/resources_notexist/main.tf",
+						},
+					},
+				},
+			},
+			err: fmt.Errorf("could not parse Variables"),
+		},
+		"data": {
+			in: tfconfig.Module{
+				DataResources: map[string]*tfconfig.Resource{
+					"t": {
+						Pos: tfconfig.SourcePos{
+							Filename: "testdata/resources_notexist/main.tf",
+						},
+					},
+				},
+			},
+			err: fmt.Errorf("could not parse DataResources"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, err := NewBlocks(&tc.in)
+			if tc.err != nil && !strings.Contains(err.Error(), tc.err.Error()) {
+				t.Fatalf("expected error: %s, got: %s", tc.err, err)
+			}
+
 		})
 	}
 }
