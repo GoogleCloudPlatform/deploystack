@@ -2,6 +2,11 @@ version: "3"
 env:
   CONTAINER: deploystack
   TERRAFORM_VERSION: 1.3.9
+  DS_BASE_VERSION: "@v1.5.3.1"
+  DS_GITHUB_VERSION: "@v1.5.3.1"
+  DS_TUI_VERSION: "@latest"
+  DS_GCLOUD_VERSION: "@latest"
+  DS_CONFIG_VERSION: "@latest"
 
 tasks:
 
@@ -18,7 +23,14 @@ tasks:
       - docker:clean
     desc: Build Docker image
     cmds:
-      - docker build --build-arg TERRAFORM_VERSION={{.TERRAFORM_VERSION}} -t {{.CONTAINER}} .
+      - |
+        docker build --build-arg TERRAFORM_VERSION={{.TERRAFORM_VERSION}} \
+        --build-arg DS_BASE_VERSION={{.DS_BASE_VERSION}} \
+        --build-arg DS_GITHUB_VERSION={{.DS_GITHUB_VERSION}} \
+        --build-arg DS_TUI_VERSION={{.DS_TUI_VERSION}} \
+        --build-arg DS_GCLOUD_VERSION={{.DS_GCLOUD_VERSION}} \
+        --build-arg DS_CONFIG_VERSION={{.DS_CONFIG_VERSION}} \
+        -t {{.CONTAINER}} .
 
   docker:run:
     deps:
