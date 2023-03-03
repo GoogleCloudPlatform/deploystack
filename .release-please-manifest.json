@@ -3,6 +3,6 @@
   "gcloud": "1.2.0",
   "tui": "1.5.1",
   "config": "1.5.1",
-  "terraform": "1.6.1",
+  "terraform": "1.7.0",
   "github": "1.6.1"
 }
