@@ -37,6 +37,10 @@ func TestGetBillingAccounts(t *testing.T) {
 		testfile = buildtestfile
 	}
 
+	if os.Getenv("USESA") != "" {
+		testfile = buildtestfile
+	}
+
 	if os.Getenv("BUILD") != "" {
 		testfile = "test_files/gcloudout/billing_accounts.json"
 	}
