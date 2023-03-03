@@ -4,5 +4,5 @@
   "tui": "1.5.1",
   "config": "1.5.1",
   "terraform": "1.6.1",
-  "github": "1.6.1"
+  "github": "2.0.0"
 }
