@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.6.0](https://github.com/GoogleCloudPlatform/deploystack/compare/config/v1.5.1...config/v1.6.0) (2023-03-03)
+
+
+### Features
+
+* added authorsettings to replace hardsettings ([129a427](https://github.com/GoogleCloudPlatform/deploystack/commit/129a4272e8013693f630159f3bf5751275f1b60e))
+* added authorsettings to replace hardsettings ([553979b](https://github.com/GoogleCloudPlatform/deploystack/commit/553979bf7520655c8467ce4ea4c6817f06447a4f))
+* added multi stack detection to config operations. ([29b4ab5](https://github.com/GoogleCloudPlatform/deploystack/commit/29b4ab54ca9791ef00854b63fe5dddf5aeca90e4))
+* added multi stack detection to config operations. ([a81267f](https://github.com/GoogleCloudPlatform/deploystack/commit/a81267ffa4abe07afae1f3942f6bc96e636b44e1))
+* added new type of settings under the covers ([5eff3f6](https://github.com/GoogleCloudPlatform/deploystack/commit/5eff3f67686e71fb7ae09443341c8fc937024802))
+* added new type of settings under the covers ([a21db57](https://github.com/GoogleCloudPlatform/deploystack/commit/a21db574eddf1ba49e727faf9171abbd14d47147))
+* adding package config ([48c944b](https://github.com/GoogleCloudPlatform/deploystack/commit/48c944b97c8263e3032d92c90e9cc02f0cf7efe2))
+* created new package to remove threat of circular dependency ([8b0738e](https://github.com/GoogleCloudPlatform/deploystack/commit/8b0738e28a839d2f9a21cb4c880ddd382d9017e2))
+
+
+### Bug Fixes
+
+* added more to the new setting features to work with tui ([ea6e1e5](https://github.com/GoogleCloudPlatform/deploystack/commit/ea6e1e534b1194a4c33d54c06dc4a5d529ab0a35))
+* added more to the new setting features to work with tui ([0ca0104](https://github.com/GoogleCloudPlatform/deploystack/commit/0ca010434226093cfaa85f85b1f463b945c569e2))
+* adding aliasof field to submodule ([cfb22ca](https://github.com/GoogleCloudPlatform/deploystack/commit/cfb22ca959e729c7b5e71d0d80d8db551ac0f6d9))
+* adding test for init ([b2cce60](https://github.com/GoogleCloudPlatform/deploystack/commit/b2cce60d41cae75e779206738dba80e77c46fcfa))
+* adding test for init ([a034b4d](https://github.com/GoogleCloudPlatform/deploystack/commit/a034b4d20bc6b715d3eca37a3aa8cb126e7d9a2e))
+* made settings compatible with calling packages ([8eae051](https://github.com/GoogleCloudPlatform/deploystack/commit/8eae051360fc4b3620919f00e0d6d92ceeea07d2))
+* made settings compatible with calling packages ([9131b4c](https://github.com/GoogleCloudPlatform/deploystack/commit/9131b4c8db61f0b35312060bbba6dd7c494054a6))
+* tweaked find terraform behavior to be smarter ([96cdb5a](https://github.com/GoogleCloudPlatform/deploystack/commit/96cdb5a953fe2251d3b958675532a3e61ddc183b))
+* tweaked find terraform behavior to be smarter ([73389e8](https://github.com/GoogleCloudPlatform/deploystack/commit/73389e8bdaa5962c1e0549329783eed0181cf496))
+
 ## [1.5.1](https://github.com/GoogleCloudPlatform/deploystack/compare/config/v1.5.0...config/v1.5.1) (2023-03-01)
 
 
