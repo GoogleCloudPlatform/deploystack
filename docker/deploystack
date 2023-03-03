@@ -8,6 +8,7 @@ function deploystackError(){
   echo 
   echo "If the problem persists, please file an issue with the Github repo:"
   echo "${repo/.git/}/issues"
+
 }
 
 FAILED=false
@@ -91,6 +92,7 @@ case $1 in
     ;;
   "repo")
     candidate=$2
+    echo "Attempting to download the repo you selected: $candidate"
     folder=$(dsexec -repo $candidate)
     cd $folder
     deploystack install
@@ -98,9 +100,11 @@ case $1 in
 
 
   *)
-    echo "DEPLOYSTACK"
+   echo "DEPLOYSTACK"
     echo "type 'deploystack install' to install this deploystack application" 
     echo "or"
-    echo "type 'deploystack uninstall' to uninstall this deploystack application" 
+    echo "type 'deploystack uninstall' to uninstall this deploystack application"
+    echo "or"
+    echo "type 'deploystack repo [a deploystack repo]' to download and install a deploystack solution"  
     ;;
 esac

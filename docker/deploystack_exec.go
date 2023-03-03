@@ -64,6 +64,7 @@ func main() {
 		if err != nil {
 			tui.Fatal(err)
 		}
+
 		dir, err := deploystack.DownloadRepo(*repo, wd)
 		if err != nil {
 			tui.Fatal(err)
@@ -72,7 +73,7 @@ func main() {
 			tui.Fatal(err)
 		}
 
-		fmt.Printf("%s\n", dir)
+		fmt.Printf("%s\n", strings.ReplaceAll(dir, "//", "/"))
 		return
 	}
 
