@@ -27,7 +27,7 @@ ARG TERRAFORM_VERSION=1.3.9
 COPY --from=builder /app/ds/dsexec /usr/local/bin/dsexec
 
 RUN apt-get update && apt-get install -y \
-    wget unzip curl \
+  wget unzip curl \
   && rm -rf /var/lib/apt/lists/*
 
 RUN wget --quiet https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
