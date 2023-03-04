@@ -45,3 +45,4 @@ docker/versionConfig
 docker/versionDS
 docker/versionGcloud
 docker/versionTUI
+.vscode/settings.json

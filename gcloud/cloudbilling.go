@@ -65,7 +65,7 @@ func (c *Client) BillingAccountList() ([]*cloudbilling.BillingAccount, error) {
 		return resp, err
 	}
 
-	c.save("ProjectList", results.BillingAccounts)
+	c.save("BillingAccountList", results.BillingAccounts)
 
 	return results.BillingAccounts, nil
 }

@@ -1,12 +1,47 @@
+#!/bin/sh
+CLEAR="\033[0m"
+UCYAN="\033[4;36m"
+BRED="\033[1;31m"
+
 function deploystackError() {
   repo=$(git config --get remote.origin.url)
-
+  clear
   echo
+  echo "Deploystack - $BRED Error $CLEAR"
   echo "An error occured collecting the necessary information to run your Deploystack"
   echo "application. Please try again."
   echo
   echo "If the problem persists, please file an issue with the Github repo:"
   echo "${repo/.git/}/issues"
+  # Sometimes there's an issue where canceling out of DeployStack makes typing
+  # in the terminal to disappear. This fixes that.
+  stty sane
+}
+
+function repoError() {
+  clear
+  repoentered=$1
+  candidate1="${UCYAN}https://github.com/GoogleCloudPlatform/${repoentered}${CLEAR}"
+  
+  echo
+  echo "Deploystack - $BRED Error $CLEAR"
+  echo
+  echo "You entered $repoentered. "
+  echo
+  echo "The corresponding github repository:"
+  echo "$candidate1"
+  if [[ $repoentered != *"deploystack-"* ]]; then
+    candidate2="${UCYAN}https://github.com/GoogleCloudPlatform/deploystack-${repoentered}${CLEAR}" 
+    echo "or"
+    echo "$candidate2"
+    echo "do not exist."
+  else
+    echo "does not exist. "
+  fi
+  echo 
+  echo "Please check the spelling."
+  
+  echo
   # Sometimes there's an issue where canceling out of DeployStack makes typing
   # in the terminal to disappear. This fixes that.
   stty sane
@@ -94,16 +129,25 @@ case $1 in
   candidate=$2
   echo "Attempting to download the repo you selected: $candidate"
   folder=$(dsexec -repo $candidate)
+  
+  if [[ $folder == *"There was an issue collecting"* ]]; then 
+    repoError $candidate
+    exit 1
+  fi
+
   cd $folder
   deploystack install
+  ;;
+"version")
+  dsexec -version
   ;;
 
 *)
   echo "DEPLOYSTACK"
-  echo "type 'deploystack install' to install this deploystack application"
+  echo "type 'deploystack install' to install this DeployStack application"
   echo "or"
-  echo "type 'deploystack uninstall' to uninstall this deploystack application"
+  echo "type 'deploystack uninstall' to uninstall this DeployStack application"
   echo "or"
-  echo "type 'deploystack repo [a deploystack repo]' to download and install a deploystack solution"
+  echo "type 'deploystack repo [a deploystack repo]' to download and install a DeployStack application"
   ;;
 esac
