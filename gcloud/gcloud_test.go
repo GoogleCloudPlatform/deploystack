@@ -28,6 +28,7 @@ import (
 	"testing"
 	"time"
 
+	"cloud.google.com/go/scheduler/apiv1beta1/schedulerpb"
 	"google.golang.org/api/option"
 )
 
@@ -206,6 +207,295 @@ func TestGetRegions(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}
+		})
+	}
+}
+
+func TestBillingAccountCache(t *testing.T) {
+
+	client := NewClient(context.Background(), "testing")
+	log.Printf("cache before: %+v", client.cache)
+	cachekey := "BillingAccountList"
+
+	_, ok := client.cache[cachekey]
+	if ok {
+		t.Fatalf("cache should be empty but it isn't")
+	}
+
+	result, err := client.BillingAccountList()
+	if err != nil {
+		t.Fatalf("coult not get first answer from client for test: %s", err)
+	}
+
+	log.Printf("cache after: %+v", client.cache)
+
+	_, ok = client.cache[cachekey]
+	if !ok {
+		t.Fatalf("cache should have a result but it doesn't")
+	}
+
+	resultCache, err := client.BillingAccountList()
+	if err != nil {
+		t.Fatalf("coult not get first answer from client for test: %s", err)
+	}
+
+	if !reflect.DeepEqual(result, resultCache) {
+		t.Fatalf("expected: %+v, got: %+v", result, resultCache)
+	}
+
+}
+
+func TestCacheableFunctions(t *testing.T) {
+	client := NewClient(context.Background(), "testing")
+	tests := map[string]struct {
+		cachekey  string
+		cachefunc func() (interface{}, error)
+	}{
+		"BillingAccountList": {
+			cachekey: "BillingAccountList",
+			cachefunc: func() (interface{}, error) {
+				return client.BillingAccountList()
+			},
+		},
+		"ProjectList": {
+			cachekey: "ProjectList",
+			cachefunc: func() (interface{}, error) {
+				return client.ProjectList()
+			},
+		},
+		"MachineTypeList": {
+			cachekey: fmt.Sprintf("MachineTypeList%s", DefaultZone),
+			cachefunc: func() (interface{}, error) {
+				return client.MachineTypeList(projectID, DefaultZone)
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			_, ok := client.cache[tc.cachekey]
+			if ok {
+				t.Fatalf("cache should be empty but it isn't")
+			}
+
+			result, err := tc.cachefunc()
+			if err != nil {
+				t.Fatalf("coult not get first answer from client for test: %s", err)
+			}
+
+			_, ok = client.cache[tc.cachekey]
+			if !ok {
+				t.Fatalf("cache should have a result but it doesn't")
+			}
+
+			resultCache, err := tc.cachefunc()
+			if err != nil {
+				t.Fatalf("coult not get first answer from client for test: %s", err)
+			}
+
+			if !reflect.DeepEqual(result, resultCache) {
+				t.Fatalf("expected: %+v, got: %+v", result, resultCache)
+			}
+
+		})
+	}
+}
+
+func TestBreakServices(t *testing.T) {
+	client := NewClient(context.Background(), "testing")
+	tests := map[string]struct {
+		servicefunc func() (interface{}, error)
+		blankfunc   func()
+		errorfunc   func() (interface{}, error)
+	}{
+		"compute": {
+			servicefunc: func() (interface{}, error) {
+				return client.getComputeService(projectID)
+			},
+			blankfunc: func() {
+				client.services.computeService.BasePath = "nonsenseshouldbreak"
+			},
+			errorfunc: func() (interface{}, error) {
+				return client.ComputeRegionList(projectID)
+			},
+		},
+		"billing": {
+			servicefunc: func() (interface{}, error) {
+				return client.getCloudbillingService()
+			},
+			blankfunc: func() {
+				client.services.billing.BasePath = "nonsenseshouldbreak"
+			},
+			errorfunc: func() (interface{}, error) {
+				return client.BillingAccountList()
+			},
+		},
+		"resourceManager": {
+			servicefunc: func() (interface{}, error) {
+				return client.getCloudResourceManagerService()
+			},
+			blankfunc: func() {
+				client.services.resourceManager.BasePath = "nonsenseshouldbreak"
+			},
+			errorfunc: func() (interface{}, error) {
+				return client.ProjectList()
+			},
+		},
+		"domains": {
+			servicefunc: func() (interface{}, error) {
+				return client.getDomainsClient(projectID)
+			},
+			blankfunc: func() {
+				client.services.domains.Close()
+			},
+			errorfunc: func() (interface{}, error) {
+				return client.DomainsSearch(projectID, "example.com")
+			},
+		},
+		// "serviceUsage": {
+		// 	servicefunc: func() (interface{}, error) {
+		// 		return client.getServiceUsageService()
+		// 	},
+		// 	blankfunc: func() {
+		// 		client.services.serviceUsage.BasePath = "nonsenseshouldbreak"
+		// 	},
+		// 	errorfunc: func() (interface{}, error) {
+		// 		return client.ServiceIsEnabled(projectID, "example.com")
+		// 	},
+		// },
+		"functions": {
+			servicefunc: func() (interface{}, error) {
+				return client.getCloudFunctionsService(projectID)
+			},
+			blankfunc: func() {
+				client.services.functions.BasePath = "nonsenseshouldbreak"
+			},
+			errorfunc: func() (interface{}, error) {
+				return client.FunctionRegionList(projectID)
+			},
+		},
+		"run": {
+			servicefunc: func() (interface{}, error) {
+				return client.getRunService(projectID)
+			},
+			blankfunc: func() {
+				client.services.run.BasePath = "nonsenseshouldbreak"
+			},
+			errorfunc: func() (interface{}, error) {
+				return client.RunRegionList(projectID)
+			},
+		},
+		"build": {
+			servicefunc: func() (interface{}, error) {
+				return client.getCloudBuildService(projectID)
+			},
+			blankfunc: func() {
+				client.services.build.BasePath = "nonsenseshouldbreak"
+			},
+			errorfunc: func() (interface{}, error) {
+				return "", client.CloudBuildTriggerDelete(projectID, "")
+			},
+		},
+		"iam": {
+			servicefunc: func() (interface{}, error) {
+				return client.getIAMService(projectID)
+			},
+			blankfunc: func() {
+				client.services.iam.BasePath = "nonsenseshouldbreak"
+			},
+			errorfunc: func() (interface{}, error) {
+				return "", client.ProjectGrantIAMRole(projectID, "", "")
+			},
+		},
+		"scheduler": {
+			servicefunc: func() (interface{}, error) {
+				return client.getSchedulerService(projectID)
+			},
+			blankfunc: func() {
+				client.services.scheduler.Close()
+			},
+			errorfunc: func() (interface{}, error) {
+				return "", client.JobSchedule(projectID, "", schedulerpb.Job{})
+			},
+		},
+		"secretManager": {
+			servicefunc: func() (interface{}, error) {
+				return client.getSecretManagerService(projectID)
+			},
+			blankfunc: func() {
+				client.services.secretManager.BasePath = "nonsenseshouldbreak"
+			},
+			errorfunc: func() (interface{}, error) {
+				return "", client.SecretDelete(projectID, "")
+			},
+		},
+
+		"storage": {
+			servicefunc: func() (interface{}, error) {
+				return client.getStorageService(projectID)
+			},
+			blankfunc: func() {
+				client.services.storage.Close()
+			},
+			errorfunc: func() (interface{}, error) {
+				return "", client.StorageBucketDelete(projectID, "")
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, err := tc.servicefunc()
+			if err != nil {
+				t.Fatalf("could not call service function for %s: %s ", name, err)
+			}
+
+			tc.blankfunc()
+
+			_, err = tc.errorfunc()
+			if err == nil {
+				t.Fatalf("error should be returned by service function for %s: %s ", name, err)
+			}
+
+		})
+	}
+}
+
+func TestBreakServicesServiceUsage(t *testing.T) {
+	client := NewClient(context.Background(), "testing")
+	tests := map[string]struct {
+		servicefunc func() (interface{}, error)
+		blankfunc   func()
+		errorfunc   func() (interface{}, error)
+	}{
+		"serviceUsage": {
+			servicefunc: func() (interface{}, error) {
+				return client.getServiceUsageService()
+			},
+			blankfunc: func() {
+				client.services.serviceUsage.BasePath = "nonsenseshouldbreak"
+			},
+			errorfunc: func() (interface{}, error) {
+				return client.ServiceIsEnabled(projectID, "example.com")
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, err := tc.servicefunc()
+			if err != nil {
+				t.Fatalf("could not call service function for %s: %s ", name, err)
+			}
+
+			tc.blankfunc()
+
+			_, err = tc.errorfunc()
+			if err == nil {
+				t.Fatalf("error should be returned by service function for %s: %s ", name, err)
+			}
+
 		})
 	}
 }
