@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/GoogleCloudPlatform/deploystack/compare/gcloud/v1.2.0...gcloud/v1.2.1) (2023-03-04)
+
+
+### Bug Fixes
+
+* testing caught a bug in billing caching ([880486e](https://github.com/GoogleCloudPlatform/deploystack/commit/880486e8671df47d5bfa55729c4c015a7691789f))
+
 ## [1.2.0](https://github.com/GoogleCloudPlatform/deploystack/compare/gcloud-v1.1.1...gcloud/v1.2.0) (2023-02-21)
 
 

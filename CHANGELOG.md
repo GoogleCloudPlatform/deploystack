@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.8.0...v1.8.1) (2023-03-04)
+
+
+### Bug Fixes
+
+* polishing the deploystack shell script ([6ea6dd1](https://github.com/GoogleCloudPlatform/deploystack/commit/6ea6dd16161379c934a4c947fcc9259d38efb26e))
+* testing caught a bug in billing caching ([880486e](https://github.com/GoogleCloudPlatform/deploystack/commit/880486e8671df47d5bfa55729c4c015a7691789f))
+* unpinned release please version. ([8a2f650](https://github.com/GoogleCloudPlatform/deploystack/commit/8a2f650580b845330e064dad95fadf5d9bfbf1fe))
+
 ## [1.8.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.5.4...v1.8.0) (2023-03-03)
 
 
