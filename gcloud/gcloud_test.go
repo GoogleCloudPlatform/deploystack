@@ -353,17 +353,6 @@ func TestBreakServices(t *testing.T) {
 				return client.DomainsSearch(projectID, "example.com")
 			},
 		},
-		// "serviceUsage": {
-		// 	servicefunc: func() (interface{}, error) {
-		// 		return client.getServiceUsageService()
-		// 	},
-		// 	blankfunc: func() {
-		// 		client.services.serviceUsage.BasePath = "nonsenseshouldbreak"
-		// 	},
-		// 	errorfunc: func() (interface{}, error) {
-		// 		return client.ServiceIsEnabled(projectID, "example.com")
-		// 	},
-		// },
 		"functions": {
 			servicefunc: func() (interface{}, error) {
 				return client.getCloudFunctionsService(projectID)
@@ -462,6 +451,8 @@ func TestBreakServices(t *testing.T) {
 	}
 }
 
+// TestBreakServicesServiceUsage split out because mucking with the client
+// while the rest of the tests are running caused errors
 func TestBreakServicesServiceUsage(t *testing.T) {
 	client := NewClient(context.Background(), "testing")
 	tests := map[string]struct {
@@ -498,4 +489,207 @@ func TestBreakServicesServiceUsage(t *testing.T) {
 
 		})
 	}
+}
+
+func TestLabeledValuesLongestLen(t *testing.T) {
+	tests := map[string]struct {
+		in   LabeledValues
+		want int
+	}{
+		"basic": {
+			in: LabeledValues{
+				{Label: "1"},
+				{Label: "12"},
+				{Label: "123"},
+				{Label: "1234"},
+				{Label: "12345"},
+				{Label: "123456"},
+				{Label: "1234567"},
+				{Label: "12345678"},
+			},
+			want: 8,
+		},
+		"outlier": {
+			in: LabeledValues{
+				{Label: "1"},
+				{Label: "12"},
+				{Label: "123"},
+				{Label: "This is really long and you will like it"},
+				{Label: "12345"},
+				{Label: "123456"},
+				{Label: "1234567"},
+				{Label: "12345678"},
+			},
+			want: 40,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.in.LongestLen()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestLabeledValuesGetDefault(t *testing.T) {
+	tests := map[string]struct {
+		in           LabeledValues
+		want         LabeledValue
+		defaultvalue string
+	}{
+		"basic": {
+			in: LabeledValues{
+				{Label: "1", Value: "1"},
+				{Label: "12", Value: "12"},
+				{Label: "123", Value: "123"},
+				{Label: "1234", Value: "1234"},
+				{Label: "12345", Value: "12345"},
+				{Label: "123456", Value: "123456"},
+				{Label: "1234567", Value: "1234567"},
+				{Label: "12345678", Value: "12345678"},
+			},
+			want:         LabeledValue{Label: "12345", Value: "12345", IsDefault: true},
+			defaultvalue: "12345",
+		},
+		"outlier": {
+			in: LabeledValues{
+				{Label: "1notsameasvalue", Value: "1"},
+				{Label: "12", Value: "12"},
+				{Label: "123", Value: "123"},
+				{Label: "1234", Value: "1234"},
+				{Label: "12345", Value: "12345"},
+				{Label: "123456", Value: "123456"},
+				{Label: "1234567", Value: "1234567"},
+				{Label: "12345678", Value: "12345678"},
+			},
+			want:         LabeledValue{Label: "1notsameasvalue", Value: "1", IsDefault: true},
+			defaultvalue: "1",
+		},
+		"noDefault": {
+			in: LabeledValues{
+				{Label: "1notsameasvalue", Value: "1"},
+				{Label: "12", Value: "12"},
+				{Label: "123", Value: "123"},
+				{Label: "1234", Value: "1234"},
+				{Label: "12345", Value: "12345"},
+				{Label: "123456", Value: "123456"},
+				{Label: "1234567", Value: "1234567"},
+				{Label: "12345678", Value: "12345678"},
+			},
+			want:         LabeledValue{},
+			defaultvalue: "",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc.in.SetDefault(tc.defaultvalue)
+			got := tc.in.GetDefault()
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestNewLabeledValues(t *testing.T) {
+	tests := map[string]struct {
+		sl           []string
+		defaultValue string
+		want         LabeledValues
+	}{
+		"basic": {
+			sl:           []string{"test", "test2", "test3"},
+			defaultValue: "test2",
+			want: LabeledValues{
+				{Label: "test", Value: "test"},
+				{Label: "test2", Value: "test2", IsDefault: true},
+				{Label: "test3", Value: "test3"},
+			},
+		},
+		"with separater": {
+			sl:           []string{"val|test", "val2|test2", "val3|test3"},
+			defaultValue: "val2",
+			want: LabeledValues{
+				{Label: "test", Value: "val"},
+				{Label: "test2", Value: "val2", IsDefault: true},
+				{Label: "test3", Value: "val3"},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := NewLabeledValues(tc.sl, tc.defaultValue)
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestBasic(t *testing.T) {
+	tests := map[string]struct {
+		addreses   []string
+		recipients []string
+		contact    ContactData
+	}{
+		"Direct": {
+			addreses:   nil,
+			recipients: nil,
+			contact:    ContactData{},
+		},
+		"New": {
+			addreses:   []string{},
+			recipients: []string{},
+			contact:    NewContactData(),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if !reflect.DeepEqual(tc.contact.AllContacts.PostalAddress.AddressLines, tc.addreses) {
+				t.Fatalf("addresses expected: %+v, got: %+v", tc.contact.AllContacts.PostalAddress.AddressLines, tc.addreses)
+			}
+
+			if !reflect.DeepEqual(tc.contact.AllContacts.PostalAddress.Recipients, tc.recipients) {
+				t.Fatalf("addresses expected: %+v, got: %+v", tc.contact.AllContacts.PostalAddress.Recipients, tc.recipients)
+			}
+		})
+	}
+}
+
+func getBadClient() *Client {
+	project := projectID
+	c := NewClient(context.Background(), "testing")
+	c.getStorageService(project)
+	c.getServiceUsageService()
+	c.getSecretManagerService(project)
+	c.getSchedulerService(project)
+	c.getIAMService(project)
+	c.getComputeService(project)
+	c.getRunService(project)
+	c.getCloudResourceManagerService()
+	c.getCloudFunctionsService(project)
+	c.getDomainsClient(project)
+	c.getCloudBuildService(project)
+	c.getCloudbillingService()
+
+	c.services.resourceManager.BasePath = "/v200"
+	c.services.billing.BasePath = "/v200"
+	c.services.serviceUsage.BasePath = "/v200"
+	c.services.computeService.BasePath = "/v200"
+	c.services.functions.BasePath = "/v200"
+	c.services.run.BasePath = "/v200"
+	c.services.build.BasePath = "/v200"
+	c.services.iam.BasePath = "/v200"
+	c.services.secretManager.BasePath = "/v200"
+	c.services.storage.Close()
+	c.services.domains.Close()
+	c.services.scheduler.Close()
+
+	return &c
 }
