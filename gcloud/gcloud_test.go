@@ -214,7 +214,6 @@ func TestGetRegions(t *testing.T) {
 func TestBillingAccountCache(t *testing.T) {
 
 	client := NewClient(context.Background(), "testing")
-	log.Printf("cache before: %+v", client.cache)
 	cachekey := "BillingAccountList"
 
 	_, ok := client.cache[cachekey]
@@ -226,8 +225,6 @@ func TestBillingAccountCache(t *testing.T) {
 	if err != nil {
 		t.Fatalf("coult not get first answer from client for test: %s", err)
 	}
-
-	log.Printf("cache after: %+v", client.cache)
 
 	_, ok = client.cache[cachekey]
 	if !ok {
