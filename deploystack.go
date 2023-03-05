@@ -28,6 +28,8 @@ import (
 	"github.com/GoogleCloudPlatform/deploystack/github"
 	"github.com/GoogleCloudPlatform/deploystack/terraform"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"google.golang.org/api/option"
 	"gopkg.in/yaml.v2"
 )
@@ -213,6 +215,103 @@ func (m Meta) ShortNameUnderscore() string {
 	r := m.ShortName()
 	r = strings.ReplaceAll(r, "-", "_")
 	return r
+}
+
+// Suggest will provide it's best guess of what the deploystack config should
+// be based on the contents of the repo, including an existing deploystack config
+func (m Meta) Suggest() config.Config {
+	out := m.DeployStack.Copy()
+
+	name := filepath.Base(m.Github.URL())
+	name = strings.ReplaceAll(name, "deploystack-", "")
+	title := strings.ReplaceAll(name, "-", " ")
+	caser := cases.Title(language.AmericanEnglish)
+	title = caser.String(title)
+
+	if m.DeployStack.Name == "" {
+		out.Name = name
+	}
+
+	if m.DeployStack.Title == "" {
+		out.Title = title
+	}
+
+	if len(m.Terraform) == 0 {
+		return out
+	}
+
+	if m.DeployStack.PathTerraform == "" {
+		out.PathTerraform = filepath.Dir(m.Terraform[0].File)
+	}
+
+	for _, v := range m.Terraform {
+		switch v.Kind {
+		case "variable":
+			// For now if there are default values, don't bother capturing
+			if !v.NoDefault() {
+				continue
+			}
+
+			switch v.Name {
+			case "project_id":
+				out.Project = true
+			case "project_number":
+				out.ProjectNumber = true
+			case "billing_account":
+				out.BillingAccount = true
+			case "region":
+				out.RegionDefault = "us-central1"
+				out.Region = true
+				out.RegionType = "compute"
+
+				if r := m.Terraform.Search("google_cloud_run", "type"); len(r) > 0 {
+					out.RegionType = "run"
+				}
+
+				if r := m.Terraform.Search("google_cloudfunctions", "type"); len(r) > 0 {
+					out.RegionType = "functions"
+				}
+
+			case "zone":
+				out.Zone = true
+			default:
+				checkCustom := out.CustomSettings.Get(v.Name)
+				checkAuthor := out.AuthorSettings.Find(v.Name)
+
+				if checkCustom.Name == "" && checkAuthor == nil {
+					cust := config.Custom{}
+					cust.Name = v.Name
+					cust.Type = v.Type
+					out.CustomSettings = append(out.CustomSettings, cust)
+				}
+
+			}
+		case "managed":
+			// TODO: figure out the best way to share the product data
+			// Might have to embed in the app.
+			// product := cfg.GetProduct(v.Type)
+
+			// if product == "" {
+			// 	continue
+			// }
+
+			// add := true
+			// for _, v := range out.Products {
+			// 	if v.Product == product {
+			// 		add = false
+			// 		break
+			// 	}
+			// }
+
+			// if add {
+			// 	p := config.Product{Product: product}
+			// 	out.Products = append(out.Products, p)
+			// }
+
+		}
+	}
+
+	return out
 }
 
 // DownloadRepo takes a name of a GoogleCloudPlatform repo or a
