@@ -40,10 +40,7 @@ type Config struct {
 	PathMessages         string            `json:"path_messages" yaml:"path_messages"`
 	PathScripts          string            `json:"path_scripts" yaml:"path_scripts"`
 	Projects             Projects          `json:"projects" yaml:"projects"`
-	Products             []struct {
-		Info    string `json:"info" yaml:"info"`
-		Product string `json:"product" yaml:"product"`
-	} `json:"products" yaml:"products"`
+	Products             []Product         `json:"products" yaml:"products"`
 }
 
 func (c *Config) convertHardset() {
@@ -129,6 +126,12 @@ func NewConfigYAML(content []byte) (Config, error) {
 	}
 
 	return result, nil
+}
+
+// Product is some info about a GCP product
+type Product struct {
+	Info    string `json:"info" yaml:"info"`
+	Product string `json:"product" yaml:"product"`
 }
 
 // Project represets a GCP project for use in a stack
