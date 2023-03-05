@@ -91,7 +91,7 @@ func TestFindAndReadConfig(t *testing.T) {
 }
 
 func TestFindTFFolder(t *testing.T) {
-	wd, err := filepath.Abs(".")
+	wd, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)
 	}

@@ -20,6 +20,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -130,21 +131,24 @@ func (s *Stack) findTFFolder(c Config) (string, error) {
 		return "", err
 	}
 
+	mains := []string{}
+
 	err = filepath.Walk(wd, func(path string, info os.FileInfo, err error) error {
 
 		if info.Name() == "main.tf" {
-			result = path
-
-			result = filepath.Dir(result)
-
-			result, err = filepath.Rel(wd, result)
-
+			dir := filepath.Dir(path)
+			mains = append(mains, dir)
 			return err
 		}
 		return nil
 	})
 
-	return result, nil
+	// I want the top most main file here. And that should be the shortest
+	sort.Slice(mains, func(i, j int) bool {
+		return len(mains[i]) < len(mains[j])
+	})
+
+	return filepath.Rel(wd, mains[0])
 }
 
 // FindAndReadRequired finds and reads in a Config from a json file.
