@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
+	"github.com/kylelemons/godebug/diff"
 )
 
 func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
@@ -625,6 +626,303 @@ func TestFindConfigReports(t *testing.T) {
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestConfigCopy(t *testing.T) {
+	tests := map[string]struct {
+		in   Config
+		want Config
+	}{
+		"empty": {
+			in:   Config{},
+			want: Config{},
+		},
+		"full": {
+			in: Config{
+				Title:          "TESTCONFIG",
+				Description:    "A test string for usage with this stuff.",
+				Duration:       5,
+				Project:        true,
+				ProjectNumber:  true,
+				Region:         true,
+				BillingAccount: false,
+				RegionType:     "run",
+				RegionDefault:  "us-central1",
+				Zone:           true,
+				PathTerraform:  "terraform",
+				PathMessages:   ".deploystack/messages",
+				PathScripts:    ".deploystack/scripts",
+				CustomSettings: []Custom{
+					{
+						Name:        "nodes",
+						Description: "Nodes",
+						Default:     "3"},
+					{
+						Name:        "nodes2",
+						Description: "Nodes",
+						Default:     "3",
+						Options:     []string{"1", "2", "3"},
+					},
+				},
+				AuthorSettings: Settings{
+					{Name: "basename", Value: "basename", Type: "string"},
+				},
+				Products: []Product{
+					{Info: "A VM", Product: "Compute Engine"},
+				},
+			},
+
+			want: Config{
+				Title:          "TESTCONFIG",
+				Description:    "A test string for usage with this stuff.",
+				Duration:       5,
+				Project:        true,
+				ProjectNumber:  true,
+				Region:         true,
+				BillingAccount: false,
+				RegionType:     "run",
+				RegionDefault:  "us-central1",
+				Zone:           true,
+				PathTerraform:  "terraform",
+				PathMessages:   ".deploystack/messages",
+				PathScripts:    ".deploystack/scripts",
+				CustomSettings: []Custom{
+					{
+						Name:        "nodes",
+						Description: "Nodes",
+						Default:     "3"},
+					{
+						Name:        "nodes2",
+						Description: "Nodes",
+						Default:     "3",
+						Options:     []string{"1", "2", "3"},
+					},
+				},
+				AuthorSettings: Settings{
+					{Name: "basename", Value: "basename", Type: "string"},
+				},
+				Products: []Product{
+					{Info: "A VM", Product: "Compute Engine"},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.in.Copy()
+			if !reflect.DeepEqual(tc.want, got) {
+				wantYAML, err := tc.want.Marshal("yaml")
+				if err != nil {
+					t.Fatalf("couldn't even marshall the wanted result: %s", err)
+				}
+
+				gotYaml, err := got.Marshal("yaml")
+				if err != nil {
+					t.Fatalf("couldn't even marshall the gotten result: %s", err)
+				}
+
+				fmt.Println(diff.Diff(string(wantYAML), string(gotYaml)))
+				t.Fatalf("objects didn't match")
+			}
+		})
+	}
+}
+
+func TestConfigMarshall(t *testing.T) {
+	tests := map[string]struct {
+		in     Config
+		format string
+		want   string
+	}{
+		"yaml": {
+			format: "yaml",
+			in: Config{
+				Title:          "TESTCONFIG",
+				Description:    "A test string for usage with this stuff.",
+				Duration:       5,
+				Project:        true,
+				ProjectNumber:  true,
+				Region:         true,
+				BillingAccount: false,
+				RegionType:     "run",
+				RegionDefault:  "us-central1",
+				Zone:           true,
+				PathTerraform:  "terraform",
+				PathMessages:   ".deploystack/messages",
+				PathScripts:    ".deploystack/scripts",
+				CustomSettings: []Custom{
+					{
+						Name:        "nodes",
+						Description: "Nodes",
+						Default:     "3"},
+					{
+						Name:        "nodes2",
+						Description: "Nodes",
+						Default:     "3",
+						Options:     []string{"1", "2", "3"},
+					},
+				},
+				AuthorSettings: Settings{
+					{Name: "basename", Value: "basename", Type: "string"},
+				},
+				Products: []Product{
+					{Info: "A VM", Product: "Compute Engine"},
+				},
+			},
+			want: `title: TESTCONFIG
+name: ""
+description: A test string for usage with this stuff.
+duration: 5
+collect_project: true
+collect_project_number: true
+collect_billing_account: false
+register_domain: false
+collect_region: true
+region_type: run
+region_default: us-central1
+collect_zone: true
+hard_settings: {}
+custom_settings:
+- name: nodes
+  description: Nodes
+  default: "3"
+  options: []
+  prepend_project: false
+- name: nodes2
+  description: Nodes
+  default: "3"
+  options:
+  - "1"
+  - "2"
+  - "3"
+  prepend_project: false
+author_settings:
+- name: basename
+  value: basename
+  type: string
+  list: []
+  map: {}
+configure_gce_instance: false
+documentation_link: ""
+path_terraform: terraform
+path_messages: .deploystack/messages
+path_scripts: .deploystack/scripts
+projects:
+  items: []
+  allow_duplicates: false
+products:
+- info: A VM
+  product: Compute Engine
+`,
+		},
+		"json": {
+			format: "json",
+			in: Config{
+				Title:          "TESTCONFIG",
+				Description:    "A test string for usage with this stuff.",
+				Duration:       5,
+				Project:        true,
+				ProjectNumber:  true,
+				Region:         true,
+				BillingAccount: false,
+				RegionType:     "run",
+				RegionDefault:  "us-central1",
+				Zone:           true,
+				PathTerraform:  "terraform",
+				PathMessages:   ".deploystack/messages",
+				PathScripts:    ".deploystack/scripts",
+				CustomSettings: []Custom{
+					{
+						Name:        "nodes",
+						Description: "Nodes",
+						Default:     "3"},
+					{
+						Name:        "nodes2",
+						Description: "Nodes",
+						Default:     "3",
+						Options:     []string{"1", "2", "3"},
+					},
+				},
+				AuthorSettings: Settings{
+					{Name: "basename", Value: "basename", Type: "string"},
+				},
+				Products: []Product{
+					{Info: "A VM", Product: "Compute Engine"},
+				},
+			},
+			want: `{
+	"title": "TESTCONFIG",
+	"name": "",
+	"description": "A test string for usage with this stuff.",
+	"duration": 5,
+	"collect_project": true,
+	"collect_project_number": true,
+	"collect_billing_account": false,
+	"register_domain": false,
+	"collect_region": true,
+	"region_type": "run",
+	"region_default": "us-central1",
+	"collect_zone": true,
+	"hard_settings": null,
+	"custom_settings": [
+		{
+			"name": "nodes",
+			"description": "Nodes",
+			"default": "3",
+			"options": null,
+			"prepend_project": false
+		},
+		{
+			"name": "nodes2",
+			"description": "Nodes",
+			"default": "3",
+			"options": [
+				"1",
+				"2",
+				"3"
+			],
+			"prepend_project": false
+		}
+	],
+	"author_settings": [
+		{
+			"name": "basename",
+			"value": "basename",
+			"type": "string",
+			"list": null,
+			"map": null
+		}
+	],
+	"configure_gce_instance": false,
+	"documentation_link": "",
+	"path_terraform": "terraform",
+	"path_messages": ".deploystack/messages",
+	"path_scripts": ".deploystack/scripts",
+	"projects": {
+		"items": null,
+		"allow_duplicates": false
+	},
+	"products": [
+		{
+			"info": "A VM",
+			"product": "Compute Engine"
+		}
+	]
+}`,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, _ := tc.in.Marshal(tc.format)
+			textdiff := diff.Diff(string(tc.want), string(got))
+			if textdiff != "" {
+				fmt.Println(textdiff)
+				t.Fatalf("object didn't match")
 			}
 		})
 	}
