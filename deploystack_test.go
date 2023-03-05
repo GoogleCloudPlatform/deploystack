@@ -519,6 +519,14 @@ func TestGetRepo(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 
+			// Defered to make sure it runs even if things fatal
+			defer func() {
+				err = os.RemoveAll(tc.want)
+				if err != nil {
+					t.Logf(err.Error())
+				}
+			}()
+
 			got, err := DownloadRepo(tc.repo, tc.path)
 
 			if tc.err == nil && err != nil {
@@ -531,11 +539,6 @@ func TestGetRepo(t *testing.T) {
 
 			if _, err := os.Stat(tc.want); os.IsNotExist(err) {
 				t.Fatalf("expected: %s to exist it does not", err)
-			}
-
-			err = os.RemoveAll(tc.want)
-			if err != nil {
-				t.Logf(err.Error())
 			}
 
 		})
