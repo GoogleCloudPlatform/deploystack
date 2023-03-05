@@ -213,6 +213,34 @@ func NewBlocks(mod *tfconfig.Module) (*Blocks, error) {
 	return &result, nil
 }
 
+// Search will query the give blocks by field and match any whose field
+// contains the string
+func (b Blocks) Search(q, field string) Blocks {
+	result := Blocks{}
+
+	for _, v := range b {
+		switch field {
+		case "type":
+			if strings.Contains(v.Type, q) {
+				result = append(result, v)
+			}
+		case "name":
+			if strings.Contains(v.Name, q) {
+				result = append(result, v)
+			}
+		case "kind":
+			if strings.Contains(v.Kind, q) {
+				result = append(result, v)
+			}
+		case "file":
+			if strings.Contains(v.File, q) {
+				result = append(result, v)
+			}
+		}
+	}
+	return result
+}
+
 // List is a slice of strings that we add extra functionality to
 type List []string
 
