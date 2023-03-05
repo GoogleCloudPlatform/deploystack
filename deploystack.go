@@ -201,16 +201,16 @@ func NewMetaFromLocal(path string) (Meta, error) {
 }
 
 // ShortName retrieves the shortname of whatever we are calling this stack
-func (d Meta) ShortName() string {
-	r := filepath.Base(d.Github.Name)
+func (m Meta) ShortName() string {
+	r := filepath.Base(m.Github.Name)
 	r = strings.ReplaceAll(r, "deploystack-", "")
 	return r
 }
 
 // ShortNameUnderscore retrieves the shortname of whatever we are calling
 // this stack replacing hyphens with underscores
-func (d Meta) ShortNameUnderscore() string {
-	r := d.ShortName()
+func (m Meta) ShortNameUnderscore() string {
+	r := m.ShortName()
 	r = strings.ReplaceAll(r, "-", "_")
 	return r
 }
