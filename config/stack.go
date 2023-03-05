@@ -148,7 +148,11 @@ func (s *Stack) findTFFolder(c Config) (string, error) {
 		return len(mains[i]) < len(mains[j])
 	})
 
-	return filepath.Rel(wd, mains[0])
+	if len(mains) > 0 {
+		return filepath.Rel(wd, mains[0])
+	}
+
+	return "", nil
 }
 
 // FindAndReadRequired finds and reads in a Config from a json file.
