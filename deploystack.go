@@ -17,6 +17,7 @@
 package deploystack
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -149,15 +150,17 @@ type Meta struct {
 
 // NewMeta downloads a github repo and parses the DeployStack and Terraform
 // information from the stack.
-func NewMeta(repo, path, dspath string) (Meta, error) {
+func NewMeta(repo, path, dspath string, clone bool) (Meta, error) {
 	g := github.NewRepo(repo)
 
-	log.Printf("cloning to path: %s", path)
-	if err := g.Clone(g.Path(path)); err != nil {
-		return Meta{}, fmt.Errorf("cannot clone repo: %s", err)
+	if clone {
+		log.Printf("cloning to path: %s", path)
+		if err := g.Clone(g.Path(path)); err != nil {
+			return Meta{}, fmt.Errorf("cannot clone repo: %s", err)
+		}
 	}
 
-	d, err := NewMetaFromLocal(g.Path(path) + dspath)
+	d, err := NewMetaFromLocal(path + dspath)
 	if err != nil {
 		return Meta{}, fmt.Errorf("cannot parse deploystack into: %s", err)
 	}
@@ -178,6 +181,7 @@ func NewMetaFromLocal(path string) (Meta, error) {
 	if err := os.Chdir(path); err != nil {
 		return d, fmt.Errorf("could not change the wd: %s", err)
 	}
+	defer os.Chdir(orgpwd)
 
 	s := config.NewStack()
 
@@ -219,7 +223,7 @@ func (m Meta) ShortNameUnderscore() string {
 
 // Suggest will provide it's best guess of what the deploystack config should
 // be based on the contents of the repo, including an existing deploystack config
-func (m Meta) Suggest() config.Config {
+func (m Meta) Suggest() (config.Config, error) {
 	out := m.DeployStack.Copy()
 
 	name := filepath.Base(m.Github.URL())
@@ -237,11 +241,16 @@ func (m Meta) Suggest() config.Config {
 	}
 
 	if len(m.Terraform) == 0 {
-		return out
+		return out, errors.New("suggest: terraform was empty")
 	}
 
 	if m.DeployStack.PathTerraform == "" {
 		out.PathTerraform = filepath.Dir(m.Terraform[0].File)
+	}
+
+	resources, err := terraform.NewGCPResources()
+	if err != nil {
+		return out, fmt.Errorf("could not get terraform resource meta data: %w", err)
 	}
 
 	for _, v := range m.Terraform {
@@ -287,40 +296,38 @@ func (m Meta) Suggest() config.Config {
 
 			}
 		case "managed":
-			// TODO: figure out the best way to share the product data
-			// Might have to embed in the app.
-			// product := cfg.GetProduct(v.Type)
+			product := resources.GetProduct(v.Type)
 
-			// if product == "" {
-			// 	continue
-			// }
+			if product == "" {
+				continue
+			}
 
-			// add := true
-			// for _, v := range out.Products {
-			// 	if v.Product == product {
-			// 		add = false
-			// 		break
-			// 	}
-			// }
+			add := true
+			for _, v := range out.Products {
+				if v.Product == product {
+					add = false
+					break
+				}
+			}
 
-			// if add {
-			// 	p := config.Product{Product: product}
-			// 	out.Products = append(out.Products, p)
-			// }
+			if add {
+				p := config.Product{Product: product}
+				out.Products = append(out.Products, p)
+			}
 
 		}
 	}
 
-	return out
+	return out, nil
 }
 
 // DownloadRepo takes a name of a GoogleCloudPlatform repo or a
 // GoogleCloudPlatform/deploystack-[name] repo, and downloads it into a unique
 // folder name, and outputs that name
-func DownloadRepo(name, path string) (string, error) {
-	candidate := fmt.Sprintf("%s/%s", path, name)
+func DownloadRepo(repo github.Repo, path string) (string, error) {
+	candidate := fmt.Sprintf("%s/%s", path, repo.Name)
 	dir := UniquePath(candidate)
-	return dir, CloneByName(name, dir)
+	return dir, repo.Clone(dir)
 
 }
 
@@ -339,23 +346,4 @@ func UniquePath(candidate string) string {
 		}
 		i++
 	}
-}
-
-// CloneByName clones a github repo owned by GoogleCloudPlatform just by the
-// name of the repo, if it fails and the repo name does not have "deploystack-"
-// in it, it will try adding it, so that short names will work.
-func CloneByName(name, path string) error {
-	gh := github.Repo{Name: name, Owner: "GoogleCloudPlatform", Branch: "main"}
-
-	err := gh.Clone(path)
-	if err != nil {
-		// This allows using a shortened name of the repo as the label here.
-		if !strings.Contains(name, "deploystack-") {
-			gh.Name = fmt.Sprintf("deploystack-%s", name)
-			err = gh.Clone(path)
-		}
-	}
-
-	return err
-
 }
