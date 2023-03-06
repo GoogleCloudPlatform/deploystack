@@ -98,7 +98,7 @@ func TestPrecheckMulti(t *testing.T) {
 	// So this is what I got addvice to do, but it caused panics
 	// Setting it to explicilty "go test" fixed it
 	// cmd := exec.Command(os.Args[0], "-test.run=TestPrecheckMulti")
-	cmd := exec.Command("go", "test", "-test.run=TestPrecheckMulti")
+	cmd := exec.Command("go", "test", "-timeout", "20s", "-test.run=TestPrecheckMulti")
 	cmd.Env = append(os.Environ(), "BE_CRASHER=1")
 	err := cmd.Run()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
@@ -151,7 +151,7 @@ func TestCacheContact(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			CacheContact(tc.in)
+			ContactSave(tc.in)
 
 			if tc.err == nil {
 				if _, err := os.Stat(contactfile); errors.Is(err, os.ErrNotExist) {
@@ -165,61 +165,6 @@ func TestCacheContact(t *testing.T) {
 			}
 
 			os.Remove(contactfile)
-
-		})
-	}
-}
-
-func TestNewContactDataFromFile(t *testing.T) {
-	tests := map[string]struct {
-		in   string
-		want gcloud.ContactData
-		err  error
-	}{
-		"basic": {
-			in: "test_files/contact/contact.yaml",
-			want: gcloud.ContactData{
-				AllContacts: gcloud.DomainRegistrarContact{
-					Email: "test@example.com",
-					Phone: "+155555551212",
-					PostalAddress: gcloud.PostalAddress{
-						RegionCode:         "US",
-						PostalCode:         "94502",
-						AdministrativeArea: "CA",
-						Locality:           "San Francisco",
-						AddressLines:       []string{"345 Spear Street"},
-						Recipients:         []string{"Googler"},
-					},
-				},
-			},
-			err: nil,
-		},
-		"error": {
-			in:   "test_files/contact/noexists.yaml",
-			want: gcloud.ContactData{},
-			err:  fmt.Errorf("open test_files/contact/noexists.yaml: no such file or directory"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := NewContactDataFromFile(tc.in)
-
-			if tc.err == nil {
-
-				if err != nil {
-					t.Fatalf("expected no error,  got: %+v", err)
-				}
-
-				if !reflect.DeepEqual(tc.want, got) {
-					t.Fatalf("expected: %+v, got: %+v", tc.want, got)
-				}
-
-			} else {
-				if err.Error() != tc.err.Error() {
-					t.Fatalf("expected %+v, got: %+v", tc.err, err)
-				}
-			}
 
 		})
 	}
@@ -260,7 +205,7 @@ func TestCheckForContact(t *testing.T) {
 			oldContactFile := contactfile
 			contactfile = tc.in
 
-			got := CheckForContact()
+			got := ContactCheck()
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}
