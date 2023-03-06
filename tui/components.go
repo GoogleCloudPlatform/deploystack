@@ -106,7 +106,7 @@ func (d description) render() string {
 	t.SetStyles(tableStyle)
 
 	if len(list) > 0 {
-		doc.WriteString(normal.Render("This process will create the following:"))
+		doc.WriteString(normal.Render("This process will install the following resources:"))
 		doc.WriteString(t.View())
 		doc.WriteString("\n\n")
 	}
