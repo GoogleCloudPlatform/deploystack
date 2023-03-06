@@ -53,6 +53,15 @@ func TestClone(t *testing.T) {
 			path: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
 			err:  fmt.Errorf("cannot get repo"),
 		},
+		"overwrite": {
+			in: Repo{
+				Name:   "deploystack-nosql-client-server",
+				Owner:  "GoogleCloudPlatform",
+				Branch: "main",
+			},
+			path: fmt.Sprintf("%s/alreadyexists", testdata),
+			err:  fmt.Errorf("already exists"),
+		},
 	}
 
 	for name, tc := range tests {
