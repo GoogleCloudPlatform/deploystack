@@ -35,7 +35,7 @@ func main() {
 	client := gcloud.NewClient(context.Background(), "")
 
 	q := tui.NewQueue(&s, &client)
-	q.Save("contact", deploystack.CheckForContact())
+	q.Save("contact", deploystack.ContactCheck())
 	q.InitializeUI()
 
 	p := tea.NewProgram(q.Start(), tea.WithAltScreen())
