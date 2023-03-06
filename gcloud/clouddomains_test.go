@@ -20,12 +20,13 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/go-test/deep"
 	"github.com/kylelemons/godebug/diff"
 	domainspb "google.golang.org/genproto/googleapis/cloud/domains/v1beta1"
 	"google.golang.org/genproto/googleapis/type/postaladdress"
 )
 
-func TestDomainRegistrarContactYAML(t *testing.T) {
+func TestContactDataYAML(t *testing.T) {
 	tests := map[string]struct {
 		file    string
 		contact ContactData
@@ -73,7 +74,7 @@ func TestDomainRegistrarContactYAML(t *testing.T) {
 	}
 }
 
-func TestDomainRegistrarContactReadYAML(t *testing.T) {
+func TestContactDataReadFrom(t *testing.T) {
 	tests := map[string]struct {
 		file string
 		want ContactData
@@ -99,7 +100,9 @@ func TestDomainRegistrarContactReadYAML(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := newContactDataFromFile(tc.file)
+			f, _ := os.Open(tc.file)
+			got := newContactData()
+			_, err := got.ReadFrom(f)
 
 			if err != tc.err {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
@@ -110,6 +113,53 @@ func TestDomainRegistrarContactReadYAML(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v got: %v", tc.want, got)
 			}
+		})
+	}
+}
+
+func TestContactDataWriteTo(t *testing.T) {
+	tests := map[string]struct {
+		contact ContactData
+	}{
+		"basic": {
+			contact: ContactData{DomainRegistrarContact{
+				"you@example.com",
+				"+1 555 555 1234",
+				PostalAddress{
+					"US",
+					"94105",
+					"CA",
+					"San Francisco",
+					[]string{"345 Spear Street"},
+					[]string{"Your Name"},
+				},
+			}},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			f, err := os.CreateTemp("", "contact")
+			defer os.Remove(f.Name())
+			if err != nil {
+				t.Fatalf("creating tmp: expected no error, got %s", err)
+			}
+
+			if _, err = tc.contact.WriteTo(f); err != nil {
+				t.Fatalf("writing tmp: expected no error, got %s", err)
+			}
+
+			f2, err := os.Open(f.Name())
+			got := newContactData()
+			if _, err = got.ReadFrom(f2); err != nil {
+				t.Fatalf("reading tmp: expected no error, got %s", err)
+			}
+
+			if !reflect.DeepEqual(tc.contact, got) {
+				diff := deep.Equal(tc.contact, got)
+				t.Errorf("compare failed: %v", diff)
+			}
+
 		})
 	}
 }
