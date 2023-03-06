@@ -41,6 +41,7 @@ type Config struct {
 	PathScripts          string            `json:"path_scripts" yaml:"path_scripts"`
 	Projects             Projects          `json:"projects" yaml:"projects"`
 	Products             []Product         `json:"products" yaml:"products"`
+	wd                   string
 }
 
 func (c *Config) convertHardset() {
@@ -51,10 +52,19 @@ func (c *Config) convertHardset() {
 	c.HardSet = nil
 }
 
+func (c *Config) Getwd() string {
+	return c.wd
+}
+
+func (c *Config) Setwd(wd string) {
+	c.wd = wd
+}
+
 // Copy produces a copy of a config file for manipulating it without changing
 // the original
 func (c Config) Copy() Config {
 	out := Config{}
+	out.wd = c.wd
 	out.Name = c.Name
 	out.Title = c.Title
 	out.Project = c.Project
@@ -126,8 +136,8 @@ func (c *Config) GetAuthorSettings() Settings {
 
 // ComputeName uses the git repo in the working directory to compute the
 // shortname for the application.
-func (c *Config) ComputeName() error {
-	repo, err := git.PlainOpen(".")
+func (c *Config) ComputeName(path string) error {
+	repo, err := git.PlainOpen(path)
 	if err != nil {
 		return fmt.Errorf("could not open local git directory: %s", err)
 	}

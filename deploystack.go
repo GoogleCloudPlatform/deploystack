@@ -42,19 +42,20 @@ var (
 )
 
 // Init initializes a Deploystack stack by looking on teh local file system
-func Init() (*config.Stack, error) {
+func Init(path string) (*config.Stack, error) {
 	s := config.NewStack()
 
-	if err := s.FindAndReadRequired(); err != nil {
+	if err := s.FindAndReadRequired(path); err != nil {
 		return &s, fmt.Errorf("could not read config file: %s", err)
 	}
 
 	if s.Config.Name == "" {
-		if err := s.Config.ComputeName(); err != nil {
+		if err := s.Config.ComputeName(path); err != nil {
 			return &s, fmt.Errorf("could not retrieve name of stack: %s \nDeployStack author: fix this by adding a 'name' key and value to the deploystack config", err)
 		}
 		s.AddSetting("stack_name", s.Config.Name)
 	}
+	s.Config.Setwd(path)
 
 	return &s, nil
 }
@@ -131,46 +132,17 @@ type Meta struct {
 	LocalPath   string           `json:"localpath" yaml:"localpath"`
 }
 
-// NewMeta downloads a github repo and parses the DeployStack and Terraform
-// information from the stack.
-func NewMeta(repo, path, dspath string, clone bool) (Meta, error) {
-	g := github.NewRepo(repo)
-
-	if clone {
-		log.Printf("cloning to path: %s", path)
-		if err := g.Clone(g.Path(path)); err != nil {
-			return Meta{}, fmt.Errorf("cannot clone repo: %s", err)
-		}
-	}
-
-	d, err := NewMetaFromLocal(path + dspath)
-	if err != nil {
-		return Meta{}, fmt.Errorf("cannot parse deploystack into: %s", err)
-	}
-	d.Github = g
-	d.LocalPath = g.Path(path)
-
-	return d, nil
-}
-
-// NewMetaFromLocal allows project to point at local directories for info
+// NewMeta allows project to point at local directories for info
 // as well as pulling down from github
-func NewMetaFromLocal(path string) (Meta, error) {
+func NewMeta(path string) (Meta, error) {
 	d := Meta{}
-	orgpwd, err := os.Getwd()
-	if err != nil {
-		return d, fmt.Errorf("could not get the wd: %s", err)
-	}
-	if err := os.Chdir(path); err != nil {
-		return d, fmt.Errorf("could not change the wd: %s", err)
-	}
-	defer os.Chdir(orgpwd)
 
 	s := config.NewStack()
 
-	if err := s.FindAndReadRequired(); err != nil {
+	if err := s.FindAndReadRequired(path); err != nil {
 		log.Printf("could not read config file: %s", err)
 	}
+	d.DeployStack = s.Config
 
 	b, err := terraform.Extract(s.Config.PathTerraform)
 	if err != nil {
@@ -181,11 +153,6 @@ func NewMetaFromLocal(path string) (Meta, error) {
 		d.Terraform = *b
 	}
 
-	d.DeployStack = s.Config
-
-	if err := os.Chdir(orgpwd); err != nil {
-		return d, fmt.Errorf("could not change the wd back: %s", err)
-	}
 	return d, nil
 }
 

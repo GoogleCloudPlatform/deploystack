@@ -12,6 +12,8 @@ import (
 	"github.com/kylelemons/godebug/diff"
 )
 
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+
 func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
 		t.Fatalf("%s: expected: \n|%v|\ngot: \n|%v|", label, want, got)
@@ -91,24 +93,20 @@ func TestConfig(t *testing.T) {
 		},
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("error setting up environment for testing %v", err)
-	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			if err := os.Chdir(fmt.Sprintf("%s/%s", testdata, tc.pwd)); err != nil {
-				t.Fatalf("failed to set the wd: %v", err)
-			}
+			path := fmt.Sprintf("%s/%s", testdata, tc.pwd)
+			descPath := filepath.Join(path, tc.descPath)
 
 			s := NewStack()
 
-			if err := s.FindAndReadRequired(); err != nil {
+			if err := s.FindAndReadRequired(path); err != nil {
 				t.Fatalf("could not read config file: %s", err)
 			}
 
-			dat, err := os.ReadFile(tc.descPath)
+			t.Logf("stack := %+v", s)
+
+			dat, err := os.ReadFile(descPath)
 			if err != nil {
 				t.Fatalf("could not read description file: %s", err)
 			}
@@ -120,9 +118,6 @@ func TestConfig(t *testing.T) {
 				// t.Fatalf("expected: \n%+v, \ngot: \n%+v", tc.want, s.Config)
 			}
 		})
-		if err := os.Chdir(wd); err != nil {
-			t.Errorf("failed to reset the wd: %v", err)
-		}
 	}
 }
 
@@ -173,32 +168,27 @@ func TestComputeNames(t *testing.T) {
 		err   error
 	}{
 		"http": {
-			"../test_files/computenames_repos/deploystack-single-vm",
+			"computenames_repos/deploystack-single-vm",
 			"single-vm",
 			nil,
 		},
 		"ssh": {
-			"../test_files/computenames_repos/deploystack-gcs-to-bq-with-least-privileges",
+			"computenames_repos/deploystack-gcs-to-bq-with-least-privileges",
 			"gcs-to-bq-with-least-privileges",
 			nil,
 		},
 		"nogit": {
-			"../test_files/computenames_repos/folder-no-git",
+			"computenames_repos/folder-no-git",
 			"",
 			fmt.Errorf("could not open local git directory: repository does not exist"),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			oldWD, _ := os.Getwd()
-			os.Chdir(tc.input)
-			defer os.Chdir(oldWD)
-
+			testdata := filepath.Join(testFilesDir, tc.input)
 			s := NewStack()
-			s.FindAndReadRequired()
-			err := s.Config.ComputeName()
-
-			os.Chdir(oldWD)
+			s.FindAndReadRequired(testdata)
+			err := s.Config.ComputeName(testdata)
 
 			if !(tc.err == nil && err == nil) {
 				if errors.Is(tc.err, err) {
@@ -287,18 +277,14 @@ func TestReadConfig(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			s := NewStack()
-			oldWD, _ := os.Getwd()
-			os.Chdir(tc.path)
 
-			err := s.FindAndReadRequired()
+			err := s.FindAndReadRequired(tc.path)
 
 			if errors.Is(err, tc.err) {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
 				}
 			}
-
-			os.Chdir(oldWD)
 
 			compareValues("Title", tc.want.Config.Title, s.Config.Title, t)
 			compareValues("Description", tc.want.Config.Description, s.Config.Description, t)

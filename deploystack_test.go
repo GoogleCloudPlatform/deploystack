@@ -30,6 +30,8 @@ import (
 	"github.com/GoogleCloudPlatform/deploystack/github"
 )
 
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+
 func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
 		t.Fatalf("%s: expected: \n|%v|\ngot: \n|%v|", label, want, got)
@@ -307,10 +309,8 @@ func TestInit(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			oldWD, _ := os.Getwd()
-			os.Chdir(tc.path)
 
-			s, err := Init()
+			s, err := Init(tc.path)
 
 			if tc.err == nil {
 				if err != nil {
@@ -323,8 +323,6 @@ func TestInit(t *testing.T) {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
 				}
 			}
-
-			os.Chdir(oldWD)
 
 			compareValues("Name", tc.want.Config.Name, s.Config.Name, t)
 			compareValues("Title", tc.want.Config.Title, s.Config.Title, t)
@@ -381,54 +379,6 @@ func TestShortNameUnderscore(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}
-		})
-	}
-}
-
-func TestNewMeta(t *testing.T) {
-	wd, err := filepath.Abs(".")
-	if err != nil {
-		t.Fatalf("error setting up environment for testing %v", err)
-	}
-
-	testdata := fmt.Sprintf("%s/test_files/repos", wd)
-	tests := map[string]struct {
-		repo string
-		path string
-		want Meta
-	}{
-		"defaultbranch": {
-			repo: "https://github.com/GoogleCloudPlatform/deploystack-cost-sentry",
-			path: testdata,
-			want: Meta{
-				Github: github.Repo{
-					Name:   "deploystack-cost-sentry",
-					Owner:  "GoogleCloudPlatform",
-					Branch: "main",
-				},
-				LocalPath: fmt.Sprintf("%s/deploystack-cost-sentry", testdata)},
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := NewMeta(tc.repo, tc.path, "", true)
-			if err != nil {
-				t.Fatalf("expected: no error, got: %v", err)
-			}
-			if !reflect.DeepEqual(tc.want.Github.Name, got.Github.Name) {
-				t.Fatalf("expected: %v, got: %v", tc.want.Github.Name, got.Github.Name)
-			}
-
-			if !reflect.DeepEqual(tc.want.Github.Branch, got.Github.Branch) {
-				t.Fatalf("expected: %v, got: %v", tc.want.Github.Branch, got.Github.Branch)
-			}
-
-			if !reflect.DeepEqual(tc.want.LocalPath, got.LocalPath) {
-				t.Fatalf("expected: %v, got: %v", tc.want.LocalPath, got.LocalPath)
-			}
-
-			os.RemoveAll(got.LocalPath)
 		})
 	}
 }

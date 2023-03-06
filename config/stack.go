@@ -37,7 +37,7 @@ func NewStack() Stack {
 	return s
 }
 
-func (s *Stack) findAndReadConfig() (Config, error) {
+func (s *Stack) findAndReadConfig(path string) (Config, error) {
 	config := Config{}
 
 	candidates := []string{
@@ -47,12 +47,10 @@ func (s *Stack) findAndReadConfig() (Config, error) {
 	}
 
 	configPath := ""
-	wd, _ := os.Getwd()
 	for _, v := range candidates {
-		file := fmt.Sprintf("%s/%s", wd, v)
-
-		if _, err := os.Stat(file); err == nil {
-			configPath = file
+		candidate := filepath.Join(path, v)
+		if _, err := os.Stat(candidate); err == nil {
+			configPath = candidate
 			break
 		}
 
@@ -88,60 +86,53 @@ func (s *Stack) findAndReadConfig() (Config, error) {
 // or exists but is not readable.
 var ErrConfigNotExist = fmt.Errorf("could not find and parse a config file")
 
-func (s *Stack) findDSFolder(c Config, folder string) (string, error) {
+func (s *Stack) findDSFolder(path, folder string) (string, error) {
 	switch folder {
 	case "messages":
-		if c.PathMessages != "" {
-			return c.PathMessages, nil
+		if s.Config.PathMessages != "" {
+			return s.Config.PathMessages, nil
 		}
 	case "scripts":
-		if c.PathScripts != "" {
-			return c.PathScripts, nil
+		if s.Config.PathScripts != "" {
+			return s.Config.PathScripts, nil
 		}
 	}
 
-	path := fmt.Sprintf(".deploystack/%s", folder)
+	dsPath := filepath.Join(path, folder)
 
-	if _, err := os.Stat(path); err == nil {
-		return path, nil
+	if _, err := os.Stat(dsPath); err == nil {
+		return dsPath, nil
 	}
 
-	path = folder
+	dsPath = filepath.Join(path, ".deploystack", folder)
 
-	if _, err := os.Stat(path); err == nil {
-		return path, nil
+	if _, err := os.Stat(dsPath); err == nil {
+		return dsPath, nil
 	}
 
 	return fmt.Sprintf("./%s", folder), fmt.Errorf("requirement (%s) was not found either in the root, or in .deploystack folder nor was it set in deploystack.json", folder)
 }
 
-func (s *Stack) findTFFolder(c Config) (string, error) {
-	if c.PathTerraform != "" {
-		return c.PathTerraform, nil
-	}
-
-	result := "terraform"
-
-	if _, err := os.Stat(result); err == nil {
-		return result, nil
-	}
-
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
+func (s *Stack) findTFFolder(path string) (string, error) {
+	if s.Config.PathTerraform != "" {
+		return s.Config.PathTerraform, nil
 	}
 
 	mains := []string{}
 
-	err = filepath.Walk(wd, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(path, func(walkpath string, info os.FileInfo, err error) error {
 
 		if info.Name() == "main.tf" {
-			dir := filepath.Dir(path)
+			dir := filepath.Dir(walkpath)
 			mains = append(mains, dir)
 			return err
 		}
 		return nil
 	})
+
+	if err != nil {
+		return "", fmt.Errorf("findTFFolder: could not find a terraform folder:, %s", err)
+	}
 
 	// I want the top most main file here. And that should be the shortest
 	sort.Slice(mains, func(i, j int) bool {
@@ -149,36 +140,38 @@ func (s *Stack) findTFFolder(c Config) (string, error) {
 	})
 
 	if len(mains) > 0 {
-		return filepath.Rel(wd, mains[0])
+		return filepath.Rel(path, mains[0])
 	}
 
 	return "", nil
 }
 
 // FindAndReadRequired finds and reads in a Config from a json file.
-func (s *Stack) FindAndReadRequired() error {
-	config, err := s.findAndReadConfig()
+func (s *Stack) FindAndReadRequired(path string) error {
+	config, err := s.findAndReadConfig(path)
 	if err != nil {
 		return fmt.Errorf("unable to parse config file: %s", err)
 	}
 
-	tfPath, err := s.findTFFolder(config)
+	s.Config = config
+
+	tfPath, err := s.findTFFolder(path)
 	if err != nil {
 		return fmt.Errorf("unable to locate terraform folder: %s", err)
 	}
-	config.PathTerraform = tfPath
+	s.Config.PathTerraform = tfPath
 
-	scriptPath, _ := s.findDSFolder(config, "scripts")
+	scriptPath, err := s.findDSFolder(path, "scripts")
 	if err != nil {
-		log.Printf("WARNING - unable to locate scripts folder, folder not required, : %s", err)
+		log.Printf("INFO - unable to locate scripts folder, folder not required, : %s", err)
 	}
-	config.PathScripts = scriptPath
+	s.Config.PathScripts, _ = filepath.Rel(path, scriptPath)
 
-	messagePath, err := s.findDSFolder(config, "messages")
+	messagePath, err := s.findDSFolder(path, "messages")
 	if err != nil {
-		log.Printf("WARNING - unable to locate messages folder, folder not required, : %s", err)
+		log.Printf("INFO - unable to locate messages folder, folder not required, : %s", err)
 	}
-	config.PathMessages = messagePath
+	s.Config.PathMessages, _ = filepath.Rel(path, messagePath)
 
 	descText := fmt.Sprintf("%s/description.txt", messagePath)
 	if _, err := os.Stat(descText); err == nil {
@@ -187,10 +180,8 @@ func (s *Stack) FindAndReadRequired() error {
 			return fmt.Errorf("unable to read description file: %s", err)
 		}
 
-		config.Description = string(description)
+		s.Config.Description = string(description)
 	}
-
-	s.Config = config
 
 	s.Config.convertHardset()
 	s.Config.defaultAuthorSettings()
