@@ -18,6 +18,7 @@
 package terraform
 
 import (
+	_ "embed"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -27,6 +28,9 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 	"gopkg.in/yaml.v2"
 )
+
+//go:embed resources.yaml
+var resources []byte
 
 // Extract points to a path that includes Terraform files and extracts all of
 // the information out of it for use with DeployStack Tools
@@ -301,15 +305,10 @@ func (t TestConfig) HasTodo() bool {
 }
 
 // NewGCPResources reads in a yaml file as a config
-func NewGCPResources(path string) (GCPResources, error) {
+func NewGCPResources() (GCPResources, error) {
 	result := GCPResources{}
 
-	content, err := ioutil.ReadFile(path)
-	if err != nil {
-		return result, fmt.Errorf("unable to find or read config file: %s", err)
-	}
-
-	if err := yaml.Unmarshal(content, &result); err != nil {
+	if err := yaml.Unmarshal(resources, &result); err != nil {
 		return result, fmt.Errorf("unable to convert content to GCPResources: %s", err)
 	}
 
