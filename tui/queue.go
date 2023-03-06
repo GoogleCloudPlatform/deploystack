@@ -263,7 +263,7 @@ func (q *Queue) ProcessConfig() error {
 	name = s.Config.Name
 
 	if name == "" {
-		err = s.Config.ComputeName()
+		err = s.Config.ComputeName(s.Config.Getwd())
 		if err != nil {
 			return err
 		}
