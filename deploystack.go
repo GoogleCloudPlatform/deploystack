@@ -32,7 +32,6 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"google.golang.org/api/option"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -83,59 +82,43 @@ func Precheck() error {
 	return nil
 }
 
-// NewContactDataFromFile generates a new ContactData from a cached yaml file
-func NewContactDataFromFile(file string) (gcloud.ContactData, error) {
-	c := gcloud.NewContactData()
-
-	dat, err := os.ReadFile(file)
-	if err != nil {
-		return c, err
-	}
-
-	err = yaml.Unmarshal(dat, &c)
-
-	if err != nil {
-		return c, err
-	}
-
-	return c, nil
-}
-
-// CheckForContact checks the local file system for a file containg domain
+// ContactCheck checks the local file system for a file containg domain
 // registar contact info
-func CheckForContact() gcloud.ContactData {
+func ContactCheck() gcloud.ContactData {
 	contact := gcloud.ContactData{}
 	if _, err := os.Stat(contactfile); err == nil {
-		contact, err = NewContactDataFromFile(contactfile)
+		f, err := os.Open(contactfile)
 		if err != nil {
-			log.Printf("domain registrar contact not cached")
+			return contact
+		}
+
+		if _, err = contact.ReadFrom(f); err != nil {
+			return contact
 		}
 	}
 	return contact
 }
 
-// CacheContact writes a file containg domain registar contact info to disk
+// ContactSave writes a file containg domain registar contact info to disk
 // if it exists
-func CacheContact(i interface{}) {
+func ContactSave(i interface{}) {
+	// We can ignore errors - this is an convenience to the user
+	// not a necessity
 	switch v := i.(type) {
-
-	// If anything goes wrong with this, it's fine, this is a convenience
-	// for the next time someone runs this.
 	case gcloud.ContactData:
 		if v.AllContacts.Email == "" {
 			return
 		}
 
-		if v.AllContacts.Email != "" {
-			yaml, err := v.YAML()
-			if err != nil {
-				return
-			}
-
-			if err := os.WriteFile(contactfile, []byte(yaml), 0o644); err != nil {
-				return
-			}
+		f, err := os.Create(contactfile)
+		if err != nil {
+			return
 		}
+
+		if _, err := v.WriteTo(f); err != nil {
+			return
+		}
+
 	}
 }
 
