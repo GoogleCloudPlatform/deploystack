@@ -28,9 +28,388 @@ import (
 	"github.com/GoogleCloudPlatform/deploystack/config"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/GoogleCloudPlatform/deploystack/github"
+	"github.com/GoogleCloudPlatform/deploystack/terraform"
+	"github.com/go-test/deep"
+	"github.com/kylelemons/godebug/diff"
 )
 
 var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+
+var nosqltestdata = filepath.Join(testFilesDir, "reposformeta")
+
+// Getting this right was such a huge pain in the ass, I'm using it a few times
+// AND NEVER TOUCHING IT AGAIN
+
+var nosqlMeta = Meta{
+	DeployStack: config.Config{
+		Title:         "NOSQL CLIENT SERVER",
+		Name:          "nosql-client-server",
+		Duration:      5,
+		Project:       true,
+		ProjectNumber: true,
+		Region:        true,
+		RegionType:    "compute",
+		RegionDefault: "us-central1",
+		Zone:          true,
+		PathTerraform: "terraform",
+		PathMessages:  ".deploystack/messages",
+		PathScripts:   ".deploystack/scripts",
+
+		DocumentationLink: "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/nosql-client-server",
+		AuthorSettings: config.Settings{
+			{
+				Name:  "basename",
+				Value: "nosql-client-server",
+				Type:  "string",
+			},
+		},
+		Description: `This process will configure and create two Compute Engine instances:
+* Server - which will run mongodb
+* Client - which will run a custom go application that talks to mongo and then 
+           exposes an API where you consumne data from mongo`,
+	},
+	Terraform: terraform.Blocks{
+		{
+			Name: "all",
+			Kind: "managed",
+			Type: "google_project_service",
+			File: filepath.Join(
+				nosqltestdata,
+				"deploystack-nosql-client-server",
+				"terraform",
+				"main.tf",
+			),
+			Start: 21,
+			Text: `
+resource "google_project_service" "all" {
+  for_each                   = toset(var.gcp_service_list)
+  project                    = var.project_number
+  service                    = each.key
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}`,
+		},
+		{
+			Name: "default",
+			Kind: "data",
+			Type: "google_compute_network",
+			File: filepath.Join(
+				nosqltestdata,
+				"deploystack-nosql-client-server",
+				"terraform",
+				"main.tf",
+			),
+			Start: 29,
+			Text: `
+data "google_compute_network" "default" {
+  project = var.project_id
+  name = "default"
+}`,
+		},
+
+		{
+			Name: "main",
+			Kind: "managed",
+			Type: "google_compute_network",
+			File: filepath.Join(
+				nosqltestdata,
+				"deploystack-nosql-client-server",
+				"terraform",
+				"main.tf",
+			),
+			Start: 34,
+			Text: `
+resource "google_compute_network" "main" {
+  provider                = google-beta
+  name                    = "${var.basename}-network"
+  auto_create_subnetworks = true
+  project                 = var.project_id
+}`,
+		},
+		{
+			Name: "default-allow-http",
+			Kind: "managed",
+			Type: "google_compute_firewall",
+			File: filepath.Join(
+				nosqltestdata,
+				"deploystack-nosql-client-server",
+				"terraform",
+				"main.tf",
+			),
+			Start: 41,
+			Text: `
+resource "google_compute_firewall" "default-allow-http" {
+  name    = "deploystack-allow-http"
+  project = var.project_number
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+
+  target_tags = ["http-server"]
+}`,
+		},
+
+		{
+			Name: "default-allow-internal",
+			Kind: "managed",
+			Type: "google_compute_firewall",
+			File: filepath.Join(
+				nosqltestdata,
+				"deploystack-nosql-client-server",
+				"terraform",
+				"main.tf",
+			),
+			Start: 56,
+			Text: `
+resource "google_compute_firewall" "default-allow-internal" {
+  name    = "deploystack-allow-internal"
+  project = var.project_number
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["0-65535"]
+  }
+
+  allow{
+    protocol = "udp"
+    ports    = ["0-65535"]
+  }
+
+  allow{
+    protocol = "icmp"
+  }
+
+  source_ranges = ["10.128.0.0/20"]
+
+}`,
+		},
+
+		{
+			Name: "default-allow-ssh",
+			Kind: "managed",
+			Type: "google_compute_firewall",
+			File: filepath.Join(
+				nosqltestdata,
+				"deploystack-nosql-client-server",
+				"terraform",
+				"main.tf",
+			),
+			Start: 79,
+			Text: `
+resource "google_compute_firewall" "default-allow-ssh" {
+  name    = "deploystack-allow-ssh"
+  project = var.project_number
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+
+  target_tags = ["ssh-server"]
+}`,
+		},
+
+		{
+			Name: "server",
+			Kind: "managed",
+			Type: "google_compute_instance",
+			File: filepath.Join(
+				nosqltestdata,
+				"deploystack-nosql-client-server",
+				"terraform",
+				"main.tf",
+			),
+			Start: 95,
+			Text: `# Create Instances
+resource "google_compute_instance" "server" {
+  name         = "server"
+  zone         = var.zone
+  project      = var.project_id
+  machine_type = "e2-standard-2"
+  tags         = ["ssh-server", "http-server"]
+  allow_stopping_for_update = true
+
+
+  boot_disk {
+    auto_delete = true
+    device_name = "server"
+    initialize_params {
+      image = "family/ubuntu-1804-lts"
+      size  = 10
+      type  = "pd-standard"
+    }
+  }
+
+  network_interface {
+    network = google_compute_network.main.name
+    access_config {
+      // Ephemeral public IP
+    }
+  }
+
+  service_account {
+    scopes = ["https://www.googleapis.com/auth/logging.write"]
+  }
+
+  metadata_startup_script = <<SCRIPT
+    apt-get update
+    apt-get install -y mongodb
+    service mongodb stop
+    sed -i 's/bind_ip = 127.0.0.1/bind_ip = 0.0.0.0/' /etc/mongodb.conf
+    iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 27017
+    service mongodb start
+  SCRIPT
+  depends_on              = [google_project_service.all]
+}`,
+		},
+
+		{
+			Name: "client",
+			Kind: "managed",
+			Type: "google_compute_instance",
+			File: filepath.Join(
+				nosqltestdata,
+				"deploystack-nosql-client-server",
+				"terraform",
+				"main.tf",
+			),
+			Start: 136,
+			Text: `
+resource "google_compute_instance" "client" {
+  name         = "client"
+  zone         = var.zone
+  project      = var.project_id
+  machine_type = "e2-standard-2"
+  tags         = ["http-server", "https-server", "ssh-server"]
+  allow_stopping_for_update = true
+
+  boot_disk {
+    auto_delete = true
+    device_name = "client"
+    initialize_params {
+      image = "family/ubuntu-1804-lts"
+      size  = 10
+      type  = "pd-standard"
+    }
+  }
+  service_account {
+    scopes = ["https://www.googleapis.com/auth/logging.write"]
+  }
+
+  network_interface {
+    network = google_compute_network.main.name
+
+    access_config {
+      // Ephemeral public IP
+    }
+  }
+
+  metadata_startup_script = <<SCRIPT
+    add-apt-repository ppa:longsleep/golang-backports -y && \
+    apt update -y && \
+    apt install golang-go -y
+    mkdir /modcache
+    mkdir /go
+    mkdir /app && cd /app
+    curl https://raw.githubusercontent.com/GoogleCloudPlatform/golang-samples/main/compute/quickstart/compute_quickstart_sample.go --output main.go
+    go mod init exec
+    GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache go mod tidy
+    GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache go get -u 
+    sed -i 's/mongoport = "80"/mongoport = "27017"/' /app/main.go
+    echo "GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache HOST=${google_compute_instance.server.network_interface.0.network_ip} go run main.go"
+    GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache HOST=${google_compute_instance.server.network_interface.0.network_ip} go run main.go & 
+  SCRIPT
+
+  depends_on = [google_project_service.all]
+}`,
+		},
+
+		{
+			Name:  "project_id",
+			Kind:  "variable",
+			Type:  "string",
+			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+			Start: 17,
+			Text: `
+variable "project_id" {
+  type = string
+}`,
+		},
+
+		{
+			Name:  "project_number",
+			Kind:  "variable",
+			Type:  "string",
+			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+			Start: 21,
+			Text: `
+variable "project_number" {
+  type = string
+}`,
+		},
+
+		{
+			Name:  "zone",
+			Kind:  "variable",
+			Type:  "string",
+			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+			Start: 25,
+			Text: `
+variable "zone" {
+  type = string
+}`,
+		},
+
+		{
+			Name:  "region",
+			Kind:  "variable",
+			Type:  "string",
+			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+			Start: 29,
+			Text: `
+variable "region" {
+  type = string
+}`,
+		},
+
+		{
+			Name:  "basename",
+			Kind:  "variable",
+			Type:  "string",
+			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+			Start: 33,
+			Text: `
+variable "basename" {
+  type = string
+}`,
+		},
+
+		{
+			Name:  "gcp_service_list",
+			Kind:  "variable",
+			Type:  "list(string)",
+			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+			Start: 37,
+			Text: `
+variable "gcp_service_list" {
+  description = "The list of apis necessary for the project"
+  type        = list(string)
+  default = [
+    "compute.googleapis.com",
+  ]
+}`,
+		},
+	},
+}
 
 func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
@@ -472,6 +851,115 @@ func TestGetAcceptableDir(t *testing.T) {
 			got := UniquePath(tc.in)
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestNewMeta(t *testing.T) {
+	testdata := filepath.Join(testFilesDir, "reposformeta")
+
+	tests := map[string]struct {
+		path string
+		want Meta
+		err  error
+	}{
+		"deploystack-nosql-client-server": {
+			path: filepath.Join(testdata, "deploystack-nosql-client-server"),
+			want: nosqlMeta,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := NewMeta(tc.path)
+
+			got.Terraform.Sort()
+			tc.want.Terraform.Sort()
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected no error, got %s", err)
+			}
+
+			if !reflect.DeepEqual(tc.want, got) {
+
+				for i := range tc.want.Terraform {
+					fmt.Println(diff.Diff(
+						tc.want.Terraform[i].Text,
+						got.Terraform[i].Text,
+					))
+				}
+
+				fmt.Println(diff.Diff(
+					tc.want.DeployStack.Description,
+					got.DeployStack.Description,
+				))
+
+				diff := deep.Equal(tc.want, got)
+				t.Errorf("compare failed: %v", diff)
+			}
+		})
+	}
+}
+
+func TestSuggest(t *testing.T) {
+	tests := map[string]struct {
+		in   Meta
+		want config.Config
+		err  error
+	}{
+		"nosql-client-server": {
+			in: nosqlMeta,
+			want: config.Config{
+				Title:         "NOSQL CLIENT SERVER",
+				Name:          "nosql-client-server",
+				Duration:      5,
+				Project:       true,
+				ProjectNumber: true,
+				Region:        true,
+				RegionType:    "compute",
+				RegionDefault: "us-central1",
+				Zone:          true,
+				PathTerraform: "terraform",
+				PathMessages:  ".deploystack/messages",
+				PathScripts:   ".deploystack/scripts",
+
+				DocumentationLink: "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/nosql-client-server",
+				AuthorSettings: config.Settings{
+					{
+						Name:  "basename",
+						Value: "nosql-client-server",
+						Type:  "string",
+					},
+				},
+				Description: `This process will configure and create two Compute Engine instances:
+* Server - which will run mongodb
+* Client - which will run a custom go application that talks to mongo and then 
+           exposes an API where you consumne data from mongo`,
+				Products: []config.Product{
+					{Product: "Compute Engine"},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := tc.in.Suggest()
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected no error, got %s", err)
+			}
+
+			if !reflect.DeepEqual(tc.want, got) {
+
+				fmt.Println(diff.Diff(
+					tc.want.Description,
+					got.Description,
+				))
+
+				diff := deep.Equal(tc.want, got)
+				t.Errorf("compare failed: %v", diff)
 			}
 		})
 	}
