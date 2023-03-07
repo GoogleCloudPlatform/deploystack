@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.0](https://github.com/GoogleCloudPlatform/deploystack/compare/config/v1.8.0...config/v1.9.0) (2023-03-07)
+
+
+### Features
+
+* enabling better manipulation of product info ([2f08319](https://github.com/GoogleCloudPlatform/deploystack/commit/2f083198a2c89429a9ba7adc4911f36faef934ab))
+* moving config marshaling to the config package ([895da3e](https://github.com/GoogleCloudPlatform/deploystack/commit/895da3e0a0b42c6b27dbde647762490715f1e8de))
+
+
+### Bug Fixes
+
+* getting rid of unnecessary warnings ([772b53a](https://github.com/GoogleCloudPlatform/deploystack/commit/772b53a4125a4665d0467e2e76ddfd75cd885323))
+* improving algorithm for finding main.tf ([cce3479](https://github.com/GoogleCloudPlatform/deploystack/commit/cce34793e09b805d0f79e125f1ec5a7de9c05af9))
+* made path finding stuff work out of the box ([607e740](https://github.com/GoogleCloudPlatform/deploystack/commit/607e74096debdb5805f983b6add54fbec1cfef52))
+* making terraform finder not panic if there is no tf files. ([92ed7d4](https://github.com/GoogleCloudPlatform/deploystack/commit/92ed7d498810b929eb1bd05b43d0f4541efad230))
+* removed package dependencies on switching wd ([5240198](https://github.com/GoogleCloudPlatform/deploystack/commit/5240198f6ca467e8991e68686631395a2ceaac0c))
+
 ## [1.8.0](https://github.com/GoogleCloudPlatform/deploystack/compare/config/v1.5.1...config/v1.8.0) (2023-03-03)
 
 

@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.9.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.8.1...v1.9.0) (2023-03-07)
+
+
+### Features
+
+* adding ability to search terraform information. ([2f391f2](https://github.com/GoogleCloudPlatform/deploystack/commit/2f391f2d1cc84567c2a81a06064f56073ba4951a))
+* adding features for trying repos without configs ([fb1a58c](https://github.com/GoogleCloudPlatform/deploystack/commit/fb1a58c1fcd7e0a9692a8a36ca1f0e1933563f67))
+* adding suggested config capabilities to core ([c02bdfa](https://github.com/GoogleCloudPlatform/deploystack/commit/c02bdfa3b93b97add2c5f39d87eab045b20aef78))
+* adding the ability to sort Blocks ([ef6b8a2](https://github.com/GoogleCloudPlatform/deploystack/commit/ef6b8a24bbaa7f5f12517b54386345747f18f4f5))
+* enabling better manipulation of product info ([2f08319](https://github.com/GoogleCloudPlatform/deploystack/commit/2f083198a2c89429a9ba7adc4911f36faef934ab))
+* got docker version shell script working perfectly ([ce9a125](https://github.com/GoogleCloudPlatform/deploystack/commit/ce9a125e3eda9b19eba43fc5ae9e80584a9f0eb4))
+* moving config marshaling to the config package ([895da3e](https://github.com/GoogleCloudPlatform/deploystack/commit/895da3e0a0b42c6b27dbde647762490715f1e8de))
+
+
+### Bug Fixes
+
+* finding terraform now relies on main.tf files ([f5bf557](https://github.com/GoogleCloudPlatform/deploystack/commit/f5bf55777a92cd45eece41479862bd84748e13f7))
+* getting rid of unnecessary warnings ([772b53a](https://github.com/GoogleCloudPlatform/deploystack/commit/772b53a4125a4665d0467e2e76ddfd75cd885323))
+* improving algorithm for finding main.tf ([cce3479](https://github.com/GoogleCloudPlatform/deploystack/commit/cce34793e09b805d0f79e125f1ec5a7de9c05af9))
+* made path finding stuff work out of the box ([607e740](https://github.com/GoogleCloudPlatform/deploystack/commit/607e74096debdb5805f983b6add54fbec1cfef52))
+* making terraform finder not panic if there is no tf files. ([92ed7d4](https://github.com/GoogleCloudPlatform/deploystack/commit/92ed7d498810b929eb1bd05b43d0f4541efad230))
+* refactoring broke some uses of code in places. ([ea3bd24](https://github.com/GoogleCloudPlatform/deploystack/commit/ea3bd24331b5d60ef0aedd1246516bceab8fcff2))
+* removed package dependencies on switching wd ([5240198](https://github.com/GoogleCloudPlatform/deploystack/commit/5240198f6ca467e8991e68686631395a2ceaac0c))
+* removing terminal clear. it's user hostile and hurts debugging ([f413228](https://github.com/GoogleCloudPlatform/deploystack/commit/f413228530b001beb0deb28a8b71d7f1c822a725))
+* removing warnings for unrequired folders ([2d980c9](https://github.com/GoogleCloudPlatform/deploystack/commit/2d980c9b3b2531cb25408b43d9992475f6b7a308))
+
 ## [1.8.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.8.0...v1.8.1) (2023-03-04)
 
 

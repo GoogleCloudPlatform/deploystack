@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.0](https://github.com/GoogleCloudPlatform/deploystack/compare/terraform/v1.8.0...terraform/v1.9.0) (2023-03-07)
+
+
+### Features
+
+* adding ability to search terraform information. ([2f391f2](https://github.com/GoogleCloudPlatform/deploystack/commit/2f391f2d1cc84567c2a81a06064f56073ba4951a))
+* adding the ability to sort Blocks ([ef6b8a2](https://github.com/GoogleCloudPlatform/deploystack/commit/ef6b8a24bbaa7f5f12517b54386345747f18f4f5))
+
 ## [1.8.0](https://github.com/GoogleCloudPlatform/deploystack/compare/terraform/v1.6.1...terraform/v1.8.0) (2023-03-03)
 
 
