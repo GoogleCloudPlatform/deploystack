@@ -19,7 +19,6 @@ package deploystack
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -139,18 +138,14 @@ func NewMeta(path string) (Meta, error) {
 
 	s := config.NewStack()
 
-	if err := s.FindAndReadRequired(path); err != nil {
-		log.Printf("could not read config file: %s", err)
-	}
-	d.DeployStack = s.Config
-
-	b, err := terraform.Extract(s.Config.PathTerraform)
-	if err != nil {
-		log.Printf("couldn't extract from TF file: %s", err)
+	if err := s.FindAndReadRequired(path); err == nil {
+		d.DeployStack = s.Config
 	}
 
-	if b != nil {
-		d.Terraform = *b
+	if b, err := terraform.Extract(s.Config.PathTerraform); err != nil {
+		if b != nil {
+			d.Terraform = *b
+		}
 	}
 
 	return d, nil
