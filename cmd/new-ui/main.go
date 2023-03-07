@@ -33,7 +33,7 @@ func main() {
 
 	flag.Parse()
 
-	s, err := deploystack.Init()
+	s, err := deploystack.Init(".")
 	if err != nil {
 		log.Fatalf("could not read initialize deploystack: %s", err)
 	}

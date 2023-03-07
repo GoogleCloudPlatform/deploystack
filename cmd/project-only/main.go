@@ -28,7 +28,7 @@ import (
 func main() {
 	s := config.NewStack()
 
-	if err := s.FindAndReadRequired(); err != nil {
+	if err := s.FindAndReadRequired("."); err != nil {
 		log.Fatalf("could not read config file: %s", err)
 	}
 
