@@ -294,3 +294,62 @@ func UniquePath(candidate string) string {
 		i++
 	}
 }
+
+// AttemptRepo will try to download a repo - only from GoogleCloudPlatform. If
+// it fails, it will append "deploystack-" to the front of the requested name
+// and try again.
+func AttemptRepo(name, wd string) (string, github.Repo, error) {
+
+	gh := github.Repo{Name: name, Owner: "GoogleCloudPlatform", Branch: "main"}
+
+	dir, err := DownloadRepo(gh, wd)
+	if err != nil {
+		// This allows using a shortened name of the repo as the label here.
+		if !strings.Contains(gh.Name, "deploystack-") {
+			gh = github.Repo{Name: fmt.Sprintf("deploystack-%s", name), Owner: "GoogleCloudPlatform", Branch: "main"}
+			dir, err = DownloadRepo(gh, wd)
+		}
+	}
+	return dir, gh, err
+}
+
+// WriteConfig will drop a .deploystack folder with deploystack.yaml file for
+// repos that do not have one.
+func WriteConfig(dir string, gh github.Repo) error {
+	m, err := NewMeta(dir)
+	if err != nil {
+		tui.Fatal(err)
+	}
+
+	m.Github = gh
+
+	sb := strings.Builder{}
+	sb.WriteString("This DeployStack is running automatically based on our best guess\n")
+	sb.WriteString("of what the Terraform files present in the github repo you chose \n")
+	sb.WriteString("need in terms of input \n")
+	sb.WriteString("\n\n")
+	sb.WriteString("If you would like to see proper information, please file an issue at \n")
+	sb.WriteString(fmt.Sprintf("%s/issues", gh.URL()))
+	m.DeployStack.Description = sb.String()
+
+	config, err := m.Suggest()
+	if err != nil {
+		return fmt.Errorf("could not make suggestion based on repo: %s", err)
+	}
+
+	configyaml, err := config.Marshal("yaml")
+	if err != nil {
+		return fmt.Errorf("could turn suggestions into yaml: %s", err)
+	}
+
+	target := fmt.Sprintf("%s/.deploystack", dir)
+	if _, err := os.Stat(target); os.IsNotExist(err) {
+		os.MkdirAll(target+"/messages", 0700)
+		err := os.WriteFile(target+"/deploystack.yaml", []byte(configyaml), 0644)
+		if err != nil {
+			return fmt.Errorf("could not write suggestions down as config: %s", err)
+		}
+	}
+
+	return nil
+}
