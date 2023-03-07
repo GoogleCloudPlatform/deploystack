@@ -104,8 +104,6 @@ func TestConfig(t *testing.T) {
 				t.Fatalf("could not read config file: %s", err)
 			}
 
-			t.Logf("stack := %+v", s)
-
 			dat, err := os.ReadFile(descPath)
 			if err != nil {
 				t.Fatalf("could not read description file: %s", err)
