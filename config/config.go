@@ -40,10 +40,8 @@ type Config struct {
 	PathMessages         string            `json:"path_messages" yaml:"path_messages"`
 	PathScripts          string            `json:"path_scripts" yaml:"path_scripts"`
 	Projects             Projects          `json:"projects" yaml:"projects"`
-	Products             []struct {
-		Info    string `json:"info" yaml:"info"`
-		Product string `json:"product" yaml:"product"`
-	} `json:"products" yaml:"products"`
+	Products             []Product         `json:"products" yaml:"products"`
+	wd                   string
 }
 
 func (c *Config) convertHardset() {
@@ -52,6 +50,71 @@ func (c *Config) convertHardset() {
 	}
 	// Blow hardset away so that if anywhere is looking for them, it fails.
 	c.HardSet = nil
+}
+
+func (c *Config) Getwd() string {
+	return c.wd
+}
+
+func (c *Config) Setwd(wd string) {
+	c.wd = wd
+}
+
+// Copy produces a copy of a config file for manipulating it without changing
+// the original
+func (c Config) Copy() Config {
+	out := Config{}
+	out.wd = c.wd
+	out.Name = c.Name
+	out.Title = c.Title
+	out.Project = c.Project
+	out.ProjectNumber = c.ProjectNumber
+	out.Region = c.Region
+	out.RegionType = c.RegionType
+	out.RegionDefault = c.RegionDefault
+	out.Zone = c.Zone
+	out.Description = c.Description
+	out.Duration = c.Duration
+	out.DocumentationLink = c.DocumentationLink
+	out.Domain = c.Domain
+	out.ConfigureGCEInstance = c.ConfigureGCEInstance
+	out.PathTerraform = c.PathTerraform
+	out.PathMessages = c.PathMessages
+	out.PathScripts = c.PathScripts
+
+	for _, v := range c.AuthorSettings {
+		out.AuthorSettings.AddComplete(v)
+	}
+
+	for _, v := range c.CustomSettings {
+		out.CustomSettings = append(out.CustomSettings, v)
+	}
+
+	for _, v := range c.Products {
+		out.Products = append(out.Products, v)
+	}
+
+	return out
+}
+
+// Marshal returns a string representation in format `json` or `yaml`
+func (c Config) Marshal(format string) ([]byte, error) {
+
+	if format == "yaml" {
+		out, err := yaml.Marshal(&c)
+		if err != nil {
+			return nil, fmt.Errorf("cannot export test: %s", err)
+		}
+
+		return out, nil
+	}
+
+	out, err := json.MarshalIndent(&c, "", "\t")
+	if err != nil {
+		return nil, fmt.Errorf("cannot export test: %s", err)
+	}
+
+	return out, nil
 }
 
 func (c *Config) defaultAuthorSettings() {
@@ -73,8 +136,8 @@ func (c *Config) GetAuthorSettings() Settings {
 
 // ComputeName uses the git repo in the working directory to compute the
 // shortname for the application.
-func (c *Config) ComputeName() error {
-	repo, err := git.PlainOpen(".")
+func (c *Config) ComputeName(path string) error {
+	repo, err := git.PlainOpen(path)
 	if err != nil {
 		return fmt.Errorf("could not open local git directory: %s", err)
 	}
@@ -129,6 +192,12 @@ func NewConfigYAML(content []byte) (Config, error) {
 	}
 
 	return result, nil
+}
+
+// Product is some info about a GCP product
+type Product struct {
+	Info    string `json:"info" yaml:"info"`
+	Product string `json:"product" yaml:"product"`
 }
 
 // Project represets a GCP project for use in a stack
@@ -286,7 +355,7 @@ func (s *Settings) Find(key string) *Setting {
 // Custom represents a custom setting that we would like to collect from a user
 // We will collect these settings from the user before continuing.
 type Custom struct {
-	Setting
+	Setting        `json:"-"  yaml:"-"`
 	Name           string   `json:"name"  yaml:"name"`
 	Description    string   `json:"description"  yaml:"description"`
 	Default        string   `json:"default"  yaml:"default"`

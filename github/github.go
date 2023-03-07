@@ -70,20 +70,17 @@ func (r Repo) Path(path string) string {
 
 // Clone performs a git clone to the directory of our choosing
 func (r Repo) Clone(path string) error {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		_, err = git.PlainClone(
-			path,
-			false,
-			&git.CloneOptions{
-				URL:           r.URL(),
-				ReferenceName: plumbing.ReferenceName(r.ReferenceName()),
-				Progress:      nil,
-			})
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		return fmt.Errorf("directory (%s) already exists", path)
+	}
 
-		if err != nil {
-			return fmt.Errorf("cannot get repo (%s) : %s", r.URL(), err)
-		}
+	options := &git.CloneOptions{
+		URL:           r.URL(),
+		ReferenceName: plumbing.ReferenceName(r.ReferenceName()),
+	}
 
+	if _, err := git.PlainClone(path, false, options); err != nil {
+		return fmt.Errorf("cannot get repo (%s) : %s", r.URL(), err)
 	}
 
 	return nil

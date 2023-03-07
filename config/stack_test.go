@@ -65,16 +65,11 @@ func TestFindAndReadConfig(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			if err := os.Chdir(fmt.Sprintf("%s/%s", testdata, tc.pwd)); err != nil {
-				if tc.err == nil {
-					t.Fatalf("failed to set the wd: %v", err)
-				}
-				t.SkipNow()
-			}
+			path := fmt.Sprintf("%s/%s", testdata, tc.pwd)
 
 			s := NewStack()
 
-			if _, err := s.findAndReadConfig(); err != nil {
+			if _, err := s.findAndReadConfig(path); err != nil {
 				if tc.err == nil {
 					t.Fatalf("could not read config file: %s", err)
 				}
@@ -84,18 +79,11 @@ func TestFindAndReadConfig(t *testing.T) {
 			}
 
 		})
-		if err := os.Chdir(wd); err != nil {
-			t.Errorf("failed to reset the wd: %v", err)
-		}
 	}
 }
 
 func TestFindTFFolder(t *testing.T) {
-	wd, err := filepath.Abs(".")
-	if err != nil {
-		t.Fatalf("error setting up environment for testing %v", err)
-	}
-	testdata := fmt.Sprintf("%s/test_files/terraform", wd)
+	testdata := filepath.Join(testFilesDir, "terraform")
 	tests := map[string]struct {
 		in   string
 		want string
@@ -117,19 +105,11 @@ func TestFindTFFolder(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			oldWD, err := os.Getwd()
-			if err != nil {
-				t.Fatalf("expected no error, got: %+v", err)
-			}
-
-			if err := os.Chdir(fmt.Sprintf("%s/%s", testdata, tc.in)); err != nil {
-				t.Fatalf("expected no error, got: %+v", err)
-			}
-			defer os.Chdir(oldWD)
+			path := fmt.Sprintf("%s/%s", testdata, tc.in)
 
 			stack := NewStack()
 
-			got, err := stack.findTFFolder(stack.Config)
+			got, err := stack.findTFFolder(path)
 
 			if tc.err == nil && err != nil {
 				t.Fatalf("expected no error, got: %+v", err)
@@ -143,7 +123,7 @@ func TestFindTFFolder(t *testing.T) {
 }
 
 func TestFindAndReadRequired(t *testing.T) {
-	testdata := "test_files/configs"
+	testdata := filepath.Join(testFilesDir, "configs")
 
 	tests := map[string]struct {
 		pwd       string
@@ -167,46 +147,30 @@ func TestFindAndReadRequired(t *testing.T) {
 			terraform: "terraform",
 			scripts:   ".deploystack/scripts",
 			messages:  ".deploystack/messages"},
-
-		"Configed": {
-			pwd:       "configed",
-			terraform: "tf",
-			scripts:   "ds/scripts",
-			messages:  "ds/messages"},
-	}
-
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("error setting up environment for testing %v", err)
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			if err := os.Chdir(fmt.Sprintf("%s/%s", testdata, tc.pwd)); err != nil {
-				t.Fatalf("failed to set the wd: %v", err)
-			}
+			path := fmt.Sprintf("%s/%s", testdata, tc.pwd)
 
 			s := NewStack()
 
-			if err := s.FindAndReadRequired(); err != nil {
-				t.Fatalf("could not read config file: %s", err)
+			if err := s.FindAndReadRequired(path); err != nil {
+				t.Errorf("could not read config file: %s", err)
 			}
 
 			if !reflect.DeepEqual(tc.terraform, s.Config.PathTerraform) {
-				t.Fatalf("expected: %s, got: %s", tc.terraform, s.Config.PathTerraform)
+				t.Errorf("expected: %s, got: %s", tc.terraform, s.Config.PathTerraform)
 			}
 
 			if !reflect.DeepEqual(tc.scripts, s.Config.PathScripts) {
-				t.Fatalf("expected: %s, got: %s", tc.scripts, s.Config.PathScripts)
+				t.Errorf("expected: %s, got: %s", tc.scripts, s.Config.PathScripts)
 			}
 
 			if !reflect.DeepEqual(tc.messages, s.Config.PathMessages) {
-				t.Fatalf("expected: %s, got: %s", tc.messages, s.Config.PathMessages)
+				t.Errorf("expected: %s, got: %s", tc.messages, s.Config.PathMessages)
 			}
 		})
-		if err := os.Chdir(wd); err != nil {
-			t.Errorf("failed to reset the wd: %v", err)
-		}
 	}
 }
 
@@ -294,21 +258,22 @@ func TestTerraformFile(t *testing.T) {
 		want     error
 	}{
 		"Ok": {
-			filename: "test_files/file/shouldwork.txt",
+			filename: "file/shouldwork.txt",
 			want:     nil,
 		},
 		"fail": {
-			filename: "test_files/file/shouldwork/dir.txt",
-			want:     errors.New("open test_files/file/shouldwork/dir.txt: no such file or directory"),
+			filename: "file/shouldwork/dir.txt",
+			want:     errors.New("test_files/file/shouldwork/dir.txt: no such file or directory"),
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			testfile := filepath.Join(testFilesDir, tc.filename)
 			s := NewStack()
 
-			got := s.TerraformFile(tc.filename)
-			os.Remove(tc.filename)
+			got := s.TerraformFile(testfile)
+			os.Remove(testfile)
 			if tc.want == nil {
 				if got != nil {
 					t.Fatalf("expected: no error got: %+v", got)

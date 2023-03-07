@@ -26,7 +26,7 @@ func main() {
 		tui.Fatal(err)
 	}
 
-	s, err := deploystack.Init()
+	s, err := deploystack.Init(".")
 	if err != nil {
 		tui.Fatal(err)
 	}

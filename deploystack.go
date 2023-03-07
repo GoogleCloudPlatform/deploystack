@@ -17,8 +17,8 @@
 package deploystack
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,8 +28,9 @@ import (
 	"github.com/GoogleCloudPlatform/deploystack/github"
 	"github.com/GoogleCloudPlatform/deploystack/terraform"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"google.golang.org/api/option"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -40,19 +41,20 @@ var (
 )
 
 // Init initializes a Deploystack stack by looking on teh local file system
-func Init() (*config.Stack, error) {
+func Init(path string) (*config.Stack, error) {
 	s := config.NewStack()
 
-	if err := s.FindAndReadRequired(); err != nil {
+	if err := s.FindAndReadRequired(path); err != nil {
 		return &s, fmt.Errorf("could not read config file: %s", err)
 	}
 
 	if s.Config.Name == "" {
-		if err := s.Config.ComputeName(); err != nil {
+		if err := s.Config.ComputeName(path); err != nil {
 			return &s, fmt.Errorf("could not retrieve name of stack: %s \nDeployStack author: fix this by adding a 'name' key and value to the deploystack config", err)
 		}
 		s.AddSetting("stack_name", s.Config.Name)
 	}
+	s.Config.Setwd(path)
 
 	return &s, nil
 }
@@ -80,59 +82,43 @@ func Precheck() error {
 	return nil
 }
 
-// NewContactDataFromFile generates a new ContactData from a cached yaml file
-func NewContactDataFromFile(file string) (gcloud.ContactData, error) {
-	c := gcloud.NewContactData()
-
-	dat, err := os.ReadFile(file)
-	if err != nil {
-		return c, err
-	}
-
-	err = yaml.Unmarshal(dat, &c)
-
-	if err != nil {
-		return c, err
-	}
-
-	return c, nil
-}
-
-// CheckForContact checks the local file system for a file containg domain
+// ContactCheck checks the local file system for a file containg domain
 // registar contact info
-func CheckForContact() gcloud.ContactData {
+func ContactCheck() gcloud.ContactData {
 	contact := gcloud.ContactData{}
 	if _, err := os.Stat(contactfile); err == nil {
-		contact, err = NewContactDataFromFile(contactfile)
+		f, err := os.Open(contactfile)
 		if err != nil {
-			log.Printf("domain registrar contact not cached")
+			return contact
+		}
+
+		if _, err = contact.ReadFrom(f); err != nil {
+			return contact
 		}
 	}
 	return contact
 }
 
-// CacheContact writes a file containg domain registar contact info to disk
+// ContactSave writes a file containg domain registar contact info to disk
 // if it exists
-func CacheContact(i interface{}) {
+func ContactSave(i interface{}) {
+	// We can ignore errors - this is an convenience to the user
+	// not a necessity
 	switch v := i.(type) {
-
-	// If anything goes wrong with this, it's fine, this is a convenience
-	// for the next time someone runs this.
 	case gcloud.ContactData:
 		if v.AllContacts.Email == "" {
 			return
 		}
 
-		if v.AllContacts.Email != "" {
-			yaml, err := v.YAML()
-			if err != nil {
-				return
-			}
-
-			if err := os.WriteFile(contactfile, []byte(yaml), 0o644); err != nil {
-				return
-			}
+		f, err := os.Create(contactfile)
+		if err != nil {
+			return
 		}
+
+		if _, err := v.WriteTo(f); err != nil {
+			return
+		}
+
 	}
 }
 
@@ -145,83 +131,150 @@ type Meta struct {
 	LocalPath   string           `json:"localpath" yaml:"localpath"`
 }
 
-// NewMeta downloads a github repo and parses the DeployStack and Terraform
-// information from the stack.
-func NewMeta(repo, path, dspath string) (Meta, error) {
-	g := github.NewRepo(repo)
-
-	log.Printf("cloning to path: %s", path)
-	if err := g.Clone(g.Path(path)); err != nil {
-		return Meta{}, fmt.Errorf("cannot clone repo: %s", err)
-	}
-
-	d, err := NewMetaFromLocal(g.Path(path) + dspath)
-	if err != nil {
-		return Meta{}, fmt.Errorf("cannot parse deploystack into: %s", err)
-	}
-	d.Github = g
-	d.LocalPath = g.Path(path)
-
-	return d, nil
-}
-
-// NewMetaFromLocal allows project to point at local directories for info
+// NewMeta allows project to point at local directories for info
 // as well as pulling down from github
-func NewMetaFromLocal(path string) (Meta, error) {
+func NewMeta(path string) (Meta, error) {
 	d := Meta{}
-	orgpwd, err := os.Getwd()
-	if err != nil {
-		return d, fmt.Errorf("could not get the wd: %s", err)
-	}
-	if err := os.Chdir(path); err != nil {
-		return d, fmt.Errorf("could not change the wd: %s", err)
-	}
 
 	s := config.NewStack()
 
-	if err := s.FindAndReadRequired(); err != nil {
-		log.Printf("could not read config file: %s", err)
+	if err := s.FindAndRead(path, false); err == nil {
+		d.DeployStack = s.Config
 	}
 
-	b, err := terraform.Extract(s.Config.PathTerraform)
-	if err != nil {
-		log.Printf("couldn't extract from TF file: %s", err)
+	tfPath := filepath.Join(path, s.Config.PathTerraform)
+	if b, err := terraform.Extract(tfPath); err == nil {
+
+		if b != nil {
+			d.Terraform = *b
+		}
 	}
 
-	if b != nil {
-		d.Terraform = *b
-	}
-
-	d.DeployStack = s.Config
-
-	if err := os.Chdir(orgpwd); err != nil {
-		return d, fmt.Errorf("could not change the wd back: %s", err)
-	}
 	return d, nil
 }
 
 // ShortName retrieves the shortname of whatever we are calling this stack
-func (d Meta) ShortName() string {
-	r := filepath.Base(d.Github.Name)
+func (m Meta) ShortName() string {
+	r := filepath.Base(m.Github.Name)
 	r = strings.ReplaceAll(r, "deploystack-", "")
 	return r
 }
 
 // ShortNameUnderscore retrieves the shortname of whatever we are calling
 // this stack replacing hyphens with underscores
-func (d Meta) ShortNameUnderscore() string {
-	r := d.ShortName()
+func (m Meta) ShortNameUnderscore() string {
+	r := m.ShortName()
 	r = strings.ReplaceAll(r, "-", "_")
 	return r
+}
+
+// Suggest will provide it's best guess of what the deploystack config should
+// be based on the contents of the repo, including an existing deploystack config
+func (m Meta) Suggest() (config.Config, error) {
+	out := m.DeployStack.Copy()
+
+	name := filepath.Base(m.Github.URL())
+	name = strings.ReplaceAll(name, "deploystack-", "")
+	title := strings.ReplaceAll(name, "-", " ")
+	caser := cases.Title(language.AmericanEnglish)
+	title = caser.String(title)
+
+	if m.DeployStack.Name == "" {
+		out.Name = name
+	}
+
+	if m.DeployStack.Title == "" {
+		out.Title = title
+	}
+
+	if len(m.Terraform) == 0 {
+		return out, errors.New("suggest: terraform was empty")
+	}
+
+	if m.DeployStack.PathTerraform == "" {
+		out.PathTerraform = filepath.Dir(m.Terraform[0].File)
+	}
+
+	resources, err := terraform.NewGCPResources()
+	if err != nil {
+		return out, fmt.Errorf("could not get terraform resource meta data: %w", err)
+	}
+
+	for _, v := range m.Terraform {
+		switch v.Kind {
+		case "variable":
+			// For now if there are default values, don't bother capturing
+			if !v.NoDefault() {
+				continue
+			}
+
+			switch v.Name {
+			case "project_id":
+				out.Project = true
+			case "project_number":
+				out.ProjectNumber = true
+			case "billing_account":
+				out.BillingAccount = true
+			case "region":
+				out.RegionDefault = "us-central1"
+				out.Region = true
+				out.RegionType = "compute"
+
+				if r := m.Terraform.Search("google_cloud_run", "type"); len(r) > 0 {
+					out.RegionType = "run"
+				}
+
+				if r := m.Terraform.Search("google_cloudfunctions", "type"); len(r) > 0 {
+					out.RegionType = "functions"
+				}
+
+			case "zone":
+				out.Zone = true
+			default:
+				checkCustom := out.CustomSettings.Get(v.Name)
+				checkAuthor := out.AuthorSettings.Find(v.Name)
+
+				if checkCustom.Name == "" && checkAuthor == nil {
+					cust := config.Custom{}
+					cust.Name = v.Name
+					cust.Type = v.Type
+					out.CustomSettings = append(out.CustomSettings, cust)
+				}
+
+			}
+		case "managed":
+			product := resources.GetProduct(v.Type)
+
+			if product == "" {
+				continue
+			}
+
+			add := true
+			for _, v := range out.Products {
+				if v.Product == product {
+					add = false
+					break
+				}
+			}
+
+			if add {
+				p := config.Product{Product: product}
+				out.Products = append(out.Products, p)
+			}
+
+		}
+	}
+
+	return out, nil
 }
 
 // DownloadRepo takes a name of a GoogleCloudPlatform repo or a
 // GoogleCloudPlatform/deploystack-[name] repo, and downloads it into a unique
 // folder name, and outputs that name
-func DownloadRepo(name, path string) (string, error) {
-	candidate := fmt.Sprintf("%s/%s", path, name)
+func DownloadRepo(repo github.Repo, path string) (string, error) {
+	candidate := fmt.Sprintf("%s/%s", path, repo.Name)
 	dir := UniquePath(candidate)
-	return dir, CloneByName(name, dir)
+	return dir, repo.Clone(dir)
 
 }
 
@@ -242,21 +295,61 @@ func UniquePath(candidate string) string {
 	}
 }
 
-// CloneByName clones a github repo owned by GoogleCloudPlatform just by the
-// name of the repo, if it fails and the repo name does not have "deploystack-"
-// in it, it will try adding it, so that short names will work.
-func CloneByName(name, path string) error {
+// AttemptRepo will try to download a repo - only from GoogleCloudPlatform. If
+// it fails, it will append "deploystack-" to the front of the requested name
+// and try again.
+func AttemptRepo(name, wd string) (string, github.Repo, error) {
+
 	gh := github.Repo{Name: name, Owner: "GoogleCloudPlatform", Branch: "main"}
 
-	err := gh.Clone(path)
+	dir, err := DownloadRepo(gh, wd)
 	if err != nil {
 		// This allows using a shortened name of the repo as the label here.
-		if !strings.Contains(name, "deploystack-") {
-			gh.Name = fmt.Sprintf("deploystack-%s", name)
-			err = gh.Clone(path)
+		if !strings.Contains(gh.Name, "deploystack-") {
+			gh = github.Repo{Name: fmt.Sprintf("deploystack-%s", name), Owner: "GoogleCloudPlatform", Branch: "main"}
+			dir, err = DownloadRepo(gh, wd)
+		}
+	}
+	return dir, gh, err
+}
+
+// WriteConfig will drop a .deploystack folder with deploystack.yaml file for
+// repos that do not have one.
+func WriteConfig(dir string, gh github.Repo) error {
+	m, err := NewMeta(dir)
+	if err != nil {
+		tui.Fatal(err)
+	}
+
+	m.Github = gh
+
+	sb := strings.Builder{}
+	sb.WriteString("This DeployStack is running automatically based on our best guess\n")
+	sb.WriteString("of what the Terraform files present in the github repo you chose \n")
+	sb.WriteString("need in terms of input \n")
+	sb.WriteString("\n\n")
+	sb.WriteString("If you would like to see proper information, please file an issue at \n")
+	sb.WriteString(fmt.Sprintf("%s/issues", gh.URL()))
+	m.DeployStack.Description = sb.String()
+
+	config, err := m.Suggest()
+	if err != nil {
+		return fmt.Errorf("could not make suggestion based on repo: %s", err)
+	}
+
+	configyaml, err := config.Marshal("yaml")
+	if err != nil {
+		return fmt.Errorf("could turn suggestions into yaml: %s", err)
+	}
+
+	target := fmt.Sprintf("%s/.deploystack", dir)
+	if _, err := os.Stat(target); os.IsNotExist(err) {
+		os.MkdirAll(target+"/messages", 0700)
+		err := os.WriteFile(target+"/deploystack.yaml", []byte(configyaml), 0644)
+		if err != nil {
+			return fmt.Errorf("could not write suggestions down as config: %s", err)
 		}
 	}
 
-	return err
-
+	return nil
 }

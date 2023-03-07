@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
+	"io"
 	"text/template"
 
 	domains "cloud.google.com/go/domains/apiv1beta1"
@@ -62,6 +62,28 @@ func (c *Client) getDomainsClient(project string) (*domains.Client, error) {
 // Data
 type ContactData struct {
 	AllContacts DomainRegistrarContact `yaml:"allContacts"`
+}
+
+// WriteTo writes the content of ContactData to a writer
+func (c ContactData) WriteTo(w io.Writer) (int64, error) {
+	yaml, err := c.YAML()
+	if err != nil {
+		return 0, fmt.Errorf("contactdata.writeto: cannot convert to yaml: %w", err)
+	}
+
+	result, err := w.Write([]byte(yaml))
+	if err != nil {
+		return 0, fmt.Errorf("contactdata.writeto: cannot write %w", err)
+	}
+
+	return int64(result), nil
+}
+
+// ReadFrom populates the content of ContactData from a reader
+func (c *ContactData) ReadFrom(r io.Reader) (int64, error) {
+	dat, err := io.ReadAll(r)
+	err = yaml.Unmarshal(dat, c)
+	return 0, err
 }
 
 // DomainRegistrarContact represents the data required to register a domain
@@ -144,22 +166,6 @@ func newContactData() ContactData {
 	d.PostalAddress.Recipients = []string{}
 	c.AllContacts = d
 	return c
-}
-
-func newContactDataFromFile(file string) (ContactData, error) {
-	c := newContactData()
-
-	dat, err := os.ReadFile(file)
-	if err != nil {
-		return c, err
-	}
-
-	err = yaml.Unmarshal(dat, &c)
-	if err != nil {
-		return c, err
-	}
-
-	return c, nil
 }
 
 // DomainsSearch checks the Cloud Domain api for the input domain

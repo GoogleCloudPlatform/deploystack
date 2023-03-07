@@ -19,7 +19,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -67,15 +66,26 @@ func main() {
 			tui.Fatal(err)
 		}
 
-		dir, err := deploystack.DownloadRepo(*repo, wd)
+		dir, gh, err := deploystack.AttemptRepo(*repo, wd)
+
 		if err != nil {
 			tui.Fatal(err)
 		}
-		if _, err := os.Stat(dir); os.IsNotExist(err) {
+
+		dir = strings.ReplaceAll(dir, "//", "/")
+
+		// If init works, that means there is a valid deploystack config here
+		// exit, and let the hosting script rerun itself
+		if _, err = deploystack.Init(dir); err == nil {
+			fmt.Printf("%s\n", dir)
+			return
+		}
+
+		if err := deploystack.WriteConfig(dir, gh); err != nil {
 			tui.Fatal(err)
 		}
 
-		fmt.Printf("%s\n", strings.ReplaceAll(dir, "//", "/"))
+		fmt.Printf("%s\n", dir)
 		return
 	}
 
@@ -84,9 +94,14 @@ func main() {
 		tui.Fatal(err)
 	}
 
-	s, err := deploystack.Init()
+	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("could not read initialize deploystack: %s", err)
+		tui.Fatal(err)
+	}
+
+	s, err := deploystack.Init(wd)
+	if err != nil {
+		tui.Fatal(fmt.Errorf("could not initalizze: %s", err))
 	}
 
 	if *verify {

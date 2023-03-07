@@ -16,6 +16,7 @@ package gcloud
 
 import (
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"sort"
@@ -57,7 +58,9 @@ func TestGenerateFunctionSignedURL(t *testing.T) {
 func TestGetFunctionRegions(t *testing.T) {
 	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
-	fRegions, err := regionsListHelper("test_files/gcloudout/regions_functions.txt")
+	f := filepath.Join(testFilesDir, "gcloudout/regions_functions.txt")
+
+	fRegions, err := regionsListHelper(f)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}

@@ -15,6 +15,7 @@
 package gcloud
 
 import (
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -104,14 +105,15 @@ func TestGetProjects(t *testing.T) {
 	tests := map[string]struct {
 		filepath string
 	}{
-		"1": {filepath: "../test_files/gcloudout/projects.txt"},
+		"1": {filepath: "gcloudout/projects.txt"},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got, err := c.ProjectList()
 
-			raw := readTestFile(tc.filepath)
+			f := filepath.Join(testFilesDir, tc.filepath)
+			raw := readTestFile(f)
 			want := strings.Split(strings.TrimSpace(raw), "\n")
 
 			gotfiltered := []string{}

@@ -9,7 +9,10 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
+	"github.com/kylelemons/godebug/diff"
 )
+
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
 
 func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
@@ -90,24 +93,18 @@ func TestConfig(t *testing.T) {
 		},
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("error setting up environment for testing %v", err)
-	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			if err := os.Chdir(fmt.Sprintf("%s/%s", testdata, tc.pwd)); err != nil {
-				t.Fatalf("failed to set the wd: %v", err)
-			}
+			path := fmt.Sprintf("%s/%s", testdata, tc.pwd)
+			descPath := filepath.Join(path, tc.descPath)
 
 			s := NewStack()
 
-			if err := s.FindAndReadRequired(); err != nil {
+			if err := s.FindAndReadRequired(path); err != nil {
 				t.Fatalf("could not read config file: %s", err)
 			}
 
-			dat, err := os.ReadFile(tc.descPath)
+			dat, err := os.ReadFile(descPath)
 			if err != nil {
 				t.Fatalf("could not read description file: %s", err)
 			}
@@ -119,9 +116,6 @@ func TestConfig(t *testing.T) {
 				// t.Fatalf("expected: \n%+v, \ngot: \n%+v", tc.want, s.Config)
 			}
 		})
-		if err := os.Chdir(wd); err != nil {
-			t.Errorf("failed to reset the wd: %v", err)
-		}
 	}
 }
 
@@ -172,32 +166,27 @@ func TestComputeNames(t *testing.T) {
 		err   error
 	}{
 		"http": {
-			"../test_files/computenames_repos/deploystack-single-vm",
+			"computenames_repos/deploystack-single-vm",
 			"single-vm",
 			nil,
 		},
 		"ssh": {
-			"../test_files/computenames_repos/deploystack-gcs-to-bq-with-least-privileges",
+			"computenames_repos/deploystack-gcs-to-bq-with-least-privileges",
 			"gcs-to-bq-with-least-privileges",
 			nil,
 		},
 		"nogit": {
-			"../test_files/computenames_repos/folder-no-git",
+			"computenames_repos/folder-no-git",
 			"",
 			fmt.Errorf("could not open local git directory: repository does not exist"),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			oldWD, _ := os.Getwd()
-			os.Chdir(tc.input)
-			defer os.Chdir(oldWD)
-
+			testdata := filepath.Join(testFilesDir, tc.input)
 			s := NewStack()
-			s.FindAndReadRequired()
-			err := s.Config.ComputeName()
-
-			os.Chdir(oldWD)
+			s.FindAndReadRequired(testdata)
+			err := s.Config.ComputeName(testdata)
 
 			if !(tc.err == nil && err == nil) {
 				if errors.Is(tc.err, err) {
@@ -286,18 +275,14 @@ func TestReadConfig(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			s := NewStack()
-			oldWD, _ := os.Getwd()
-			os.Chdir(tc.path)
 
-			err := s.FindAndReadRequired()
+			err := s.FindAndReadRequired(tc.path)
 
 			if errors.Is(err, tc.err) {
 				if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 					t.Fatalf("expected: error(%s) got: error(%s)", tc.err, err)
 				}
 			}
-
-			os.Chdir(oldWD)
 
 			compareValues("Title", tc.want.Config.Title, s.Config.Title, t)
 			compareValues("Description", tc.want.Config.Description, s.Config.Description, t)
@@ -625,6 +610,303 @@ func TestFindConfigReports(t *testing.T) {
 
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestConfigCopy(t *testing.T) {
+	tests := map[string]struct {
+		in   Config
+		want Config
+	}{
+		"empty": {
+			in:   Config{},
+			want: Config{},
+		},
+		"full": {
+			in: Config{
+				Title:          "TESTCONFIG",
+				Description:    "A test string for usage with this stuff.",
+				Duration:       5,
+				Project:        true,
+				ProjectNumber:  true,
+				Region:         true,
+				BillingAccount: false,
+				RegionType:     "run",
+				RegionDefault:  "us-central1",
+				Zone:           true,
+				PathTerraform:  "terraform",
+				PathMessages:   ".deploystack/messages",
+				PathScripts:    ".deploystack/scripts",
+				CustomSettings: []Custom{
+					{
+						Name:        "nodes",
+						Description: "Nodes",
+						Default:     "3"},
+					{
+						Name:        "nodes2",
+						Description: "Nodes",
+						Default:     "3",
+						Options:     []string{"1", "2", "3"},
+					},
+				},
+				AuthorSettings: Settings{
+					{Name: "basename", Value: "basename", Type: "string"},
+				},
+				Products: []Product{
+					{Info: "A VM", Product: "Compute Engine"},
+				},
+			},
+
+			want: Config{
+				Title:          "TESTCONFIG",
+				Description:    "A test string for usage with this stuff.",
+				Duration:       5,
+				Project:        true,
+				ProjectNumber:  true,
+				Region:         true,
+				BillingAccount: false,
+				RegionType:     "run",
+				RegionDefault:  "us-central1",
+				Zone:           true,
+				PathTerraform:  "terraform",
+				PathMessages:   ".deploystack/messages",
+				PathScripts:    ".deploystack/scripts",
+				CustomSettings: []Custom{
+					{
+						Name:        "nodes",
+						Description: "Nodes",
+						Default:     "3"},
+					{
+						Name:        "nodes2",
+						Description: "Nodes",
+						Default:     "3",
+						Options:     []string{"1", "2", "3"},
+					},
+				},
+				AuthorSettings: Settings{
+					{Name: "basename", Value: "basename", Type: "string"},
+				},
+				Products: []Product{
+					{Info: "A VM", Product: "Compute Engine"},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.in.Copy()
+			if !reflect.DeepEqual(tc.want, got) {
+				wantYAML, err := tc.want.Marshal("yaml")
+				if err != nil {
+					t.Fatalf("couldn't even marshall the wanted result: %s", err)
+				}
+
+				gotYaml, err := got.Marshal("yaml")
+				if err != nil {
+					t.Fatalf("couldn't even marshall the gotten result: %s", err)
+				}
+
+				fmt.Println(diff.Diff(string(wantYAML), string(gotYaml)))
+				t.Fatalf("objects didn't match")
+			}
+		})
+	}
+}
+
+func TestConfigMarshall(t *testing.T) {
+	tests := map[string]struct {
+		in     Config
+		format string
+		want   string
+	}{
+		"yaml": {
+			format: "yaml",
+			in: Config{
+				Title:          "TESTCONFIG",
+				Description:    "A test string for usage with this stuff.",
+				Duration:       5,
+				Project:        true,
+				ProjectNumber:  true,
+				Region:         true,
+				BillingAccount: false,
+				RegionType:     "run",
+				RegionDefault:  "us-central1",
+				Zone:           true,
+				PathTerraform:  "terraform",
+				PathMessages:   ".deploystack/messages",
+				PathScripts:    ".deploystack/scripts",
+				CustomSettings: []Custom{
+					{
+						Name:        "nodes",
+						Description: "Nodes",
+						Default:     "3"},
+					{
+						Name:        "nodes2",
+						Description: "Nodes",
+						Default:     "3",
+						Options:     []string{"1", "2", "3"},
+					},
+				},
+				AuthorSettings: Settings{
+					{Name: "basename", Value: "basename", Type: "string"},
+				},
+				Products: []Product{
+					{Info: "A VM", Product: "Compute Engine"},
+				},
+			},
+			want: `title: TESTCONFIG
+name: ""
+description: A test string for usage with this stuff.
+duration: 5
+collect_project: true
+collect_project_number: true
+collect_billing_account: false
+register_domain: false
+collect_region: true
+region_type: run
+region_default: us-central1
+collect_zone: true
+hard_settings: {}
+custom_settings:
+- name: nodes
+  description: Nodes
+  default: "3"
+  options: []
+  prepend_project: false
+- name: nodes2
+  description: Nodes
+  default: "3"
+  options:
+  - "1"
+  - "2"
+  - "3"
+  prepend_project: false
+author_settings:
+- name: basename
+  value: basename
+  type: string
+  list: []
+  map: {}
+configure_gce_instance: false
+documentation_link: ""
+path_terraform: terraform
+path_messages: .deploystack/messages
+path_scripts: .deploystack/scripts
+projects:
+  items: []
+  allow_duplicates: false
+products:
+- info: A VM
+  product: Compute Engine
+`,
+		},
+		"json": {
+			format: "json",
+			in: Config{
+				Title:          "TESTCONFIG",
+				Description:    "A test string for usage with this stuff.",
+				Duration:       5,
+				Project:        true,
+				ProjectNumber:  true,
+				Region:         true,
+				BillingAccount: false,
+				RegionType:     "run",
+				RegionDefault:  "us-central1",
+				Zone:           true,
+				PathTerraform:  "terraform",
+				PathMessages:   ".deploystack/messages",
+				PathScripts:    ".deploystack/scripts",
+				CustomSettings: []Custom{
+					{
+						Name:        "nodes",
+						Description: "Nodes",
+						Default:     "3"},
+					{
+						Name:        "nodes2",
+						Description: "Nodes",
+						Default:     "3",
+						Options:     []string{"1", "2", "3"},
+					},
+				},
+				AuthorSettings: Settings{
+					{Name: "basename", Value: "basename", Type: "string"},
+				},
+				Products: []Product{
+					{Info: "A VM", Product: "Compute Engine"},
+				},
+			},
+			want: `{
+	"title": "TESTCONFIG",
+	"name": "",
+	"description": "A test string for usage with this stuff.",
+	"duration": 5,
+	"collect_project": true,
+	"collect_project_number": true,
+	"collect_billing_account": false,
+	"register_domain": false,
+	"collect_region": true,
+	"region_type": "run",
+	"region_default": "us-central1",
+	"collect_zone": true,
+	"hard_settings": null,
+	"custom_settings": [
+		{
+			"name": "nodes",
+			"description": "Nodes",
+			"default": "3",
+			"options": null,
+			"prepend_project": false
+		},
+		{
+			"name": "nodes2",
+			"description": "Nodes",
+			"default": "3",
+			"options": [
+				"1",
+				"2",
+				"3"
+			],
+			"prepend_project": false
+		}
+	],
+	"author_settings": [
+		{
+			"name": "basename",
+			"value": "basename",
+			"type": "string",
+			"list": null,
+			"map": null
+		}
+	],
+	"configure_gce_instance": false,
+	"documentation_link": "",
+	"path_terraform": "terraform",
+	"path_messages": ".deploystack/messages",
+	"path_scripts": ".deploystack/scripts",
+	"projects": {
+		"items": null,
+		"allow_duplicates": false
+	},
+	"products": [
+		{
+			"info": "A VM",
+			"product": "Compute Engine"
+		}
+	]
+}`,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, _ := tc.in.Marshal(tc.format)
+			textdiff := diff.Diff(string(tc.want), string(got))
+			if textdiff != "" {
+				fmt.Println(textdiff)
+				t.Fatalf("object didn't match")
 			}
 		})
 	}

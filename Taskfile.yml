@@ -73,6 +73,17 @@ tasks:
       - config:test
       - dstester:test
 
+  test:verbose: 
+    desc: Run all tests
+    deps:
+      - deploystack:test:verbose
+      - tui:test:verbose
+      - gcloud:test:verbose
+      - github:test:verbose
+      - terraform:test:verbose
+      - config:test:verbose
+      - dstester:test:verbose
+
   go:clean:
    desc: Cleans the caches before running tests
    run: once
@@ -134,6 +145,60 @@ tasks:
     cmds: 
       - go test .  -cover         
 
+  deploystack:test:verbose:
+    desc: Tests the deploystack package
+    deps:
+      - go:clean
+    cmds: 
+      - go test .  -v
+ 
+  tui:test:verbose:
+    desc: Tests the tui package
+    deps:
+      - go:clean
+    dir: tui
+    cmds: 
+      - go test .  -v
+ 
+  gcloud:test:verbose:
+    desc: Tests the gcloud package
+    deps:
+      - go:clean
+    dir: gcloud
+    cmds: 
+      - go test .  -v     
+ 
+  config:test:verbose:
+    desc: Tests the config package
+    deps:
+      - go:clean
+    dir: config
+    cmds: 
+      - go test .  -v     
+ 
+  terraform:test:verbose:
+    desc: Tests the terraform package
+    deps:
+      - go:clean
+    dir: terraform
+    cmds: 
+      - go test .  -v
+ 
+  github:test:verbose:
+    desc: Tests the github package
+    deps:
+      - go:clean
+    dir: github
+    cmds: 
+      - go test .  -v 
+ 
+  dstester:test:verbose:
+    desc: Tests the dstester package
+    deps:
+      - go:clean
+    dir: dstester
+    cmds: 
+      - go test .  -v
 
   dsexec:clean:
     desc: Cleans the generated files of the dsexec binary
@@ -169,3 +234,8 @@ tasks:
     cmds:
       - sudo cp dsexec /usr/local/bin/
       - sudo cp deploystack /usr/local/bin/
+
+  cloud:test:
+    desc: Runs the cloudbuild testing job without a git push
+    cmds:
+      - gcloud builds submit --config test.yaml 

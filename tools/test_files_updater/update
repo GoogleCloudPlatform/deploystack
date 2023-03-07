@@ -21,4 +21,10 @@ git clone git@github.com:googlecloudplatform/deploystack-gcs-to-bq-with-least-pr
 git clone https://github.com/GoogleCloudPlatform/deploystack-single-vm.git
 mkdir folder-no-git
 
+cd "../.."
+cd "test_files/reposformeta"
+pwd
+git clone https://github.com/GoogleCloudPlatform/deploystack-nosql-client-server.git
+git clone https://github.com/GoogleCloudPlatform/terraform-google-load-balanced-vms.git
+
 echo "Git repos for testing have been cloned"

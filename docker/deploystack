@@ -5,7 +5,6 @@ BRED="\033[1;31m"
 
 function deploystackError() {
   repo=$(git config --get remote.origin.url)
-  clear
   echo
   echo "Deploystack - $BRED Error $CLEAR"
   echo "An error occured collecting the necessary information to run your Deploystack"
@@ -19,7 +18,6 @@ function deploystackError() {
 }
 
 function repoError() {
-  clear
   repoentered=$1
   candidate1="${UCYAN}https://github.com/GoogleCloudPlatform/${repoentered}${CLEAR}"
   

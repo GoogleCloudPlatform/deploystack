@@ -14,6 +14,7 @@
 
 steps:
    - name: 'gcr.io/cloud-builders/git'
+     id: "ssh-init"
      secretEnv: ['SSH_KEY']
      entrypoint: 'bash'
      args:
@@ -26,38 +27,69 @@ steps:
      volumes:
       - name: 'ssh'
         path: /root/.ssh
+     waitFor: ['-']     
    - name: 'bash'
+     id: "creds"     
      args: ['-c','echo $$CREDS > creds.json']
-     secretEnv: ['CREDS']     
+     secretEnv: ['CREDS']
+     waitFor: ['ssh-init']      
    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+     id: "test-file-get"
      entrypoint: bash
      args: ['-c','GOOGLE_APPLICATION_CREDENTIALS=creds.json && ./update']
      dir: "tools/test_files_updater/"
      volumes:
      - name: 'ssh'
        path: /root/.ssh
-   - name: 'gcr.io/cloudshell-images/cloudshell:latest'
-     args: [ 'go', 'test', '.', '-v', '-cover' ]
+     waitFor: ['creds']
    - name: 'golang'
+     id: "test-deploystack"  
+     args: [ 'go', 'test', '.', '-v', '-cover' ]
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'
+     waitFor: ['test-file-get']
+   - name: 'golang'
+     id: "test-deploystack-config"  
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
-     dir: "config"     
-   - name: 'gcr.io/cloudshell-images/cloudshell:latest'
-     args: [ 'go', 'test', '.', '-v', '-cover' ] 
-     dir: "gcloud"    
+     dir: "config"    
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH' 
+     waitFor: ['test-file-get']
    - name: 'golang'
+     id: "test-deploystack-terraform"                
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
      dir: "terraform"
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'
+     waitFor: ['test-file-get'] 
    - name: 'golang'
+     id: "test-deploystack-tui"    
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
-     dir: "tui"   
+     dir: "tui"
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'
+     waitFor: ['test-file-get']  
    - name: 'golang'
+     id: "test-deploystack-github" 
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
-     dir: "github"   
+     dir: "github"
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'  
+     waitFor: ['test-file-get']  
+   - name: 'gcr.io/cloudshell-images/cloudshell:latest' 
+     id: "test-deploystack-gcloud"      
+     args: [ 'go', 'test', '.', '-v', '-cover' ] 
+     dir: "gcloud"
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'
+     waitFor: ['test-file-get']      
 timeout: 3600s
+substitutions:
+    _DEPLOYSTACK_PATH: /workspace
 options:
   machineType: 'E2_HIGHCPU_8'
 availableSecrets:
