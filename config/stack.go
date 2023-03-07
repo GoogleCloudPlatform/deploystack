@@ -17,7 +17,6 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -122,6 +121,10 @@ func (s *Stack) findTFFolder(path string) (string, error) {
 
 	err := filepath.Walk(path, func(walkpath string, info os.FileInfo, err error) error {
 
+		if info == nil {
+			return fmt.Errorf("info is nil: walkpath: %s err: %s", walkpath, err)
+		}
+
 		if info.Name() == "main.tf" {
 			dir := filepath.Dir(walkpath)
 			mains = append(mains, dir)
@@ -161,26 +164,21 @@ func (s *Stack) FindAndReadRequired(path string) error {
 	}
 	s.Config.PathTerraform = tfPath
 
-	scriptPath, err := s.findDSFolder(path, "scripts")
-	if err != nil {
-		log.Printf("INFO - unable to locate scripts folder, folder not required, : %s", err)
+	if scriptPath, err := s.findDSFolder(path, "scripts"); err == nil {
+		s.Config.PathScripts, _ = filepath.Rel(path, scriptPath)
 	}
-	s.Config.PathScripts, _ = filepath.Rel(path, scriptPath)
 
-	messagePath, err := s.findDSFolder(path, "messages")
-	if err != nil {
-		log.Printf("INFO - unable to locate messages folder, folder not required, : %s", err)
-	}
-	s.Config.PathMessages, _ = filepath.Rel(path, messagePath)
+	if messagePath, err := s.findDSFolder(path, "messages"); err == nil {
 
-	descText := fmt.Sprintf("%s/description.txt", messagePath)
-	if _, err := os.Stat(descText); err == nil {
-		description, err := ioutil.ReadFile(descText)
-		if err != nil {
-			return fmt.Errorf("unable to read description file: %s", err)
+		s.Config.PathMessages, _ = filepath.Rel(path, messagePath)
+
+		descText := fmt.Sprintf("%s/description.txt", messagePath)
+		if _, err := os.Stat(descText); err == nil {
+			if description, err := ioutil.ReadFile(descText); err == nil {
+				s.Config.Description = string(description)
+			}
 		}
 
-		s.Config.Description = string(description)
 	}
 
 	s.Config.convertHardset()
