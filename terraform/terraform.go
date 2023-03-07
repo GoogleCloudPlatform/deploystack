@@ -245,6 +245,17 @@ func (b Blocks) Search(q, field string) Blocks {
 	return result
 }
 
+// Sort sorts a collections of blocks by file and by start line number
+func (b *Blocks) Sort() {
+	sort.Slice(*b, func(i, j int) bool {
+		if (*b)[i].File != (*b)[j].File {
+			return (*b)[i].File < (*b)[j].File
+		}
+		return (*b)[i].Start < (*b)[j].Start
+	})
+
+}
+
 // List is a slice of strings that we add extra functionality to
 type List []string
 

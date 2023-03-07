@@ -1031,3 +1031,39 @@ func TestBadNewBlocks(t *testing.T) {
 		})
 	}
 }
+
+func TestBlocksSort(t *testing.T) {
+	tests := map[string]struct {
+		in   Blocks
+		want Blocks
+	}{
+		"basic": {
+			in: Blocks{
+				{Start: 100, File: "variable.tf"},
+				{Start: 100, File: "main.tf"},
+				{Start: 56, File: "variable.tf"},
+				{Start: 19, File: "main.tf"},
+				{Start: 1, File: "variable.tf"},
+				{Start: 36, File: "main.tf"},
+			},
+			want: Blocks{
+				{Start: 19, File: "main.tf"},
+				{Start: 36, File: "main.tf"},
+				{Start: 100, File: "main.tf"},
+				{Start: 1, File: "variable.tf"},
+				{Start: 56, File: "variable.tf"},
+				{Start: 100, File: "variable.tf"},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc.in.Sort()
+			got := tc.in
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+			}
+		})
+	}
+}
