@@ -36,28 +36,48 @@ steps:
      volumes:
      - name: 'ssh'
        path: /root/.ssh
+   # test deploystack  
    - name: 'gcr.io/cloudshell-images/cloudshell:latest'
      args: [ 'go', 'test', '.', '-v', '-cover' ]
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'
+   # test deploystack/config      
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
-     dir: "config"     
+     dir: "config"    
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH' 
+   # test deploystack/gcloud     
    - name: 'gcr.io/cloudshell-images/cloudshell:latest'
      args: [ 'go', 'test', '.', '-v', '-cover' ] 
-     dir: "gcloud"    
+     dir: "gcloud"
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'
+    # test deploystack/terraform            
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
      dir: "terraform"
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'
+     # test deploystack/tui       
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
-     dir: "tui"   
+     dir: "tui"
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'
+    # test deploystack/github           
    - name: 'golang'
      entrypoint: 'go'
      args: [ 'test', '.', '-v', '-cover' ] 
-     dir: "github"   
+     dir: "github"
+     env:
+      - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'   
 timeout: 3600s
+substitutions:
+    _DEPLOYSTACK_PATH: /
 options:
   machineType: 'E2_HIGHCPU_8'
 availableSecrets:

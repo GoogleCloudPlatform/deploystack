@@ -22,6 +22,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -39,6 +40,7 @@ var (
 	opts             = option.WithCredentialsFile("")
 	ctx              = context.Background()
 	defaultUserAgent = "deploystack/testing"
+	testFilesDir     = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
 )
 
 func TestMain(m *testing.M) {
@@ -130,17 +132,21 @@ func regionsListHelper(file string) ([]string, error) {
 
 func TestGetRegions(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
-	cRegions, err := regionsListHelper("test_files/gcloudout/regions_compute.txt")
+
+	fc := filepath.Join(testFilesDir, "gcloudout/regions_compute.txt")
+	cRegions, err := regionsListHelper(fc)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
 
-	fRegions, err := regionsListHelper("test_files/gcloudout/regions_functions.txt")
+	ff := filepath.Join(testFilesDir, "gcloudout/regions_functions.txt")
+	fRegions, err := regionsListHelper(ff)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
 
-	rRegions, err := regionsListHelper("test_files/gcloudout/regions_run.txt")
+	fr := filepath.Join(testFilesDir, "gcloudout/regions_run.txt")
+	rRegions, err := regionsListHelper(fr)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}

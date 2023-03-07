@@ -15,6 +15,7 @@
 package gcloud
 
 import (
+	"path/filepath"
 	"reflect"
 	"sort"
 	"testing"
@@ -23,7 +24,9 @@ import (
 func TestGetRunRegions(t *testing.T) {
 	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
-	rRegions, err := regionsListHelper("test_files/gcloudout/regions_run.txt")
+	f := filepath.Join(testFilesDir, "gcloudout/regions_run.txt")
+
+	rRegions, err := regionsListHelper(f)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}

@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
@@ -32,7 +33,8 @@ import (
 func TestGetComputeRegions(t *testing.T) {
 	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
-	cRegions, err := regionsListHelper("test_files/gcloudout/regions_compute.txt")
+	f := filepath.Join(testFilesDir, "gcloudout/regions_compute.txt")
+	cRegions, err := regionsListHelper(f)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
@@ -113,7 +115,8 @@ func TestFormatMBToGB(t *testing.T) {
 func TestGetMachineTypes(t *testing.T) {
 	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
-	uscaTypes, err := typefileHelper("test_files/gcloudout/types_uscentral1a.txt")
+	f := filepath.Join(testFilesDir, "gcloudout/types_uscentral1a.txt")
+	uscaTypes, err := typefileHelper(f)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
@@ -469,7 +472,8 @@ func getLatestImageByProjectFromFile(imgs []*compute.Image, imageproject, imagef
 func TestImages(t *testing.T) {
 	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
-	dat, err := os.ReadFile("test_files/gcloudout/images.json")
+	f := filepath.Join(testFilesDir, "gcloudout/images.json")
+	dat, err := os.ReadFile(f)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}
@@ -516,7 +520,8 @@ func TestImages(t *testing.T) {
 
 func TestGetLatestImage(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
-	dat, err := os.ReadFile("test_files/gcloudout/images.json")
+	f := filepath.Join(testFilesDir, "gcloudout/images.json")
+	dat, err := os.ReadFile(f)
 	if err != nil {
 		t.Fatalf("got error during preloading: %s", err)
 	}

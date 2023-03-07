@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"testing"
@@ -29,8 +30,8 @@ func TestGetBillingAccounts(t *testing.T) {
 	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 
-	buildtestfile := "test_files/gcloudout/billing_accounts.json"
-	localtestfile := "test_files/gcloudout/billing_accounts_local.json"
+	buildtestfile := filepath.Join(testFilesDir, "gcloudout/billing_accounts.json")
+	localtestfile := filepath.Join(testFilesDir, "gcloudout/billing_accounts_local.json")
 	testfile := localtestfile
 
 	if _, err := os.Stat(localtestfile); errors.Is(err, os.ErrNotExist) {
@@ -42,7 +43,7 @@ func TestGetBillingAccounts(t *testing.T) {
 	}
 
 	if os.Getenv("BUILD") != "" {
-		testfile = "test_files/gcloudout/billing_accounts.json"
+		testfile = buildtestfile
 	}
 
 	dat, err := os.ReadFile(testfile)

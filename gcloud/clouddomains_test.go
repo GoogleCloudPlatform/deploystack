@@ -17,6 +17,7 @@ package gcloud
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -33,7 +34,7 @@ func TestContactDataYAML(t *testing.T) {
 		err     error
 	}{
 		"simple": {
-			file: "test_files/contact_sample.yaml",
+			file: "contact/contact_sample.yaml",
 			contact: ContactData{DomainRegistrarContact{
 				"you@example.com",
 				"+1 555 555 1234",
@@ -52,7 +53,8 @@ func TestContactDataYAML(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			dat, err := os.ReadFile(tc.file)
+			f := filepath.Join(testFilesDir, tc.file)
+			dat, err := os.ReadFile(f)
 			if err != nil {
 				t.Fatalf("err could not get file for testing: (%s)", err)
 			}
@@ -81,7 +83,7 @@ func TestContactDataReadFrom(t *testing.T) {
 		err  error
 	}{
 		"simple": {
-			file: "test_files/contact_sample.yaml",
+			file: "contact/contact_sample.yaml",
 			want: ContactData{DomainRegistrarContact{
 				"you@example.com",
 				"+1 555 555 1234",
@@ -100,7 +102,8 @@ func TestContactDataReadFrom(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			f, _ := os.Open(tc.file)
+			cf := filepath.Join(testFilesDir, tc.file)
+			f, _ := os.Open(cf)
 			got := newContactData()
 			_, err := got.ReadFrom(f)
 
