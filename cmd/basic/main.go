@@ -18,17 +18,14 @@ import (
 	"log"
 
 	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/tui"
 )
 
 func main() {
-	deploystack.ClearScreen()
-	s := deploystack.NewStack()
-
-	if err := s.FindAndReadRequired(); err != nil {
-		log.Fatalf("could not read config file: %s", err)
+	s, err := deploystack.Init(".")
+	if err != nil {
+		log.Fatalf("could not read initialize deploystack: %s", err)
 	}
 
-	if err := s.Process("terraform.tfvars"); err != nil {
-		log.Fatalf("problemn collecting the configurations: %s", err)
-	}
+	tui.Run(s, false)
 }

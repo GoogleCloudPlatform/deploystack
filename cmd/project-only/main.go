@@ -15,33 +15,18 @@
 package main
 
 import (
-	"context"
 	"log"
 
 	"github.com/GoogleCloudPlatform/deploystack"
-	"github.com/GoogleCloudPlatform/deploystack/config"
-	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
-	s := config.NewStack()
 
-	if err := s.FindAndReadRequired("."); err != nil {
-		log.Fatalf("could not read config file: %s", err)
+	s, err := deploystack.Init(".")
+	if err != nil {
+		log.Fatalf("could not read initialize deploystack: %s", err)
 	}
 
-	client := gcloud.NewClient(context.Background(), "")
-
-	q := tui.NewQueue(&s, &client)
-	q.Save("contact", deploystack.ContactCheck())
-	q.InitializeUI()
-
-	p := tea.NewProgram(q.Start(), tea.WithAltScreen())
-	if err := p.Start(); err != nil {
-		log.Fatalf(err.Error())
-	}
-
-	s.TerraformFile("terraform.tfvars")
+	tui.Run(s, false)
 }
