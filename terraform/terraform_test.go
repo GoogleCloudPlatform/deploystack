@@ -16,14 +16,18 @@ package terraform
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/go-test/deep"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 	"github.com/kylelemons/godebug/diff"
 )
+
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
 
 func TestExtract2(t *testing.T) {
 	wd, err := filepath.Abs("../")
@@ -1066,4 +1070,318 @@ func TestBlocksSort(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSearch(t *testing.T) {
+	tests := map[string]struct {
+		in    string
+		field string
+		want  Blocks
+	}{
+		"type": {
+			in:    "project_service",
+			field: "type",
+			want: Blocks{
+				{
+					Name: "all",
+					Kind: "managed",
+					Type: "google_project_service",
+					File: filepath.Join(
+						nosqltestdata,
+						"deploystack-nosql-client-server",
+						"terraform",
+						"main.tf",
+					),
+					Start: 21,
+				},
+			},
+		},
+		"name": {
+			in:    "allow-http",
+			field: "name",
+			want: Blocks{
+				{
+					Name: "default-allow-http",
+					Kind: "managed",
+					Type: "google_compute_firewall",
+					File: filepath.Join(
+						nosqltestdata,
+						"deploystack-nosql-client-server",
+						"terraform",
+						"main.tf",
+					),
+					Start: 41,
+				},
+			},
+		},
+		"kind": {
+			in:    "variable",
+			field: "kind",
+			want: Blocks{
+				{
+					Name:  "project_id",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 17,
+				},
+
+				{
+					Name:  "project_number",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 21,
+				},
+
+				{
+					Name:  "zone",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 25,
+				},
+
+				{
+					Name:  "region",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 29,
+				},
+
+				{
+					Name:  "basename",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 33,
+				},
+
+				{
+					Name:  "gcp_service_list",
+					Kind:  "variable",
+					Type:  "list(string)",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 37,
+				},
+			},
+		},
+		"file": {
+			in:    "variables.tf",
+			field: "file",
+			want: Blocks{
+				{
+					Name:  "project_id",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 17,
+				},
+
+				{
+					Name:  "project_number",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 21,
+				},
+
+				{
+					Name:  "zone",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 25,
+				},
+
+				{
+					Name:  "region",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 29,
+				},
+
+				{
+					Name:  "basename",
+					Kind:  "variable",
+					Type:  "string",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 33,
+				},
+
+				{
+					Name:  "gcp_service_list",
+					Kind:  "variable",
+					Type:  "list(string)",
+					File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+					Start: 37,
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := searchBlocks.Search(tc.in, tc.field)
+			if !reflect.DeepEqual(tc.want, got) {
+				diff := deep.Equal(tc.want, got)
+				t.Errorf("compare failed: %v", diff)
+			}
+		})
+	}
+}
+
+var nosqltestdata = filepath.Join(testFilesDir, "reposformeta")
+var searchBlocks = Blocks{
+	{
+		Name: "all",
+		Kind: "managed",
+		Type: "google_project_service",
+		File: filepath.Join(
+			nosqltestdata,
+			"deploystack-nosql-client-server",
+			"terraform",
+			"main.tf",
+		),
+		Start: 21,
+	},
+	{
+		Name: "default",
+		Kind: "data",
+		Type: "google_compute_network",
+		File: filepath.Join(
+			nosqltestdata,
+			"deploystack-nosql-client-server",
+			"terraform",
+			"main.tf",
+		),
+		Start: 29,
+	},
+
+	{
+		Name: "main",
+		Kind: "managed",
+		Type: "google_compute_network",
+		File: filepath.Join(
+			nosqltestdata,
+			"deploystack-nosql-client-server",
+			"terraform",
+			"main.tf",
+		),
+		Start: 34,
+	},
+	{
+		Name: "default-allow-http",
+		Kind: "managed",
+		Type: "google_compute_firewall",
+		File: filepath.Join(
+			nosqltestdata,
+			"deploystack-nosql-client-server",
+			"terraform",
+			"main.tf",
+		),
+		Start: 41,
+	},
+
+	{
+		Name: "default-allow-internal",
+		Kind: "managed",
+		Type: "google_compute_firewall",
+		File: filepath.Join(
+			nosqltestdata,
+			"deploystack-nosql-client-server",
+			"terraform",
+			"main.tf",
+		),
+		Start: 56,
+	},
+
+	{
+		Name: "default-allow-ssh",
+		Kind: "managed",
+		Type: "google_compute_firewall",
+		File: filepath.Join(
+			nosqltestdata,
+			"deploystack-nosql-client-server",
+			"terraform",
+			"main.tf",
+		),
+		Start: 79,
+	},
+
+	{
+		Name: "server",
+		Kind: "managed",
+		Type: "google_compute_instance",
+		File: filepath.Join(
+			nosqltestdata,
+			"deploystack-nosql-client-server",
+			"terraform",
+			"main.tf",
+		),
+		Start: 95,
+	},
+
+	{
+		Name: "client",
+		Kind: "managed",
+		Type: "google_compute_instance",
+		File: filepath.Join(
+			nosqltestdata,
+			"deploystack-nosql-client-server",
+			"terraform",
+			"main.tf",
+		),
+		Start: 136,
+	},
+
+	{
+		Name:  "project_id",
+		Kind:  "variable",
+		Type:  "string",
+		File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+		Start: 17,
+	},
+
+	{
+		Name:  "project_number",
+		Kind:  "variable",
+		Type:  "string",
+		File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+		Start: 21,
+	},
+
+	{
+		Name:  "zone",
+		Kind:  "variable",
+		Type:  "string",
+		File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+		Start: 25,
+	},
+
+	{
+		Name:  "region",
+		Kind:  "variable",
+		Type:  "string",
+		File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+		Start: 29,
+	},
+
+	{
+		Name:  "basename",
+		Kind:  "variable",
+		Type:  "string",
+		File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+		Start: 33,
+	},
+
+	{
+		Name:  "gcp_service_list",
+		Kind:  "variable",
+		Type:  "list(string)",
+		File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
+		Start: 37,
+	},
 }
