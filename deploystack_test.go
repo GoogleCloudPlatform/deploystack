@@ -31,6 +31,7 @@ import (
 	"github.com/GoogleCloudPlatform/deploystack/terraform"
 	"github.com/go-test/deep"
 	"github.com/kylelemons/godebug/diff"
+	cp "github.com/otiai10/copy"
 )
 
 var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
@@ -962,5 +963,125 @@ func TestSuggest(t *testing.T) {
 				t.Errorf("compare failed: %v", diff)
 			}
 		})
+	}
+}
+
+func TestAttemptRepo(t *testing.T) {
+	tempName, err := os.MkdirTemp("", "testrepos")
+	defer os.RemoveAll(tempName)
+	if err != nil {
+		t.Fatalf("could not get a temp directory for test: %s", err)
+	}
+
+	err = os.Mkdir(filepath.Join(tempName, "deploystack-single-vm"), 0666)
+	if err != nil {
+		t.Fatalf("could not get a make a directory for test: %s", err)
+	}
+
+	tests := map[string]struct {
+		name     string
+		wd       string
+		wantdir  string
+		wantrepo github.Repo
+		err      error
+	}{
+		"deploystack-nosql-client-server": {
+			name:    "deploystack-nosql-client-server",
+			wd:      tempName,
+			wantdir: filepath.Join(tempName, "deploystack-nosql-client-server"),
+			wantrepo: github.Repo{
+				Name:   "deploystack-nosql-client-server",
+				Owner:  "GoogleCloudPlatform",
+				Branch: "main",
+			},
+		},
+		"deploystack-single-vm": {
+			name:    "deploystack-single-vm",
+			wd:      tempName,
+			wantdir: filepath.Join(tempName, "deploystack-single-vm_1"),
+			wantrepo: github.Repo{
+				Name:   "deploystack-single-vm",
+				Owner:  "GoogleCloudPlatform",
+				Branch: "main",
+			},
+		},
+		"cost-sentry": {
+			name:    "cost-sentry",
+			wd:      tempName,
+			wantdir: filepath.Join(tempName, "deploystack-cost-sentry"),
+			wantrepo: github.Repo{
+				Name:   "deploystack-cost-sentry",
+				Owner:  "GoogleCloudPlatform",
+				Branch: "main",
+			},
+		},
+
+		"notvalid": {
+			name:    "badreponame",
+			wd:      tempName,
+			wantdir: filepath.Join(tempName, "deploystack-badreponame"),
+			wantrepo: github.Repo{
+				Name:   "deploystack-badreponame",
+				Owner:  "GoogleCloudPlatform",
+				Branch: "main",
+			},
+			err: fmt.Errorf("cannot get repo"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotdir, gotrepo, err := AttemptRepo(tc.name, tc.wd)
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected no error, got: %s", err)
+			}
+
+			if tc.err != nil && err != nil {
+				if !strings.Contains(err.Error(), tc.err.Error()) {
+					t.Fatalf("expected error %s, got: %s", tc.err, err)
+				}
+			}
+
+			if !reflect.DeepEqual(tc.wantdir, gotdir) {
+				diff := deep.Equal(tc.wantdir, gotdir)
+				t.Errorf("compare failed: %v", diff)
+			}
+
+			if !reflect.DeepEqual(tc.wantrepo, gotrepo) {
+				diff := deep.Equal(tc.wantrepo, gotrepo)
+				t.Errorf("compare failed: %v", diff)
+			}
+		})
+	}
+}
+
+func TestWriteConfig(t *testing.T) {
+	tempName, err := os.MkdirTemp("", "testreposwc")
+	defer os.RemoveAll(tempName)
+	if err != nil {
+		t.Fatalf("could not get a temp directory for test: %s", err)
+	}
+
+	src := filepath.Join(testFilesDir, "reposformeta", "terraform-google-load-balanced-vms")
+	dest := filepath.Join(tempName, "terraform-google-load-balanced-vms")
+
+	if err := cp.Copy(src, dest); err != nil {
+		t.Fatalf("could create a test directory for test: %s", err)
+	}
+
+	gh := github.Repo{
+		Name:   "terraform-google-load-balanced-vms",
+		Owner:  "GoogleCloudPlatform",
+		Branch: "main",
+	}
+
+	if err := WriteConfig(dest, gh); err != nil {
+		t.Fatalf("writeconfig: failed %s", err)
+	}
+
+	target := filepath.Join(dest, ".deploystack", "deploystack.yaml")
+	if _, err := os.Stat(target); err != nil {
+		t.Fatalf("writeconfig: failed to write file %s", err)
 	}
 }
