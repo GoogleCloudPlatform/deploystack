@@ -29,7 +29,7 @@ import (
 
 var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
 
-func TestExtract2(t *testing.T) {
+func TestExtract(t *testing.T) {
 	wd, err := filepath.Abs("../")
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)
