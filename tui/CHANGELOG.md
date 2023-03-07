@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/GoogleCloudPlatform/deploystack/compare/tui/v1.8.0...tui/v1.9.0) (2023-03-07)
+
+
+### Bug Fixes
+
+* refactoring broke some uses of code in places. ([ea3bd24](https://github.com/GoogleCloudPlatform/deploystack/commit/ea3bd24331b5d60ef0aedd1246516bceab8fcff2))
+
 ## [1.8.0](https://github.com/GoogleCloudPlatform/deploystack/compare/tui/v1.5.1...tui/v1.8.0) (2023-03-03)
 
 
