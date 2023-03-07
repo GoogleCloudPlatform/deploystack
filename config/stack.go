@@ -149,42 +149,46 @@ func (s *Stack) findTFFolder(path string) (string, error) {
 	return "", nil
 }
 
-// FindAndReadRequired finds and reads in a Config from a json file.
-func (s *Stack) FindAndReadRequired(path string) error {
-	config, err := s.findAndReadConfig(path)
-	if err != nil {
-		return fmt.Errorf("unable to parse config file: %s", err)
-	}
+// FindAndRead figures out a default config, or reads it if it is there
+// has option to insure various things and folders exist
+func (s *Stack) FindAndRead(path string, required bool) error {
+	errs := []error{}
 
+	config, err := s.findAndReadConfig(path)
 	s.Config = config
+	errs = append(errs, err)
 
 	tfPath, err := s.findTFFolder(path)
-	if err != nil {
-		return fmt.Errorf("unable to locate terraform folder: %s", err)
-	}
 	s.Config.PathTerraform = tfPath
+	errs = append(errs, err)
 
-	if scriptPath, err := s.findDSFolder(path, "scripts"); err == nil {
-		s.Config.PathScripts, _ = filepath.Rel(path, scriptPath)
-	}
+	scriptPath, err := s.findDSFolder(path, "scripts")
+	s.Config.PathScripts, _ = filepath.Rel(path, scriptPath)
+	errs = append(errs, err)
 
-	if messagePath, err := s.findDSFolder(path, "messages"); err == nil {
+	messagePath, err := s.findDSFolder(path, "messages")
+	s.Config.PathMessages, _ = filepath.Rel(path, messagePath)
+	errs = append(errs, err)
 
-		s.Config.PathMessages, _ = filepath.Rel(path, messagePath)
+	descText := fmt.Sprintf("%s/description.txt", messagePath)
 
-		descText := fmt.Sprintf("%s/description.txt", messagePath)
-		if _, err := os.Stat(descText); err == nil {
-			if description, err := ioutil.ReadFile(descText); err == nil {
-				s.Config.Description = string(description)
-			}
-		}
-
-	}
+	description, err := ioutil.ReadFile(descText)
+	s.Config.Description = string(description)
+	errs = append(errs, err)
 
 	s.Config.convertHardset()
 	s.Config.defaultAuthorSettings()
 
+	if required && len(errs) > 0 {
+		return errs[0]
+	}
+
 	return nil
+}
+
+// FindAndReadRequired finds and reads in a Config from a json file.
+func (s *Stack) FindAndReadRequired(path string) error {
+	return s.FindAndRead(path, true)
 }
 
 // AddSetting stores a setting key/value pair.

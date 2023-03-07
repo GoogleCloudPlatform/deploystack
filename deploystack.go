@@ -138,11 +138,13 @@ func NewMeta(path string) (Meta, error) {
 
 	s := config.NewStack()
 
-	if err := s.FindAndReadRequired(path); err == nil {
+	if err := s.FindAndRead(path, false); err == nil {
 		d.DeployStack = s.Config
 	}
 
-	if b, err := terraform.Extract(s.Config.PathTerraform); err != nil {
+	tfPath := filepath.Join(path, s.Config.PathTerraform)
+	if b, err := terraform.Extract(tfPath); err == nil {
+
 		if b != nil {
 			d.Terraform = *b
 		}
