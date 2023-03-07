@@ -46,5 +46,3 @@ docker/versionDS
 docker/versionGcloud
 docker/versionTUI
 .vscode/settings.json
-test_files/computenames_repos/terraform-google-load-balanced-vms/
-test_files/computenames_repos/deploystack-nosql-client-server/
