@@ -7,7 +7,7 @@
   "separate-pull-requests": false,
   "draft": false,
   "prerelease": false,
-  "release-as": "1.9.0",
+  "release-as": "1.10.0",
   "packages": {
     ".": {
     },

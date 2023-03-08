@@ -1,7 +1,7 @@
 #!/bin/sh
-CLEAR="\033[0m"
-UCYAN="\033[4;36m"
-BRED="\033[1;31m"
+CLEAR="[0m"
+UCYAN="[4;36m"
+BRED="[1;31m"
 
 function deploystackError() {
   repo=$(git config --get remote.origin.url)

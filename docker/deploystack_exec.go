@@ -25,6 +25,7 @@ import (
 	_ "embed"
 
 	"github.com/GoogleCloudPlatform/deploystack"
+	"github.com/GoogleCloudPlatform/deploystack/github"
 	"github.com/GoogleCloudPlatform/deploystack/tui"
 )
 
@@ -40,6 +41,9 @@ var versionGcloud string
 //go:embed versionConfig
 var versionConfig string
 
+//go:embed versionTerraform
+var versionTerraform string
+
 //go:embed buildTime
 var buildTime string
 
@@ -48,6 +52,7 @@ func main() {
 	name := flag.Bool("name", false, "Whether or not to be in drop the name of the stack")
 	version := flag.Bool("version", false, "Shows version information")
 	repo := flag.String("repo", "", "The name only of a Google Cloud Platform repo to download")
+	suggest := flag.Bool("suggest", false, "Weather or not you want DeployStack to reccomend a config")
 
 	flag.Parse()
 
@@ -56,6 +61,7 @@ func main() {
 		fmt.Printf("deploystack/tui:    %s\n", strings.TrimSpace(versionTUI))
 		fmt.Printf("deploystack/gcloud: %s\n", strings.TrimSpace(versionGcloud))
 		fmt.Printf("deploystack/config: %s\n", strings.TrimSpace(versionConfig))
+		fmt.Printf("deploystack/terraform: %s\n", strings.TrimSpace(versionTerraform))
 		fmt.Printf("buildTime:          %s\n", strings.TrimSpace(buildTime))
 		return
 	}
@@ -86,6 +92,20 @@ func main() {
 		}
 
 		fmt.Printf("%s\n", dir)
+		return
+	}
+
+	if *suggest {
+		wd, err := os.Getwd()
+		if err != nil {
+			tui.Fatal(err)
+		}
+
+		if err := deploystack.WriteConfig(wd, github.Repo{}); err != nil {
+			tui.Fatal(err)
+		}
+
+		fmt.Printf("Made a reccomended config for you\n")
 		return
 	}
 
