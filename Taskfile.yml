@@ -7,6 +7,7 @@ env:
   DS_TUI_VERSION: $DS_TUI_VERSION
   DS_GCLOUD_VERSION: $DS_GCLOUD_VERSION
   DS_CONFIG_VERSION: $DS_CONFIG_VERSION
+  DEPLOYSTACK_SHELL_PATH: $DEPLOYSTACK_SHELL_PATH
 
 tasks:
 
@@ -96,7 +97,58 @@ tasks:
       - go:clean
     cmds: 
       - go test .  -cover
- 
+
+  deploystack:tidy:
+    desc: updates modules for deploystack
+    cmds: 
+      - go get -u
+      - go mod tidy
+  
+  tui:tidy:
+     desc: updates modules for tui
+     dir: tui
+     cmds: 
+      - go get -u
+      - go mod tidy
+
+  gcloud:tidy:
+     desc: updates modules for gcloud
+     dir: gcloud
+     cmds: 
+      - go get -u
+      - go mod tidy
+
+  config:tidy:
+     desc: updates modules for config
+     dir: config
+     cmds: 
+      - go get -u
+      - go mod tidy
+  
+  github:tidy:
+     desc: updates modules for github
+     dir: github
+     cmds: 
+      - go get -u
+      - go mod tidy
+  
+  terraform:tidy:
+     desc: updates modules for terraform
+     dir: terraform
+     cmds: 
+      - go get -u
+      - go mod tidy        
+
+  all:tidy:
+     desc: updates modules for all
+     dir: config
+     cmds: 
+      - task: config:tidy
+      - task: gcloud:tidy   
+      - task: github:tidy   
+      - task: terraform:tidy   
+      - task: deploystack:tidy    
+
   tui:test:
     desc: Tests the tui package
     deps:
@@ -239,3 +291,31 @@ tasks:
     desc: Runs the cloudbuild testing job without a git push
     cmds:
       - gcloud builds submit --config test.yaml 
+
+  shell:experimental:
+    desc: pushes to experimental branch      
+    cmds: 
+      - cd {{.DEPLOYSTACK_SHELL_PATH}} && git checkout experimental
+      - task: shell:export
+
+  shell:master:
+    desc: pushes to master branch      
+    cmds: 
+      - cd {{.DEPLOYSTACK_SHELL_PATH}} && git checkout master
+      - task: shell:export
+
+  shell:main:
+    desc: pushes to main branch      
+    cmds: 
+      - cd {{.DEPLOYSTACK_SHELL_PATH}} && git checkout main
+      - task: shell:export    
+
+  shell:export:
+    desc: Copies key files to the shell image locally.      
+    cmds: 
+      - cp docker/deploystack {{.DEPLOYSTACK_SHELL_PATH}}
+      - cp docker/deploystack_exec.go {{.DEPLOYSTACK_SHELL_PATH}}/ds
+      - cp docker/version.sh {{.DEPLOYSTACK_SHELL_PATH}}/ds
+      - cd {{.DEPLOYSTACK_SHELL_PATH}} && git add .
+      - cd {{.DEPLOYSTACK_SHELL_PATH}} && git commit -m "chore:update from deploystack core version"
+      - cd {{.DEPLOYSTACK_SHELL_PATH}} && git push
