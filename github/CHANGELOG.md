@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/GoogleCloudPlatform/deploystack/compare/github/v1.8.0...github/v1.10.0) (2023-03-08)
+
+
+### Bug Fixes
+
+* number of issues around mod updates ([a694472](https://github.com/GoogleCloudPlatform/deploystack/commit/a694472f68184030fad2f47bac32d12188921420))
+
 ## [1.8.0](https://github.com/GoogleCloudPlatform/deploystack/compare/github/v1.6.1...github/v1.8.0) (2023-03-03)
 
 
