@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.9.0...v1.10.0) (2023-03-08)
+
+
+### Features
+
+* added suggestion to the dsexec ([b2a9a53](https://github.com/GoogleCloudPlatform/deploystack/commit/b2a9a53ba5021ba6fff76797d6fd9fe243ac9c58))
+
+
+### Bug Fixes
+
+* number of issues around mod updates ([a694472](https://github.com/GoogleCloudPlatform/deploystack/commit/a694472f68184030fad2f47bac32d12188921420))
+
 ## [1.9.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.8.1...v1.9.0) (2023-03-07)
 
 
