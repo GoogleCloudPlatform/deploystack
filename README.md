@@ -4,7 +4,7 @@
 
 [DeployStack](http://deploystack.dev) is a one click solution for running 
 Terraform projects for Google Cloud Platfom using [Cloud Shell](https://cloud.google.com/shell) 
-It uses (Open in Cloud Shell)[https://cloud.google.com/shell/docs/open-in-cloud-shell] 
+It uses [Open in Cloud Shell](https://cloud.google.com/shell/docs/open-in-cloud-shell) 
 to guide users from a link to a series or questions to help them install a 
 Terraform solution in their own Google Cloud Platform project space - prompting 
 them to choose answers to questions like "What [datacenter] zone do you want to 
@@ -13,6 +13,9 @@ are right for them.
 
 ![DeployStack UX](/assets/demo.gif)
 
+For technical reasons, at this time, it is limited to working with github repos 
+owned by [Google Cloud Platform](https://github.com/GoogleCloudPlatform). You 
+can see a list of DeployStack projects on [cloud.google.com](https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack).
 
 ## This Codebase
 
