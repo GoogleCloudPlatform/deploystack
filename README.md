@@ -3,7 +3,7 @@
 
 
 [DeployStack](http://deploystack.dev) is a one click solution for running 
-Terraform projects for Google Cloud Platfom using [Cloud Shell](https://cloud.google.com/shell) 
+Terraform projects for Google Cloud Platfom using [Cloud Shell](https://cloud.google.com/shell). 
 It uses [Open in Cloud Shell](https://cloud.google.com/shell/docs/open-in-cloud-shell) 
 to guide users from a link to a series or questions to help them install a 
 Terraform solution in their own Google Cloud Platform project space - prompting 
@@ -17,6 +17,10 @@ For technical reasons, at this time, it is limited to working with github repos
 owned by [Google Cloud Platform](https://github.com/GoogleCloudPlatform). You 
 can see a list of DeployStack projects on [cloud.google.com](https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack).
 
+## Authoring
+Authoring information has been moved to [deploystack/AUTHORING.MD](/AUTHORING.MD).
+
+
 ## This Codebase
 
 This project is to centralize all of the tools and processes to get terminal
@@ -25,11 +29,6 @@ Ultimately this codebase creates an executable that runs on Cloud Shell and
 works with other tools to drive the experience.
 
 It's broken up into packages with different responsibilities: 
-
-
-
-## Authoring
-Authoring information has been moved to [deploystack/AUTHORING.MD](/AUTHORING.MD).
 
 <dl>
   <dt>deploystack</dt>
@@ -56,7 +55,7 @@ Authoring information has been moved to [deploystack/AUTHORING.MD](/AUTHORING.MD
 ## Testing this Repo
 
 In order to test the helper app in this repo, we need to do a fair amount of
-manipulation of projects and what not. To faciliate that the tests require a
+manipulation of projects and what not. The tests require a
 Service Account key json file. To faciliate this there is a script in
 `tools/credsfile` that will create a service account, give it the right access
 and service enablements, and export out a key file to use with testing.
