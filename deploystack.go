@@ -300,13 +300,13 @@ func UniquePath(candidate string) string {
 // and try again.
 func AttemptRepo(name, wd string) (string, github.Repo, error) {
 
-	gh := github.Repo{Name: name, Owner: "GoogleCloudPlatform", Branch: "main"}
+	gh := github.New(name)
 
 	dir, err := DownloadRepo(gh, wd)
 	if err != nil {
 		// This allows using a shortened name of the repo as the label here.
 		if !strings.Contains(gh.Name, "deploystack-") {
-			gh = github.Repo{Name: fmt.Sprintf("deploystack-%s", name), Owner: "GoogleCloudPlatform", Branch: "main"}
+			gh = github.New(fmt.Sprintf("deploystack-%s", name))
 			dir, err = DownloadRepo(gh, wd)
 		}
 	}
