@@ -1025,7 +1025,7 @@ func TestAttemptRepo(t *testing.T) {
 				Owner:  "GoogleCloudPlatform",
 				Branch: "main",
 			},
-			err: fmt.Errorf("cannot get repo"),
+			err: fmt.Errorf("cannot clone repo"),
 		},
 	}
 
