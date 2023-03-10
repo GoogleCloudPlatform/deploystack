@@ -1,0 +1,51 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+title: Load Balanced VMs (BASICLB)
+name: load-balanced-vms
+duration: 5
+documentation_link: https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/load-balanced-vms
+hard_settings:
+  basename: load-balanced-vms
+custom_settings:
+- name: nodes
+  description: Please enter the number of nodes in the Managed Instance Group
+  default: '3'
+- name: label
+  description: Please enter the 'label' to apply to resources which will be affected
+    by this process
+  default: costsentry
+- name: location
+  description: the location for the Cloud Storage Bucket
+  default: US
+  options:
+  - US
+  - EU
+  - ASIA
+- name: budgetamount
+  description: Please enter the number limit for this budget
+  default: '0'
+- name: yesorno
+  description: Enter your choice for the site, will it answer `yes` or `no`
+  default: 'yes'
+  options:
+  - 'no'
+  - 'yes' 
+- name: roles
+  description: Please choose the role that you need for this project
+  default: 'roles/owner'
+  options:
+  - 'roles/reviewer|Project Reviewer'
+  - 'roles/owner|Project Owner'
+  - 'roles/vison.reader|Cloud Vision Reader'
