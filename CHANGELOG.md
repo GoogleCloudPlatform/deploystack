@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.11.2...v1.11.3) (2023-03-10)
+
+
+### Bug Fixes
+
+* stop treating packages like modules ([e0b9674](https://github.com/GoogleCloudPlatform/deploystack/commit/e0b9674e1c30578d9bcd80d45ff784fd730e2a84))
+* upgrade tests to use root testdata ([2557700](https://github.com/GoogleCloudPlatform/deploystack/commit/2557700e98affb17a5d9ad4182125fb4438cb1e2))
+
 ## [1.11.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.11.1...v1.11.2) (2023-03-10)
 
 
