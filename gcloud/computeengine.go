@@ -177,13 +177,13 @@ func (c *Client) ImageLatestGet(project, imageproject, imagefamily string) (stri
 
 	svc, err := c.getComputeService(project)
 	if err != nil {
-		return resp, err
+		return resp, fmt.Errorf("ImageLatestGet: could not get compute service: %s", err)
 	}
 
 	filter := fmt.Sprintf("(family=\"%s\")", imagefamily)
 	results, err := svc.Images.List(imageproject).Filter(filter).Do()
 	if err != nil {
-		return resp, err
+		return resp, fmt.Errorf("ImageLatestGet: could not get filter list images: %s", err)
 	}
 
 	sort.Slice(results.Items, func(i, j int) bool {

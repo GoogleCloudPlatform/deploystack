@@ -26,6 +26,9 @@ import (
 // permission to enable the service in the project or it's a nonexistent service name.
 var ErrorServiceNotExistOrNotAllowed = fmt.Errorf("Not found or permission denied for service")
 
+// ErrorProjectRequired communicates that am empty project string has been passed
+var ErrorProjectRequired = fmt.Errorf("Project may not be an empty string")
+
 func (c *Client) getServiceUsageService() (*serviceusage.Service, error) {
 	var err error
 	svc := c.services.serviceUsage
@@ -54,12 +57,12 @@ func (c *Client) ServiceEnable(project, service string) error {
 
 	svc, err := c.getServiceUsageService()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not getServiceUsageService: %s", err)
 	}
 
 	enabled, err := c.ServiceIsEnabled(project, service)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not confirm if service is already enabled: %w", err)
 	}
 
 	if enabled {
@@ -96,6 +99,10 @@ func (c *Client) ServiceEnable(project, service string) error {
 func (c *Client) ServiceIsEnabled(project, service string) (bool, error) {
 	svc, err := c.getServiceUsageService()
 
+	if project == "" {
+		return false, ErrorProjectRequired
+	}
+
 	s := fmt.Sprintf("projects/%s/services/%s", project, service)
 	current, err := svc.Services.Get(s).Do()
 	if err != nil {
@@ -103,7 +110,7 @@ func (c *Client) ServiceIsEnabled(project, service string) (bool, error) {
 			return false, ErrorServiceNotExistOrNotAllowed
 		}
 
-		return false, err
+		return false, fmt.Errorf("cannot get the service for resource (%s): %w", s, err)
 	}
 
 	if current.State == "ENABLED" {

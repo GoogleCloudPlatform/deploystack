@@ -538,8 +538,9 @@ func TestGetLatestImage(t *testing.T) {
 		imageFamily  string
 		want         string
 	}{
-		"debian": {projectID, "debian-cloud", "debian-11", getLatestImageByProjectFromFile(imgs, "debian-cloud", "debian-11")},
-		"rhel":   {projectID, "rhel-cloud", "rhel-9", getLatestImageByProjectFromFile(imgs, "rhel-cloud", "rhel-9")},
+		"debian":  {projectID, "debian-cloud", "debian-11", getLatestImageByProjectFromFile(imgs, "debian-cloud", "debian-11")},
+		"rhel":    {projectID, "rhel-cloud", "rhel-9", getLatestImageByProjectFromFile(imgs, "rhel-cloud", "rhel-9")},
+		"default": {projectID, DefaultImageProject, DefaultImageFamily, getLatestImageByProjectFromFile(imgs, DefaultImageProject, DefaultImageFamily)},
 	}
 
 	for name, tc := range tests {
