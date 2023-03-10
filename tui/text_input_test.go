@@ -158,7 +158,7 @@ func TestTextInput(t *testing.T) {
 			tcOutput := readTestFile(testdata)
 			if content != tcOutput {
 				writeDebugFile(content, testdata)
-				t.Fatalf("text wasn't the same")
+				t.Fatalf("text wasn't the same. Look in testdata for expected and debug/testdata for got")
 			}
 		})
 	}
