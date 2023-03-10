@@ -16,6 +16,7 @@ package tui
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -45,7 +46,7 @@ func TestPicker(t *testing.T) {
 			preProcessor: nil,
 			exstate:      "idle",
 			msg:          tea.MouseEvent{},
-			outputFile:   "testdata/picker_basic.txt",
+			outputFile:   "picker_basic.txt",
 		},
 		"basic_with_content": {
 			listLabel:    "test",
@@ -54,7 +55,7 @@ func TestPicker(t *testing.T) {
 			preProcessor: nil,
 			state:        "idle",
 			msg:          tea.MouseEvent{},
-			outputFile:   "testdata/picker_basic_with_content.txt",
+			outputFile:   "picker_basic_with_content.txt",
 			content:      "Adding some basic content to test",
 		},
 		"spinner": {
@@ -69,7 +70,7 @@ func TestPicker(t *testing.T) {
 			}(),
 			state:      "querying",
 			msg:        tea.MouseEvent{},
-			outputFile: "testdata/picker_spinner.txt",
+			outputFile: "picker_spinner.txt",
 		},
 		"items": {
 			listLabel:    "test",
@@ -78,7 +79,7 @@ func TestPicker(t *testing.T) {
 			preProcessor: nil,
 			state:        "displaying",
 			msg:          tea.Msg([]list.Item{item{label: "Choice", value: "choice"}}),
-			outputFile:   "testdata/picker_items.txt",
+			outputFile:   "picker_items.txt",
 		},
 		"items_with_default": {
 			listLabel:    "test",
@@ -93,7 +94,7 @@ func TestPicker(t *testing.T) {
 				item{label: "Choice3", value: "choice3"},
 			}),
 			defaultValue: "choice3",
-			outputFile:   "testdata/picker_items_with_default.txt",
+			outputFile:   "picker_items_with_default.txt",
 		},
 		"error": {
 			listLabel:    "test",
@@ -102,7 +103,7 @@ func TestPicker(t *testing.T) {
 			preProcessor: nil,
 			state:        "idle",
 			msg:          errMsg{err: fmt.Errorf("error")},
-			outputFile:   "testdata/picker_error.txt",
+			outputFile:   "picker_error.txt",
 		},
 
 		"success": {
@@ -112,7 +113,7 @@ func TestPicker(t *testing.T) {
 			preProcessor:   nil,
 			state:          "idle",
 			msg:            successMsg{},
-			outputFile:     "testdata/picker_success.txt",
+			outputFile:     "picker_success.txt",
 			exlistLabel:    "dummy",
 			exspinnerLabel: "dummy",
 			exkey:          "dummy",
@@ -131,7 +132,7 @@ func TestPicker(t *testing.T) {
 			}(),
 			state:          "displaying",
 			msg:            tea.KeyMsg{Type: tea.KeyEnter},
-			outputFile:     "testdata/picker_send_enter.txt",
+			outputFile:     "picker_send_enter.txt",
 			exlistLabel:    "dummy",
 			exspinnerLabel: "dummy",
 			exkey:          "dummy",
@@ -145,7 +146,7 @@ func TestPicker(t *testing.T) {
 			preProcessor: nil,
 			state:        "",
 			msg:          tea.KeyMsg{Type: tea.KeyCtrlC},
-			outputFile:   "testdata/picker_send_ctrl_c.txt",
+			outputFile:   "picker_send_ctrl_c.txt",
 			exkey:        "",
 		},
 	}
@@ -217,9 +218,10 @@ func TestPicker(t *testing.T) {
 
 			if newP.key != "" {
 				content := newP.View()
-				tcOutput := readTestFile(tc.outputFile)
+				testdata := filepath.Join(testFilesDir, "tui/testdata", tc.outputFile)
+				tcOutput := readTestFile(testdata)
 				if content != tcOutput {
-					writeDebugFile(content, tc.outputFile)
+					writeDebugFile(content, testdata)
 					t.Fatalf("text wasn't the same")
 				}
 
