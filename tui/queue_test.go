@@ -15,6 +15,7 @@
 package tui
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -144,11 +145,11 @@ func TestQueueProcess(t *testing.T) {
 		keys   []string
 	}{
 		"basic": {
-			config: "testdata/config_basic.yaml",
+			config: "config_basic.yaml",
 			keys:   []string{},
 		},
 		"complex": {
-			config: "testdata/config_complex.yaml",
+			config: "config_complex.yaml",
 			keys: []string{
 				"project_id",
 				"project_id_2",
@@ -187,7 +188,8 @@ func TestQueueProcess(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			q := getTestQueue(appTitle, "test")
-			s := readTestFile(tc.config)
+			testdata := filepath.Join(testFilesDir, "tui/testdata", tc.config)
+			s := readTestFile(testdata)
 
 			config, err := config.NewConfigYAML([]byte(s))
 			if err != nil {

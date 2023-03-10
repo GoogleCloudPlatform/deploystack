@@ -16,6 +16,7 @@ package tui
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -38,7 +39,7 @@ func TestTextInput(t *testing.T) {
 		exspinnerLabel string
 	}{
 		"basic": {
-			outputFile:   "testdata/page_custom_basic.txt",
+			outputFile:   "page_custom_basic.txt",
 			label:        "test",
 			spinnerLabel: "test",
 			key:          "test",
@@ -52,7 +53,7 @@ func TestTextInput(t *testing.T) {
 			defaultValue:   "test",
 			key:            "test",
 			msg:            tea.KeyMsg{Type: tea.KeyEnter},
-			outputFile:     "testdata/page_custom_send_enter.txt",
+			outputFile:     "page_custom_send_enter.txt",
 			exlabel:        "dummy",
 			exspinnerLabel: "loading dummy",
 			exkey:          "dummy",
@@ -60,7 +61,7 @@ func TestTextInput(t *testing.T) {
 		},
 
 		"success": {
-			outputFile:     "testdata/page_custom_success.txt",
+			outputFile:     "page_custom_success.txt",
 			label:          "test",
 			spinnerLabel:   "test",
 			key:            "test",
@@ -72,7 +73,7 @@ func TestTextInput(t *testing.T) {
 		},
 
 		"spinner": {
-			outputFile:   "testdata/page_custom_spinner.txt",
+			outputFile:   "page_custom_spinner.txt",
 			label:        "test",
 			spinnerLabel: "test",
 			key:          "test",
@@ -81,7 +82,7 @@ func TestTextInput(t *testing.T) {
 		},
 
 		"error": {
-			outputFile:   "testdata/page_custom_error.txt",
+			outputFile:   "page_custom_error.txt",
 			label:        "test",
 			spinnerLabel: "test",
 			key:          "test",
@@ -153,9 +154,10 @@ func TestTextInput(t *testing.T) {
 			}
 
 			content := nextTi.View()
-			tcOutput := readTestFile(tc.outputFile)
+			testdata := filepath.Join(testFilesDir, "tui/testdata", tc.outputFile)
+			tcOutput := readTestFile(testdata)
 			if content != tcOutput {
-				writeDebugFile(content, tc.outputFile)
+				writeDebugFile(content, testdata)
 				t.Fatalf("text wasn't the same")
 			}
 		})
