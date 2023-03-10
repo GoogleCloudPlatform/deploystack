@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.11.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.11.1...v1.11.2) (2023-03-10)
+
+
+### Bug Fixes
+
+* removing Makefile in leiu of taskfile ([73659b0](https://github.com/GoogleCloudPlatform/deploystack/commit/73659b03624e28c87bfb791e36bb4573a6691b8b))
+* Trying to get Release please to see the right verison ([1076491](https://github.com/GoogleCloudPlatform/deploystack/commit/10764917512a44bfa6bdc3246a796b17eda49fa5))
+* unblocking release please. It's free. Do what ever you will beep boop! ([e3f894e](https://github.com/GoogleCloudPlatform/deploystack/commit/e3f894efeaf1064ccce86da41ca9fcb25d8a205b))
+
 ## [1.11.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.11.0...v1.11.1) (2023-03-10)
 
 
