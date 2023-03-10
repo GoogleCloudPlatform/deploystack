@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.11.0...v1.11.1) (2023-03-10)
+
+
+### Bug Fixes
+
+* collapsing all of the different modules into packages ([ff7a7fc](https://github.com/GoogleCloudPlatform/deploystack/commit/ff7a7fc0a9c860b5bce8a21b0627cd17f098bfe7))
+
 ## [1.11.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.10.0...v1.11.0) (2023-03-10)
 
 
