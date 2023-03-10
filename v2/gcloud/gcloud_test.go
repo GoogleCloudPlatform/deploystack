@@ -278,8 +278,8 @@ func TestCacheableFunctions(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 
-			_, ok := client.cache[tc.cachekey]
-			if ok {
+			if contents, ok := client.cache[tc.cachekey]; ok {
+				t.Logf("cache contains: %+v", contents)
 				t.Fatalf("cache should be empty but it isn't")
 			}
 
@@ -288,8 +288,7 @@ func TestCacheableFunctions(t *testing.T) {
 				t.Fatalf("coult not get first answer from client for test: %s", err)
 			}
 
-			_, ok = client.cache[tc.cachekey]
-			if !ok {
+			if _, ok := client.cache[tc.cachekey]; !ok {
 				t.Fatalf("cache should have a result but it doesn't")
 			}
 
