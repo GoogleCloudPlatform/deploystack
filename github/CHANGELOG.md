@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/GoogleCloudPlatform/deploystack/compare/github/v1.10.0...github/v1.11.0) (2023-03-10)
+
+
+### Features
+
+* implemented New, with better ways of creating repos ([cc2b35a](https://github.com/GoogleCloudPlatform/deploystack/commit/cc2b35a602301f06c7bcf40d237e26b0d8b5ec83))
+
 ## [1.10.0](https://github.com/GoogleCloudPlatform/deploystack/compare/github/v1.8.0...github/v1.10.0) (2023-03-08)
 
 
