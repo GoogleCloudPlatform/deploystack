@@ -275,7 +275,9 @@ tasks:
       - dsexec:clean
       - go:clean
     cmds:
-      - go mod init dsexec && go mod tidy
+      - go mod init dsexec
+      - go get github.com/GoogleCloudPlatform/deploystack@v1.11.2 
+      - go mod tidy
       - ./version.sh
       - go build -o dsexec deploystack_exec.go
 

@@ -11,10 +11,6 @@ WORKDIR /app/ds
 COPY deploystack_exec.go deploystack_exec.go 
 COPY version.sh version.sh 
 RUN go mod init exec
-RUN go get github.com/GoogleCloudPlatform/deploystack/github${DS_GITHUB_VERSION}
-RUN go get github.com/GoogleCloudPlatform/deploystack/config${DS_CONFIG_VERSION}
-RUN go get github.com/GoogleCloudPlatform/deploystack/tui${DS_TUI_VERSION}
-RUN go get github.com/GoogleCloudPlatform/deploystack/gcloud${DS_GCLOUD_VERSION}
 RUN go get github.com/GoogleCloudPlatform/deploystack${DS_BASE_VERSION}
 RUN go mod tidy
 RUN ./version.sh

@@ -29,20 +29,8 @@ import (
 	"github.com/GoogleCloudPlatform/deploystack/tui"
 )
 
-//go:embed versionTUI
+//go:embed versionDS
 var versionDS string
-
-//go:embed versionTUI
-var versionTUI string
-
-//go:embed versionGcloud
-var versionGcloud string
-
-//go:embed versionConfig
-var versionConfig string
-
-//go:embed versionTerraform
-var versionTerraform string
 
 //go:embed buildTime
 var buildTime string
@@ -58,10 +46,6 @@ func main() {
 
 	if *version {
 		fmt.Printf("deploystack:        %s\n", strings.TrimSpace(versionDS))
-		fmt.Printf("deploystack/tui:    %s\n", strings.TrimSpace(versionTUI))
-		fmt.Printf("deploystack/gcloud: %s\n", strings.TrimSpace(versionGcloud))
-		fmt.Printf("deploystack/config: %s\n", strings.TrimSpace(versionConfig))
-		fmt.Printf("deploystack/terraform: %s\n", strings.TrimSpace(versionTerraform))
 		fmt.Printf("buildTime:          %s\n", strings.TrimSpace(buildTime))
 		return
 	}
