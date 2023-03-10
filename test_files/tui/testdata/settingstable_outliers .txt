@@ -1,0 +1,10 @@
+
+Setting                            Value                                                  
+                                                                                          
+[0;37mStack Name[0m                         [1;36mtest-stack-value[0m                                       
+[0;37mProject Name[0m                       [1;36mtest-project[0m                                           
+[0;37mProject ID[0m                         [1;36mtest-id[0m                                                
+[0;37mProject Number[0m                     [1;36m123344567[0m                                              
+[0;37mEmpty[0m                              [1;36m[0m                                                       
+[0;37mTestkey[0m                            [1;36mtestvalue[0m                                              
+[0;37mTestkey2[0m                           [1;36m123456789012345678901234567890123456789012345...       

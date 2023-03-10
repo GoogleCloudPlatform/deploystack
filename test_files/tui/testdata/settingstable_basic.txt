@@ -1,0 +1,4 @@
+
+Setting                            Value                                                  
+                                                                                          
+[0;37mTestkey[0m                            [1;36mtestvalue[0m                                              

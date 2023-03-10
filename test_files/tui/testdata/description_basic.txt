@@ -1,0 +1,12 @@
+[0;37mThis process will install the following resources:[0m                                                        
+                                                        
+[0;37mVM template[0m             [1;36mInstance Template[0m               
+[0;37mClustering[0m              [1;36mManaged Instance Group[0m          
+[0;37mLoad Balancing[0m          [1;36mLoad Balancer[0m                   
+
+[0;37m[0m
+
+[0;37mIt's going to take around [0m[1;36m5[0m[0;37m minutes.[0m
+
+[0;37mIf you would like more information about this stack, [0m[0;37mplease read the documentation at: [0m[4;36mhttps://example.com[0m
+
