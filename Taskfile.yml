@@ -62,15 +62,6 @@ tasks:
       - |
         gcloud secrets versions access latest --secret=creds \
         --project={{.DEPLOYSTACK_TEST_PROJECT}} > creds.json
-  v2:test:
-    desc: Run all v2 tests
-    deps:
-      - v2:deploystack:test
-      - v2:tui:test
-      - v2:gcloud:test
-      - v2:github:test
-      - v2:terraform:test
-      - v2:config:test
 
   test:
     desc: Run all tests
@@ -330,50 +321,4 @@ tasks:
       - cd {{.DEPLOYSTACK_SHELL_PATH}} && git commit -m "chore:update from deploystack core version"
       - cd {{.DEPLOYSTACK_SHELL_PATH}} && git push
 
-  v2:deploystack:test:
-    desc: Tests the tui package
-    deps:
-      - go:clean
-    dir: v2/
-    cmds: 
-      - go test .  -cover
-
-  v2:tui:test:
-    desc: Tests the tui package
-    deps:
-      - go:clean
-    dir: v2/tui
-    cmds: 
-      - go test .  -cover
- 
-  v2:gcloud:test:
-    desc: Tests the gcloud package
-    deps:
-      - go:clean
-    dir: v2/gcloud
-    cmds: 
-      - go test .  -cover     
- 
-  v2:config:test:
-    desc: Tests the config package
-    deps:
-      - go:clean
-    dir: v2/config
-    cmds: 
-      - go test .  -cover     
- 
-  v2:terraform:test:
-    desc: Tests the terraform package
-    deps:
-      - go:clean
-    dir: v2/terraform
-    cmds: 
-      - go test .  -cover
- 
-  v2:github:test:
-    desc: Tests the github package
-    deps:
-      - go:clean
-    dir: v2/github
-    cmds: 
-      - go test .  -cover     
+      
