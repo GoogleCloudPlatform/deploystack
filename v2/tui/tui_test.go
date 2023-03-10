@@ -19,6 +19,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
@@ -34,7 +35,10 @@ func readTestFile(file string) string {
 
 func writeDebugFile(content string, target string) {
 	d1 := []byte(content)
-	err := os.WriteFile("debug/"+target, d1, 0o644)
+
+	dest := strings.ReplaceAll(target, "tui/testdata", "tui/debug/testdata")
+
+	err := os.WriteFile(dest, d1, 0o644)
 	if err != nil {
 		log.Printf("err: %s", err)
 	}

@@ -41,13 +41,14 @@ var (
 	ctx              = context.Background()
 	defaultUserAgent = "deploystack/testing"
 	testFilesDir     = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+	credsPath        = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "creds.json")
 )
 
 func TestMain(m *testing.M) {
 	var err error
-	opts = option.WithCredentialsFile("../creds.json")
+	opts = option.WithCredentialsFile(credsPath)
 
-	dat, err := os.ReadFile("../creds.json")
+	dat, err := os.ReadFile(credsPath)
 	if err != nil {
 		log.Fatalf("unable to handle the json config file: %v", err)
 	}

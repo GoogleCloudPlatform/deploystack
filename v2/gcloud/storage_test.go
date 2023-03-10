@@ -51,7 +51,11 @@ func TestObjectCreate(t *testing.T) {
 		path    string
 		err     error
 	}{
-		"basic": {projectID, projectID + "-testing-object", "../README.md", nil},
+		"basic": {
+			project: projectID,
+			bucket:  projectID + "-testing-object",
+			path:    "../../README.md",
+			err:     nil},
 	}
 
 	for name, tc := range tests {

@@ -15,6 +15,7 @@
 package tui
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/deploystack/config"
@@ -29,7 +30,7 @@ func TestNewProjectCreator(t *testing.T) {
 	}{
 		"basic": {
 			key:        "project_id",
-			outputFile: "testdata/project_creator_basic.txt",
+			outputFile: "project_creator_basic.txt",
 		},
 	}
 
@@ -40,10 +41,11 @@ func TestNewProjectCreator(t *testing.T) {
 			q.add(&out)
 
 			got := out.View()
-			want := readTestFile(tc.outputFile)
+			testdata := filepath.Join(testFilesDir, "tui/testdata", tc.outputFile)
+			want := readTestFile(testdata)
 
 			if want != got {
-				writeDebugFile(got, tc.outputFile)
+				writeDebugFile(got, testdata)
 				t.Fatalf("text wasn't the same")
 			}
 		})
@@ -61,12 +63,12 @@ func TestNewProjectSelector(t *testing.T) {
 		"waiting": {
 			key:        "project_id",
 			listLabel:  "Selecte a project to use",
-			outputFile: "testdata/project_selector_waiting.txt",
+			outputFile: "project_selector_waiting.txt",
 		},
 		"updated": {
 			key:        "project_id",
 			listLabel:  "Selecte a project to use",
-			outputFile: "testdata/project_selector_updated.txt",
+			outputFile: "project_selector_updated.txt",
 			update:     true,
 		},
 	}
@@ -104,10 +106,11 @@ func TestNewProjectSelector(t *testing.T) {
 			}
 
 			got := out.View()
-			want := readTestFile(tc.outputFile)
+			testdata := filepath.Join(testFilesDir, "tui/testdata", tc.outputFile)
+			want := readTestFile(testdata)
 
 			if want != got {
-				writeDebugFile(got, tc.outputFile)
+				writeDebugFile(got, testdata)
 				t.Fatalf("text wasn't the same")
 			}
 		})
@@ -123,17 +126,17 @@ func TestNewBillingSelector(t *testing.T) {
 	}{
 		"basic": {
 			key:        "billing_account",
-			outputFile: "testdata/billing_selector_basic.txt",
+			outputFile: "billing_selector_basic.txt",
 			state:      "idle",
 		},
 		"displaying": {
 			key:        "project_id",
-			outputFile: "testdata/project_selector_displaying.txt",
+			outputFile: "project_selector_displaying.txt",
 			state:      "displaying",
 		},
 		"displaying_single": {
 			key:        "project_id",
-			outputFile: "testdata/project_selector_displaying_single.txt",
+			outputFile: "project_selector_displaying_single.txt",
 			state:      "displaying",
 			single:     true,
 		},
@@ -200,10 +203,11 @@ func TestNewBillingSelector(t *testing.T) {
 			}
 
 			got := out.View()
-			want := readTestFile(tc.outputFile)
+			testdata := filepath.Join(testFilesDir, "tui/testdata", tc.outputFile)
+			want := readTestFile(testdata)
 
 			if want != got {
-				writeDebugFile(got, tc.outputFile)
+				writeDebugFile(got, testdata)
 				t.Fatalf("text wasn't the same")
 			}
 		})
@@ -265,7 +269,7 @@ func TestNewCustom(t *testing.T) {
 				Description: "A test option",
 				Default:     "Test",
 			},
-			outputFile: "testdata/custom_basic.txt",
+			outputFile: "custom_basic.txt",
 		},
 		"phone": {
 			c: config.Custom{
@@ -274,7 +278,7 @@ func TestNewCustom(t *testing.T) {
 				Default:     "1-555-555-4040",
 				Validation:  validationPhoneNumber,
 			},
-			outputFile: "testdata/custom_phone.txt",
+			outputFile: "custom_phone.txt",
 		},
 		"yesorno": {
 			c: config.Custom{
@@ -283,7 +287,7 @@ func TestNewCustom(t *testing.T) {
 				Default:     "Yes",
 				Validation:  validationYesOrNo,
 			},
-			outputFile: "testdata/custom_yesorno.txt",
+			outputFile: "custom_yesorno.txt",
 		},
 		"integer": {
 			c: config.Custom{
@@ -292,7 +296,7 @@ func TestNewCustom(t *testing.T) {
 				Default:     "5",
 				Validation:  validationInteger,
 			},
-			outputFile: "testdata/custom_integer.txt",
+			outputFile: "custom_integer.txt",
 		},
 	}
 
@@ -303,10 +307,11 @@ func TestNewCustom(t *testing.T) {
 			q.add(out)
 
 			got := out.View()
-			want := readTestFile(tc.outputFile)
+			testdata := filepath.Join(testFilesDir, "tui/testdata", tc.outputFile)
+			want := readTestFile(testdata)
 
 			if want != got {
-				writeDebugFile(got, tc.outputFile)
+				writeDebugFile(got, testdata)
 				t.Fatalf("text wasn't the same")
 			}
 		})
@@ -418,7 +423,7 @@ func TestCustomPages(t *testing.T) {
 		keys   []string
 	}{
 		"region": {
-			config: "testdata/config_multicustom.yaml",
+			config: "config_multicustom.yaml",
 			count:  6,
 			keys: []string{
 				"nodes",
@@ -435,7 +440,8 @@ func TestCustomPages(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			q := getTestQueue(appTitle, "test")
 
-			s := readTestFile(tc.config)
+			testdata := filepath.Join(testFilesDir, "tui/testdata", tc.config)
+			s := readTestFile(testdata)
 
 			config, err := config.NewConfigYAML([]byte(s))
 			if err != nil {
@@ -446,7 +452,6 @@ func TestCustomPages(t *testing.T) {
 			newCustomPages(&q)
 
 			if tc.count != len(q.models) {
-				t.Logf("Models ")
 				for _, v := range q.models {
 					t.Logf("%s", v.getKey())
 				}

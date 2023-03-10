@@ -15,6 +15,7 @@
 package tui
 
 import (
+	"path/filepath"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -29,13 +30,13 @@ func TestPage(t *testing.T) {
 	}{
 		"basic": {
 			key:        "test",
-			outputFile: "testdata/page_basic.txt",
+			outputFile: "page_basic.txt",
 			content:    []component{newTextBlock(explainText)},
 			msg:        successMsg{},
 		},
 		"send_enter": {
 			key:        "test",
-			outputFile: "testdata/page_send_enter.txt",
+			outputFile: "page_send_enter.txt",
 			content:    []component{newTextBlock(explainText)},
 			msg:        tea.KeyMsg{Type: tea.KeyEnter},
 		},
@@ -63,9 +64,12 @@ func TestPage(t *testing.T) {
 			newP.Init()
 
 			content := newP.View()
-			tcOutput := readTestFile(tc.outputFile)
+
+			testdata := filepath.Join(testFilesDir, "tui/testdata", tc.outputFile)
+
+			tcOutput := readTestFile(testdata)
 			if content != tcOutput {
-				writeDebugFile(content, tc.outputFile)
+				writeDebugFile(content, testdata)
 				t.Fatalf("text wasn't the same")
 			}
 		})
