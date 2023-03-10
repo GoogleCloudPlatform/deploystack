@@ -25,16 +25,15 @@ import (
 	"github.com/go-test/deep"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 	"github.com/kylelemons/godebug/diff"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 )
 
 var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
 
 func TestExtract(t *testing.T) {
-	wd, err := filepath.Abs("../")
-	if err != nil {
-		t.Fatalf("error setting up environment for testing %v", err)
-	}
-	testdata := fmt.Sprintf("%s/terraform/testdata/extracttest", wd)
+	testdata := filepath.Join(testFilesDir, "terraform", "extracttest")
 	tests := map[string]struct {
 		in   string
 		want Blocks
@@ -152,7 +151,8 @@ func TestExtract(t *testing.T) {
 }
 
 func TestNewBlocks(t *testing.T) {
-	mod, dia := tfconfig.LoadModule("testdata/extracttest")
+	testdata := filepath.Join(testFilesDir, "terraform", "extracttest")
+	mod, dia := tfconfig.LoadModule(testdata)
 	if dia.Err() != nil {
 		t.Fatalf("coult not initiate testdata: %v", dia.Err())
 	}
@@ -162,7 +162,7 @@ func TestNewBlocks(t *testing.T) {
 		t.Fatalf("coult not turn testdata into structured data: %v", err)
 	}
 
-	want := Blocks{
+	want := &Blocks{
 		Block{
 			Name: "snapshot",
 			Text: `resource "google_compute_snapshot" "snapshot" {
@@ -175,7 +175,7 @@ func TestNewBlocks(t *testing.T) {
 }`,
 			Kind:  "managed",
 			Type:  "google_compute_snapshot",
-			File:  "testdata/extracttest/main.tf",
+			File:  filepath.Join(testdata, "main.tf"),
 			Start: 15,
 		},
 		Block{
@@ -185,7 +185,7 @@ func TestNewBlocks(t *testing.T) {
 }`,
 			Kind:  "variable",
 			Type:  "string",
-			File:  "testdata/extracttest/variables.tf",
+			File:  filepath.Join(testdata, "variables.tf"),
 			Start: 15,
 		},
 		Block{
@@ -204,7 +204,7 @@ func TestNewBlocks(t *testing.T) {
 }`,
 			Kind:  "module",
 			Type:  "terraform-google-modules/project-factory/google//modules/project_services",
-			File:  "testdata/extracttest/main.tf",
+			File:  filepath.Join(testdata, "main.tf"),
 			Start: 24,
 		},
 		Block{
@@ -212,53 +212,33 @@ func TestNewBlocks(t *testing.T) {
 			Type:  "google_project",
 			Kind:  "data",
 			Start: 37,
-			File:  "testdata/extracttest/main.tf",
-			Text: `data "google_project" "project" {
-}`,
-		},
-		Block{
-			Name:  "project",
-			Type:  "google_project",
-			Kind:  "data",
-			Start: 37,
-			File:  "testdata/extracttest/main.tf",
+			File:  filepath.Join(testdata, "main.tf"),
 			Text: `data "google_project" "project" {
 }`,
 		},
 	}
+	want.Sort()
+	got.Sort()
 
 	for i := 0; i < len(*got); i++ {
 
-		if want[i].Name != (*got)[i].Name {
-			t.Fatalf("name expected: %+v, got: %+v", want[i].Name, (*got)[i].Name)
-		}
+		assert.Equal(t, (*want)[i].Name, (*got)[i].Name)
+		assert.Equal(t, (*want)[i].Kind, (*got)[i].Kind)
+		assert.Equal(t, (*want)[i].Type, (*got)[i].Type)
+		assert.Equal(t, (*want)[i].File, (*got)[i].File)
+		assert.Equal(t, (*want)[i].Start, (*got)[i].Start)
 
-		if want[i].Text != strings.TrimSpace((*got)[i].Text) {
+		if (*want)[i].Text != strings.TrimSpace((*got)[i].Text) {
 			fmt.Println(diff.Diff((*got)[i].Text, strings.TrimSpace((*got)[i].Text)))
-			t.Fatalf("text expected: \n%+v, got: \n%+v", want[i].Text, strings.TrimSpace((*got)[i].Text))
-		}
-
-		if want[i].Kind != (*got)[i].Kind {
-			t.Fatalf("kindexpected: %+v, got: %+v", want[i].Kind, (*got)[i].Kind)
-		}
-
-		if want[i].Type != (*got)[i].Type {
-			t.Fatalf("type expected: %+v, got: %+v", want[i].Type, (*got)[i].Type)
-		}
-
-		if want[i].File != (*got)[i].File {
-			t.Fatalf("file expected: %+v, got: %+v", want[i].File, (*got)[i].File)
-		}
-
-		if want[i].Start != (*got)[i].Start {
-			t.Fatalf("start expected: %+v, got: %+v", want[i].Start, (*got)[i].Start)
+			t.Fatalf("text expected: \n%+v, got: \n%+v", (*want)[i].Text, strings.TrimSpace((*got)[i].Text))
 		}
 
 	}
 }
 
 func TestVariableExtract(t *testing.T) {
-	mod, dia := tfconfig.LoadModule("testdata/variables")
+	testdata := filepath.Join(testFilesDir, "terraform", "variables")
+	mod, dia := tfconfig.LoadModule(testdata)
 	if dia.Err() != nil {
 		t.Fatalf("coult not initiate testdata: %v", dia.Err())
 	}
@@ -277,38 +257,19 @@ variable "project_id" {
 }`,
 			Kind:  "variable",
 			Type:  "string",
-			File:  "testdata/variables/variables.tf",
+			File:  filepath.Join(testdata, "variables.tf"),
 			Start: 15,
 		},
 	}
 
-	if want[0].Name != (*got)[0].Name {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Name, (*got)[0].Name)
-	}
+	assert.Equal(t, want, (*got))
 
-	if want[0].Text != (*got)[0].Text {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Text, (*got)[0].Text)
-	}
-
-	if want[0].Kind != (*got)[0].Kind {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Kind, (*got)[0].Kind)
-	}
-
-	if want[0].Type != (*got)[0].Type {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Type, (*got)[0].Type)
-	}
-
-	if want[0].File != (*got)[0].File {
-		t.Fatalf("expected: %+v, got: %+v", want[0].File, (*got)[0].File)
-	}
-
-	if want[0].Start != (*got)[0].Start {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Start, (*got)[0].Start)
-	}
 }
 
 func TestResourceExtract(t *testing.T) {
-	mod, dia := tfconfig.LoadModule("testdata/resources")
+
+	testdata := filepath.Join(testFilesDir, "terraform", "resources")
+	mod, dia := tfconfig.LoadModule(testdata)
 	if dia.Err() != nil {
 		t.Fatalf("coult not initiate testdata: %v", dia.Err())
 	}
@@ -318,7 +279,7 @@ func TestResourceExtract(t *testing.T) {
 		t.Fatalf("coult not turn testdata into structured data: %v", err)
 	}
 
-	want := Blocks{
+	want := &Blocks{
 		Block{
 			Name: "snapshot",
 			Text: `
@@ -332,39 +293,18 @@ resource "google_compute_snapshot" "snapshot" {
 }`,
 			Kind:  "managed",
 			Type:  "google_compute_snapshot",
-			File:  "testdata/resources/main.tf",
+			File:  filepath.Join(testdata, "main.tf"),
 			Start: 15,
 		},
 	}
 
-	if want[0].Name != (*got)[0].Name {
-		t.Fatalf("Name expected: %+v, got: %+v", want[0].Name, (*got)[0].Name)
-	}
+	assert.Equal(t, (*want)[0], (*got)[0])
 
-	if want[0].Text != (*got)[0].Text {
-		fmt.Println(diff.Diff(want[0].Text, (*got)[0].Text))
-		t.Fatalf("Text expected: %+v, got: %+v", want[0].Text, (*got)[0].Text)
-	}
-
-	if want[0].Kind != (*got)[0].Kind {
-		t.Fatalf("Kind expected: %+v, got: %+v", want[0].Kind, (*got)[0].Kind)
-	}
-
-	if want[0].Type != (*got)[0].Type {
-		t.Fatalf("Type expected: %+v, got: %+v", want[0].Type, (*got)[0].Type)
-	}
-
-	if want[0].File != (*got)[0].File {
-		t.Fatalf("file expected: %+v, got: %+v", want[0].File, (*got)[0].File)
-	}
-
-	if want[0].Start != (*got)[0].Start {
-		t.Fatalf("start expected: %+v, got: %+v", want[0].Start, (*got)[0].Start)
-	}
 }
 
 func TestModuleExtract(t *testing.T) {
-	mod, dia := tfconfig.LoadModule("testdata/modules")
+	testdata := filepath.Join(testFilesDir, "terraform", "modules")
+	mod, dia := tfconfig.LoadModule(testdata)
 	if dia.Err() != nil {
 		t.Fatalf("coult not initiate testdata: %v", dia.Err())
 	}
@@ -374,7 +314,7 @@ func TestModuleExtract(t *testing.T) {
 		t.Fatalf("coult not turn testdata into structured data: %v", err)
 	}
 
-	want := Blocks{
+	want := &Blocks{
 		Block{
 			Name: "project-services",
 			Text: `
@@ -392,34 +332,12 @@ module "project-services" {
 }`,
 			Kind:  "module",
 			Type:  "terraform-google-modules/project-factory/google//modules/project_services",
-			File:  "testdata/modules/main.tf",
+			File:  filepath.Join(testdata, "main.tf"),
 			Start: 15,
 		},
 	}
 
-	if want[0].Name != (*got)[0].Name {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Name, (*got)[0].Name)
-	}
-
-	if want[0].Text != (*got)[0].Text {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Text, (*got)[0].Text)
-	}
-
-	if want[0].Kind != (*got)[0].Kind {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Kind, (*got)[0].Kind)
-	}
-
-	if want[0].Type != (*got)[0].Type {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Type, (*got)[0].Type)
-	}
-
-	if want[0].File != (*got)[0].File {
-		t.Fatalf("expected: %+v, got: %+v", want[0].File, (*got)[0].File)
-	}
-
-	if want[0].Start != (*got)[0].Start {
-		t.Fatalf("expected: %+v, got: %+v", want[0].Start, (*got)[0].Start)
-	}
+	assert.Equal(t, (*want)[0], (*got)[0])
 }
 
 func TestFindClosingBracket(t *testing.T) {
@@ -454,9 +372,7 @@ func TestFindClosingBracket(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := findClosingBracket(tc.start, strings.Split(tc.content, "\n"))
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %v, got: %v", tc.want, got)
-			}
+			assert.Equal(t, tc.want, got)
 		})
 	}
 }
@@ -490,23 +406,15 @@ func TestTestConfig(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 
-			if !reflect.DeepEqual(tc.hasTest, tc.in.TestConfig.HasTest()) {
-				t.Fatalf("HasTest: expected: %+v, got: %+v", tc.hasTest, tc.in.TestConfig.HasTest())
-			}
+			assert.Equal(t, tc.hasTest, tc.in.TestConfig.HasTest())
+			assert.Equal(t, tc.hasTodo, tc.in.TestConfig.HasTodo())
 
-			if !reflect.DeepEqual(tc.hasTodo, tc.in.TestConfig.HasTodo()) {
-				t.Fatalf("HasTodo: expected: %+v, got: %+v", tc.hasTodo, tc.in.TestConfig.HasTodo())
-			}
 		})
 	}
 }
 
 func TestNewRepos(t *testing.T) {
-	wd, err := filepath.Abs("../")
-	if err != nil {
-		t.Fatalf("error setting up environment for testing %v", err)
-	}
-	testdata := fmt.Sprintf("%s/terraform/testdata/yaml", wd)
+	testdata := filepath.Join(testFilesDir, "terraform", "yaml")
 
 	tests := map[string]struct {
 		in   string
@@ -572,9 +480,7 @@ func TestListMatches(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := tc.list.Matches(tc.in)
-			if !reflect.DeepEqual(tc.want, got) {
-				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
-			}
+			assert.Equal(t, tc.want, got)
 		})
 	}
 }
@@ -607,19 +513,10 @@ func TestBlockBools(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
-			if !reflect.DeepEqual(tc.IsModule, tc.in.IsModule()) {
-				t.Fatalf("IsModule expected: %+v, got: %+v", tc.IsModule, tc.in.IsModule())
-			}
-			if !reflect.DeepEqual(tc.IsVariable, tc.in.IsVariable()) {
-				t.Fatalf("IsVariable expected: %+v, got: %+v", tc.IsVariable, tc.in.IsVariable())
-			}
-			if !reflect.DeepEqual(tc.IsResource, tc.in.IsResource()) {
-				t.Fatalf("IsResource expected: %+v, got: %+v", tc.IsResource, tc.in.IsResource())
-			}
-			if !reflect.DeepEqual(tc.NoDefault, tc.in.NoDefault()) {
-				t.Fatalf("NoDefault expected: %+v, got: %+v", tc.NoDefault, tc.in.NoDefault())
-			}
+			assert.Equal(t, tc.IsModule, tc.in.IsModule())
+			assert.Equal(t, tc.IsVariable, tc.in.IsVariable())
+			assert.Equal(t, tc.IsResource, tc.in.IsResource())
+			assert.Equal(t, tc.NoDefault, tc.in.NoDefault())
 		})
 	}
 }
@@ -720,7 +617,7 @@ func TestGetResourceText(t *testing.T) {
 		target string
 	}{
 		"basic": {
-			in:     "testdata/resources",
+			in:     "resources",
 			target: "google_compute_snapshot.snapshot",
 			want: `
 resource "google_compute_snapshot" "snapshot" {
@@ -733,7 +630,7 @@ resource "google_compute_snapshot" "snapshot" {
 }`,
 		},
 		"begin at zero": {
-			in:     "testdata/resources_begin_at_zero",
+			in:     "resources_begin_at_zero",
 			target: "google_compute_snapshot.snapshot",
 			want: `resource "google_compute_snapshot" "snapshot" {
   project           = var.project_id
@@ -745,7 +642,7 @@ resource "google_compute_snapshot" "snapshot" {
 }`,
 		},
 		"filenotfound": {
-			in:     "testdata/resources_not_exist",
+			in:     "resources_not_exist",
 			target: "google_compute_snapshot.snapshot",
 			want:   ``,
 			err:    fmt.Errorf("could not get terraform file"),
@@ -755,7 +652,8 @@ resource "google_compute_snapshot" "snapshot" {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 
-			mod, _ := tfconfig.LoadModule(tc.in)
+			testdata := filepath.Join(testFilesDir, "terraform", tc.in)
+			mod, _ := tfconfig.LoadModule(testdata)
 
 			r := mod.ManagedResources[tc.target]
 
@@ -784,6 +682,7 @@ resource "google_compute_snapshot" "snapshot" {
 }
 
 func TestBlocks(t *testing.T) {
+	testdata := filepath.Join(testFilesDir, "terraform")
 	tests := map[string]struct {
 		in   interface{}
 		want Block
@@ -795,7 +694,7 @@ func TestBlocks(t *testing.T) {
 				Type: "google_compute_snapshot",
 				Mode: tfconfig.ManagedResourceMode,
 				Pos: tfconfig.SourcePos{
-					Filename: "testdata/resources/main.tf",
+					Filename: filepath.Join(testdata, "resources/main.tf"),
 					Line:     15,
 				},
 			},
@@ -804,7 +703,7 @@ func TestBlocks(t *testing.T) {
 				Type:  "google_compute_snapshot",
 				Kind:  "managed",
 				Start: 15,
-				File:  "testdata/resources/main.tf",
+				File:  filepath.Join(testdata, "resources/main.tf"),
 				Text: `
 resource "google_compute_snapshot" "snapshot" {
   project           = var.project_id
@@ -822,7 +721,7 @@ resource "google_compute_snapshot" "snapshot" {
 				Type: "google_compute_snapshot",
 				Mode: tfconfig.ManagedResourceMode,
 				Pos: tfconfig.SourcePos{
-					Filename: "testdata/resources_notexist/main.tf",
+					Filename: filepath.Join(testdata, "resources_notexist/main.tf"),
 					Line:     15,
 				},
 			},
@@ -831,7 +730,8 @@ resource "google_compute_snapshot" "snapshot" {
 				Type:  "google_compute_snapshot",
 				Kind:  "managed",
 				Start: 15,
-				File:  "testdata/resources_notexist/main.tf"},
+				File:  filepath.Join(testdata, "resources_notexist/main.tf"),
+			},
 			err: fmt.Errorf("could not extract text from Resource"),
 		},
 		"variable-good": {
@@ -839,7 +739,7 @@ resource "google_compute_snapshot" "snapshot" {
 				Name: "project_id",
 				Type: "string",
 				Pos: tfconfig.SourcePos{
-					Filename: "testdata/variables/variables.tf",
+					Filename: filepath.Join(testdata, "variables/variables.tf"),
 					Line:     15,
 				},
 			},
@@ -848,7 +748,7 @@ resource "google_compute_snapshot" "snapshot" {
 				Type:  "string",
 				Kind:  "variable",
 				Start: 15,
-				File:  "testdata/variables/variables.tf",
+				File:  filepath.Join(testdata, "variables/variables.tf"),
 				Text: `
 variable "project_id" {
   type = string
@@ -860,7 +760,7 @@ variable "project_id" {
 				Name: "project_id",
 				Type: "string",
 				Pos: tfconfig.SourcePos{
-					Filename: "testdata/variables_not_exist/variables.tf",
+					Filename: filepath.Join(testdata, "variables_not_exist/variables.tf"),
 					Line:     15,
 				},
 			},
@@ -869,7 +769,7 @@ variable "project_id" {
 				Type:  "string",
 				Kind:  "variable",
 				Start: 15,
-				File:  "testdata/variables_not_exist/variables.tf",
+				File:  filepath.Join(testdata, "variables_not_exist/variables.tf"),
 			},
 			err: fmt.Errorf("could not extract text from Variable"),
 		},
@@ -878,7 +778,7 @@ variable "project_id" {
 				Name:   "project-services",
 				Source: "terraform-google-modules/project-factory/google//modules/project_services",
 				Pos: tfconfig.SourcePos{
-					Filename: "testdata/modules/main.tf",
+					Filename: filepath.Join(testdata, "modules/main.tf"),
 					Line:     15,
 				},
 			},
@@ -887,7 +787,7 @@ variable "project_id" {
 				Type:  "terraform-google-modules/project-factory/google//modules/project_services",
 				Kind:  "module",
 				Start: 15,
-				File:  "testdata/modules/main.tf",
+				File:  filepath.Join(testdata, "modules/main.tf"),
 				Text: `
 module "project-services" {
   source                      = "terraform-google-modules/project-factory/google//modules/project_services"
@@ -908,7 +808,7 @@ module "project-services" {
 				Name:   "project-services",
 				Source: "terraform-google-modules/project-factory/google//modules/project_services",
 				Pos: tfconfig.SourcePos{
-					Filename: "testdata/modules-not-exists/main.tf",
+					Filename: filepath.Join(testdata, "modules-not-exists/main.tf"),
 					Line:     15,
 				},
 			},
@@ -917,7 +817,7 @@ module "project-services" {
 				Type:  "terraform-google-modules/project-factory/google//modules/project_services",
 				Kind:  "module",
 				Start: 15,
-				File:  "testdata/modules-not-exists/main.tf",
+				File:  filepath.Join(testdata, "modules-not-exists/main.tf"),
 			},
 			err: fmt.Errorf("could not extract text from Module"),
 		},
@@ -1384,4 +1284,43 @@ var searchBlocks = Blocks{
 		File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
 		Start: 37,
 	},
+}
+
+func TestNewGCPResources(t *testing.T) {
+	working := GCPResources{}
+
+	if err := yaml.Unmarshal(resources, &working); err != nil {
+		t.Fatalf("could not get pristine version of varialble: %s", err)
+	}
+
+	tests := map[string]struct {
+		err  error
+		want GCPResources
+	}{
+		"basic": {want: working},
+		"error": {want: GCPResources{}, err: fmt.Errorf("cannot unmarshal !!str `shoudl`")},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			oldResources := resources
+			if tc.err != nil {
+				resources = []byte("{\"test\":shoudl}")
+			}
+			defer func() { resources = oldResources }()
+
+			got, err := NewGCPResources()
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected no error, got: %s", err)
+			}
+
+			if tc.err != nil && err != nil {
+				require.ErrorContains(t, err, tc.err.Error())
+				t.Skip()
+			}
+
+			assert.Equal(t, tc.want, got)
+		})
+	}
 }

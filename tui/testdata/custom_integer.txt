@@ -6,7 +6,7 @@
                                                                                                         
   [0;37m   [0;37ma number: [0m                                                                                       [0m  
   [0;37m                                                                                                    [0m  
-  [1;36m   > [7m5[0m                                                                                              [0m  
+  [1;36m   > 5                                                                                              [0m  
                                                                                                         
      Type a value or hit enter for '[1;36m5[0m'                                                                  
                                                                                                         [0m

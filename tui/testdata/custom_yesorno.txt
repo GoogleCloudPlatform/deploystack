@@ -6,7 +6,7 @@
                                                                                                         
   [0;37m   [0;37mYay or Nay: [0m                                                                                     [0m  
   [0;37m                                                                                                    [0m  
-  [1;36m   > [7mY[0mes                                                                                            [0m  
+  [1;36m   > Yes                                                                                            [0m  
                                                                                                         
      Type a value or hit enter for '[1;36mYes[0m'                                                                
                                                                                                         [0m

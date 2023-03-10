@@ -19,17 +19,17 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestClone(t *testing.T) {
-	wd, err := filepath.Abs(".")
-	if err != nil {
-		t.Fatalf("error setting up environment for testing %v", err)
-	}
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
 
-	testdata := fmt.Sprintf("%s/test_files", wd)
+func TestClone(t *testing.T) {
+
+	testdata := filepath.Join(testFilesDir, "repoforgithub")
 
 	tests := map[string]struct {
 		in   Repo
@@ -42,7 +42,7 @@ func TestClone(t *testing.T) {
 				Owner:  "GoogleCloudPlatform",
 				Branch: "main",
 			},
-			path: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
+			path: filepath.Join(testdata, "deploystack-nosql-client-server"),
 		},
 		"error": {
 			in: Repo{
@@ -50,8 +50,8 @@ func TestClone(t *testing.T) {
 				Owner:  "GoogleCloudPlatform",
 				Branch: "main",
 			},
-			path: fmt.Sprintf("%s/deploystack-nosql-client-server", testdata),
-			err:  fmt.Errorf("cannot get repo"),
+			path: filepath.Join(testdata, "deploystack-nosql-client-server-not-exist"),
+			err:  fmt.Errorf("cannot clone repo"),
 		},
 		"overwrite": {
 			in: Repo{
@@ -59,7 +59,7 @@ func TestClone(t *testing.T) {
 				Owner:  "GoogleCloudPlatform",
 				Branch: "main",
 			},
-			path: fmt.Sprintf("%s/alreadyexists", testdata),
+			path: filepath.Join(testdata, "alreadyexists"),
 			err:  fmt.Errorf("already exists"),
 		},
 	}
@@ -73,9 +73,7 @@ func TestClone(t *testing.T) {
 			}
 
 			if tc.err != nil {
-				if !strings.Contains(err.Error(), tc.err.Error()) {
-					t.Fatalf("expected: %v, got: %v", tc.err, err)
-				}
+				require.ErrorContains(t, err, tc.err.Error())
 				t.Skip()
 			}
 
@@ -154,6 +152,154 @@ func TestRepoPath(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}
+		})
+	}
+}
+
+func TestNew(t *testing.T) {
+	tests := map[string]struct {
+		name    string
+		options []Option
+		want    Repo
+	}{
+		"basic": {
+			name: "deploystack-nosql-client-server",
+			want: Repo{
+				Owner:  "GoogleCloudPlatform",
+				Name:   "deploystack-nosql-client-server",
+				Branch: "main",
+			},
+		},
+		"owner": {
+			name: "deploystack-nosql-client-server",
+			want: Repo{
+				Owner:  "tpryan",
+				Name:   "deploystack-nosql-client-server",
+				Branch: "main",
+			},
+			options: []Option{
+				Owner("tpryan"),
+			},
+		},
+		"branch": {
+			name: "deploystack-nosql-client-server",
+			want: Repo{
+				Owner:  "GoogleCloudPlatform",
+				Name:   "deploystack-nosql-client-server",
+				Branch: "experimental",
+			},
+			options: []Option{
+				Branch("experimental"),
+			},
+		},
+		"owner and branch": {
+			name: "deploystack-nosql-client-server",
+			want: Repo{
+				Owner:  "tpryan",
+				Name:   "deploystack-nosql-client-server",
+				Branch: "experimental",
+			},
+			options: []Option{
+				Owner("tpryan"),
+				Branch("experimental"),
+			},
+		},
+		"siteurl": {
+			name: "deploystack-cost-sentry",
+			want: Repo{
+				Owner:  "GoogleCloudPlatform",
+				Name:   "deploystack-cost-sentry",
+				Branch: "main",
+			},
+			options: []Option{
+				SiteURL("https://github.com/GoogleCloudPlatform/deploystack-cost-sentry"),
+			},
+		},
+		"siteurl branch": {
+			name: "deploystack-nosql-client-server",
+			want: Repo{
+				Owner:  "tpryan",
+				Name:   "microservices-demo",
+				Branch: "deploystack-enable",
+			},
+			options: []Option{
+				SiteURL("https://github.com/tpryan/microservices-demo/tree/deploystack-enable"),
+			},
+		},
+		"siteurl name empty": {
+			name: "",
+			want: Repo{
+				Owner:  "GoogleCloudPlatform",
+				Name:   "deploystack-cost-sentry",
+				Branch: "main",
+			},
+			options: []Option{
+				SiteURL("https://github.com/GoogleCloudPlatform/deploystack-cost-sentry"),
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := New(tc.name, tc.options...)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestPopulate(t *testing.T) {
+	tests := map[string]struct {
+		in   Repo
+		want Repo
+		err  error
+	}{
+		"basic": {
+			in: Repo{
+				Owner:  "GoogleCloudPlatform",
+				Name:   "deploystack-nosql-client-server",
+				Branch: "main",
+			},
+			want: Repo{
+				Owner:       "GoogleCloudPlatform",
+				Name:        "deploystack-nosql-client-server",
+				Branch:      "main",
+				Description: "A terraform solution that will create 2 VMS and a firewall rule, connect them all, to serve up a API powered by mongo.",
+			},
+		},
+		"no description": {
+			in: Repo{
+				Owner:  "tpryan",
+				Name:   "deploystack",
+				Branch: "main",
+			},
+			want: Repo{
+				Owner:       "tpryan",
+				Name:        "deploystack",
+				Branch:      "main",
+				Description: "",
+			},
+		},
+		"doesnt exist": {
+			in: Repo{
+				Owner:  "tpryan",
+				Name:   "deploystack-dontexist",
+				Branch: "main",
+			},
+			want: Repo{
+				Owner:       "tpryan",
+				Name:        "deploystack-dontexist",
+				Branch:      "main",
+				Description: "",
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tc.in
+			got.Populate()
+			assert.Equal(t, tc.want, got)
+
 		})
 	}
 }

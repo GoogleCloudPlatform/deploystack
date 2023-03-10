@@ -187,7 +187,7 @@ func (l *LabeledValues) LongestLen() int {
 	return longest
 }
 
-// GetDefault returns the deafult value of the LabeledValues list
+// GetDefault returns the default value of the LabeledValues list
 func (l *LabeledValues) GetDefault() LabeledValue {
 	for _, v := range *l {
 		if v.IsDefault {

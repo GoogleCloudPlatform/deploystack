@@ -10,7 +10,7 @@
      between 6 and 30 characters.                                                                       
                                                                                                         
      [1;36mPlease enter a new project name to create:[0m                                                       [0m  
-  [1;36m   > [7m [0m                                                                                              [0m  
+  [1;36m   >                                                                                                [0m  
                                                                                                         
      Type a value and hit enter to continue                                                             
                                                                                                         [0m
