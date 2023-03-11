@@ -65,17 +65,16 @@ type successMsg struct {
 // UIClient interface encapsulates all of the calls to gcloud that one needs to
 // make the TUI work
 type UIClient interface {
+	// CloudResourceManager
 	ProjectIDGet() (string, error)
 	ProjectList() ([]gcloud.ProjectWithBilling, error)
 	ProjectParentGet(project string) (*cloudresourcemanager.ResourceId, error)
 	ProjectCreate(project, parent, parentType string) error
 	ProjectNumberGet(id string) (string, error)
 	ProjectIDSet(id string) error
+	// Compute Engine
 	RegionList(project, product string) ([]string, error)
 	ZoneList(project, region string) ([]string, error)
-	DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error)
-	DomainIsVerified(project, domain string) (bool, error)
-	DomainRegister(project string, domaininfo *domainspb.RegisterParameters, contact gcloud.ContactData) error
 	ImageLatestGet(project, imageproject, imagefamily string) (string, error)
 	MachineTypeList(project, zone string) (*compute.MachineTypeList, error)
 	MachineTypeFamilyList(imgs *compute.MachineTypeList) gcloud.LabeledValues
@@ -83,8 +82,16 @@ type UIClient interface {
 	ImageList(project, imageproject string) (*compute.ImageList, error)
 	ImageTypeListByFamily(imgs *compute.ImageList, project, family string) gcloud.LabeledValues
 	ImageFamilyList(imgs *compute.ImageList) gcloud.LabeledValues
+	// Billing
 	BillingAccountList() ([]*cloudbilling.BillingAccount, error)
 	BillingAccountAttach(project, account string) error
+	// Domains
+	DomainIsAvailable(project, domain string) (*domainspb.RegisterParameters, error)
+	DomainIsVerified(project, domain string) (bool, error)
+	DomainRegister(project string, domaininfo *domainspb.RegisterParameters, contact gcloud.ContactData) error
+	// ServiceUsage
+	ServiceEnable(project string, service gcloud.Service) error
+	ServiceIsEnabled(project string, service gcloud.Service) (bool, error)
 }
 
 // Run takes a deploystack configuration and walks someone through all of the

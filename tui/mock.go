@@ -50,6 +50,7 @@ func (m mock) delay() {
 }
 
 func (m mock) ProjectIDGet() (string, error) {
+	m.delay()
 	if m.forceErr {
 		return "", errForced
 	}
@@ -57,6 +58,7 @@ func (m mock) ProjectIDGet() (string, error) {
 }
 
 func (m mock) ProjectIDSet(id string) error {
+	m.delay()
 	if m.forceErr {
 		return errForced
 	}
@@ -346,7 +348,6 @@ func (m mock) ProjectParentGet(project string) (*cloudresourcemanager.ResourceId
 
 	r.Id = "298490623289"
 	r.Type = "organization"
-	m.delay()
 	return r, nil
 }
 
@@ -442,6 +443,7 @@ func (m mock) DomainRegister(project string, domaininfo *domainspb.RegisterParam
 }
 
 func (m mock) ImageLatestGet(project, imageproject, imagefamily string) (string, error) {
+	m.delay()
 	if m.forceErr {
 		return "", errForced
 	}
@@ -449,6 +451,7 @@ func (m mock) ImageLatestGet(project, imageproject, imagefamily string) (string,
 }
 
 func (m mock) MachineTypeList(project, zone string) (*compute.MachineTypeList, error) {
+	m.delay()
 	if m.forceErr {
 		return nil, errForced
 	}
@@ -620,22 +623,23 @@ func (m mock) MachineTypeList(project, zone string) (*compute.MachineTypeList, e
 			{GuestCpus: 8, MemoryMb: 32768, Name: "t2d-standard-8"},
 		},
 	}
-	m.delay()
 	return &r, nil
 }
 
 func (m mock) MachineTypeFamilyList(imgs *compute.MachineTypeList) gcloud.LabeledValues {
+	m.delay()
 	client := gcloud.NewClient(context.Background(), "deploystack/test")
-
 	return client.MachineTypeFamilyList(imgs)
 }
 
 func (m mock) MachineTypeListByFamily(imgs *compute.MachineTypeList, family string) gcloud.LabeledValues {
+	m.delay()
 	client := gcloud.NewClient(context.Background(), "deploystack/test")
 	return client.MachineTypeListByFamily(imgs, family)
 }
 
 func (m mock) ImageList(project, imageproject string) (*compute.ImageList, error) {
+	m.delay()
 	if m.forceErr {
 		return nil, errForced
 	}
@@ -776,6 +780,7 @@ func (m mock) ImageList(project, imageproject string) (*compute.ImageList, error
 }
 
 func (m mock) ImageTypeListByFamily(imgs *compute.ImageList, project, family string) gcloud.LabeledValues {
+	m.delay()
 	lb := gcloud.LabeledValues{}
 
 	for _, v := range imgs.Items {
@@ -795,6 +800,7 @@ func (m mock) ImageTypeListByFamily(imgs *compute.ImageList, project, family str
 }
 
 func (m mock) ProjectNumberGet(id string) (string, error) {
+	m.delay()
 	if m.forceErr {
 		return "", errForced
 	}
@@ -802,6 +808,7 @@ func (m mock) ProjectNumberGet(id string) (string, error) {
 }
 
 func (m mock) ImageFamilyList(imgs *compute.ImageList) gcloud.LabeledValues {
+	m.delay()
 	fam := make(map[string]bool)
 	lb := gcloud.LabeledValues{}
 
@@ -837,6 +844,7 @@ func (m *mock) get(key string) interface{} {
 }
 
 func (m mock) BillingAccountList() ([]*cloudbilling.BillingAccount, error) {
+	m.delay()
 	if m.forceErr {
 		return nil, errForced
 	}
@@ -864,8 +872,25 @@ func (m mock) BillingAccountList() ([]*cloudbilling.BillingAccount, error) {
 var errForced = fmt.Errorf("this is a forced error for mocking")
 
 func (m mock) BillingAccountAttach(project, account string) error {
+	m.delay()
 	if m.forceErr {
 		return errForced
 	}
 	return nil
+}
+
+func (m mock) ServiceEnable(project string, service gcloud.Service) error {
+	m.delay()
+	if m.forceErr {
+		return errForced
+	}
+	return nil
+}
+
+func (m mock) ServiceIsEnabled(project string, service gcloud.Service) (bool, error) {
+	m.delay()
+	if m.forceErr {
+		return false, errForced
+	}
+	return true, nil
 }
