@@ -50,9 +50,15 @@ FAILED=false
 case $1 in
 
 "install")
+
+  results=$(dsexec -verify)
+  arr=($(echo "$results" | tr '|' '\n'))
+  scriptsDIR=${arr[2]}
+
   if [ -f "$scriptsDIR/preinstall.sh" ]; then
-    $scriptsDIR/preinstall.sh
+    . $scriptsDIR/preinstall.sh
   fi
+
   DEBUG=true dsexec || FAILED=true
 
   if $FAILED; then
@@ -74,19 +80,19 @@ case $1 in
   mv terraform.tfvars $terraformDIR
 
   if [ -f "$scriptsDIR/preinit.sh" ]; then
-    $scriptsDIR/preinit.sh
+    . $scriptsDIR/preinit.sh
   fi
 
   terraform -chdir="$terraformDIR" init
 
   if [ -f "$scriptsDIR/postinit.sh" ]; then
-    $scriptsDIR/postinit.sh
+    . $scriptsDIR/postinit.sh
   fi
 
   terraform -chdir="$terraformDIR" apply -auto-approve -var-file=terraform.tfvars || FAILED=true
 
   if [ -f "$scriptsDIR/postapply.sh" ]; then
-    $scriptsDIR/postapply.sh
+    . $scriptsDIR/postapply.sh
   fi
 
   if $FAILED; then
@@ -95,7 +101,7 @@ case $1 in
   fi
 
   if [ -f "$scriptsDIR/postinstall.sh" ]; then
-    $scriptsDIR/postinstall.sh
+    . $scriptsDIR/postinstall.sh
   fi
 
   if [ -f "$messagesDIR/success.txt" ]; then
@@ -116,11 +122,11 @@ case $1 in
   export TF_LOG_PATH=tfdebug.log
 
   if [ -f "$scriptsDIR/predestroy.sh" ]; then
-    $scriptsDIR/predestroy.sh
+    . $scriptsDIR/predestroy.sh
   fi
   terraform -chdir="$terraformDIR" destroy -auto-approve -var-file=terraform.tfvars
   if [ -f "$scriptsDIR/postdestroy.sh" ]; then
-    $scriptsDIR/postdestroy.sh
+   . $scriptsDIR/postdestroy.sh
   fi
   ;;
 "repo")
