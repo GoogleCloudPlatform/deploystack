@@ -161,7 +161,7 @@ func TestDescriptionRender(t *testing.T) {
 			if want != got {
 				fmt.Println(diff.Diff(want, got))
 				writeDebugFile(got, tc.outputFile)
-				t.Fatalf("text wasn't the same")
+				t.Fatalf("text wasn't the same. Look in testdata for expected and debug/testdata for got")
 			}
 		})
 	}
@@ -213,7 +213,7 @@ func TestErrorAlertRender(t *testing.T) {
 			if want != got {
 				fmt.Println(diff.Diff(want, got))
 				writeDebugFile(got, testdata)
-				t.Fatalf("text wasn't the same")
+				t.Fatalf("text wasn't the same. Look in testdata for expected and debug/testdata for got")
 			}
 		})
 	}
@@ -271,7 +271,7 @@ func TestSettingsTableRender(t *testing.T) {
 			if want != got {
 				fmt.Println(diff.Diff(want, got))
 				writeDebugFile(got, tc.outputFile)
-				t.Fatalf("text wasn't the same")
+				t.Fatalf("text wasn't the same. Look in testdata for expected and debug/testdata for got")
 			}
 		})
 	}

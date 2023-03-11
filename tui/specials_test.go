@@ -46,7 +46,7 @@ func TestNewProjectCreator(t *testing.T) {
 
 			if want != got {
 				writeDebugFile(got, testdata)
-				t.Fatalf("text wasn't the same")
+				t.Fatalf("text wasn't the same. Look in testdata for expected and debug/testdata for got")
 			}
 		})
 	}
@@ -111,7 +111,7 @@ func TestNewProjectSelector(t *testing.T) {
 
 			if want != got {
 				writeDebugFile(got, testdata)
-				t.Fatalf("text wasn't the same")
+				t.Fatalf("text wasn't the same. Look in testdata for expected and debug/testdata for got")
 			}
 		})
 	}
@@ -208,7 +208,7 @@ func TestNewBillingSelector(t *testing.T) {
 
 			if want != got {
 				writeDebugFile(got, testdata)
-				t.Fatalf("text wasn't the same")
+				t.Fatalf("text wasn't the same. Look in testdata for expected and debug/testdata for got")
 			}
 		})
 	}
@@ -312,7 +312,7 @@ func TestNewCustom(t *testing.T) {
 
 			if want != got {
 				writeDebugFile(got, testdata)
-				t.Fatalf("text wasn't the same")
+				t.Fatalf("text wasn't the same. Look in testdata for expected and debug/testdata for got")
 			}
 		})
 	}

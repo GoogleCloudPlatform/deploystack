@@ -22,9 +22,73 @@ import (
 	"google.golang.org/api/serviceusage/v1"
 )
 
+// Service is an enum that makes it easy to reference Google Cloud Services
+type Service int64
+
+const (
+	// Compute is the service name for enabling Compute Engine
+	Compute Service = iota + 1
+	// CloudResourceManager is the service name for enabling
+	// CloudResourceManager this is ultimately about manipulating projects
+	CloudResourceManager
+	// CloudBuild is the service name for enabling Cloud Build
+	CloudBuild
+	// CloudScheduler is the service name for enabling Cloud Scheduler
+	CloudScheduler
+	// Domains is the service name for enabling Cloud Domains
+	Domains
+	// CloudFunctions is the service name for enabling Cloud Functions
+	CloudFunctions
+	// Run is the service name for enabling Cloud Run
+	Run
+	// IAM is the service name for enabling Cloud IAM
+	IAM
+	// SecretManager is the service name for enabling Cloud Secret Manager
+	SecretManager
+	// Storage is the service name for enabling Cloud Storage
+	Storage
+	// Vault is the service name for enabling Cloud Vault
+	Vault
+)
+
+func (s Service) String() string {
+	apistring := "googleapis.com"
+	svc := ""
+	switch s {
+	case Compute:
+		svc = "compute"
+	case CloudResourceManager:
+		svc = "cloudresourcemanager"
+	case CloudBuild:
+		svc = "cloudbuild"
+	case Domains:
+		svc = "domains"
+	case CloudFunctions:
+		svc = "cloudfunctions"
+	case Run:
+		svc = "run"
+	case IAM:
+		svc = "iam"
+	case SecretManager:
+		svc = "secretmanager"
+	case Storage:
+		svc = "storage"
+	case CloudScheduler:
+		svc = "cloudscheduler"
+	case Vault:
+		svc = "vault"
+	default:
+		svc = "unknown"
+	}
+	return fmt.Sprintf("%s.%s", svc, apistring)
+}
+
 // ErrorServiceNotExistOrNotAllowed occurs when the user running this code doesn't have
 // permission to enable the service in the project or it's a nonexistent service name.
 var ErrorServiceNotExistOrNotAllowed = fmt.Errorf("Not found or permission denied for service")
+
+// ErrorProjectRequired communicates that am empty project string has been passed
+var ErrorProjectRequired = fmt.Errorf("Project may not be an empty string")
 
 func (c *Client) getServiceUsageService() (*serviceusage.Service, error) {
 	var err error
@@ -47,23 +111,23 @@ func (c *Client) getServiceUsageService() (*serviceusage.Service, error) {
 
 // ServiceEnable enable a service in the selected project so that query calls
 // to various lists will work.
-func (c *Client) ServiceEnable(project, service string) error {
-	if _, ok := c.enabledServices[service]; ok {
+func (c *Client) ServiceEnable(project string, service Service) error {
+	if _, ok := c.enabledServices[service.String()]; ok {
 		return nil
 	}
 
 	svc, err := c.getServiceUsageService()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not getServiceUsageService: %s", err)
 	}
 
 	enabled, err := c.ServiceIsEnabled(project, service)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not confirm if service is already enabled: %w", err)
 	}
 
 	if enabled {
-		c.enabledServices[service] = true
+		c.enabledServices[service.String()] = true
 		return nil
 	}
 
@@ -80,21 +144,25 @@ func (c *Client) ServiceEnable(project, service string) error {
 				return err
 			}
 			if enabled {
-				c.enabledServices[service] = true
+				c.enabledServices[service.String()] = true
 				return nil
 			}
 			time.Sleep(1 * time.Second)
 		}
 	}
 
-	c.enabledServices[service] = true
+	c.enabledServices[service.String()] = true
 	return nil
 }
 
 // ServiceIsEnabled checks to see if the existing service is already enabled
 // in the project we are trying to enable it in.
-func (c *Client) ServiceIsEnabled(project, service string) (bool, error) {
+func (c *Client) ServiceIsEnabled(project string, service Service) (bool, error) {
 	svc, err := c.getServiceUsageService()
+
+	if project == "" {
+		return false, ErrorProjectRequired
+	}
 
 	s := fmt.Sprintf("projects/%s/services/%s", project, service)
 	current, err := svc.Services.Get(s).Do()
@@ -103,7 +171,7 @@ func (c *Client) ServiceIsEnabled(project, service string) (bool, error) {
 			return false, ErrorServiceNotExistOrNotAllowed
 		}
 
-		return false, err
+		return false, fmt.Errorf("cannot get the service for resource (%s): %w", s, err)
 	}
 
 	if current.State == "ENABLED" {
@@ -114,7 +182,7 @@ func (c *Client) ServiceIsEnabled(project, service string) (bool, error) {
 }
 
 // ServiceDisable disables a service in the selected project
-func (c *Client) ServiceDisable(project, service string) error {
+func (c *Client) ServiceDisable(project string, service Service) error {
 	svc, err := c.getServiceUsageService()
 	if err != nil {
 		return err

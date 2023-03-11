@@ -44,7 +44,7 @@ func (c *Client) getDomainsClient(project string) (*domains.Client, error) {
 		return svc, nil
 	}
 
-	if err := c.ServiceEnable(project, "domains.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, Domains); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 

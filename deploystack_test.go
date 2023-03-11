@@ -43,11 +43,10 @@ var nosqltestdata = filepath.Join(testFilesDir, "reposformeta")
 
 var nosqlMeta = Meta{
 	DeployStack: config.Config{
-		Title:         "NOSQL CLIENT SERVER",
+		Title:         "NoSQL Client Server",
 		Name:          "nosql-client-server",
 		Duration:      5,
 		Project:       true,
-		ProjectNumber: true,
 		Region:        true,
 		RegionType:    "compute",
 		RegionDefault: "us-central1",
@@ -64,12 +63,29 @@ var nosqlMeta = Meta{
 				Type:  "string",
 			},
 		},
-		Description: `This process will configure and create two Compute Engine instances:
-* Server - which will run mongodb
-* Client - which will run a custom go application that talks to mongo and then 
-           exposes an API where you consumne data from mongo`,
+		Description: "",
+		Products: []config.Product{
+			{Product: "Compute Engine", Info: "Server - which will run mongodb"},
+			{Product: "Compute Engine", Info: "Client - which will run a custom go application"},
+		},
 	},
 	Terraform: terraform.Blocks{
+		{
+			Name: "project",
+			Kind: "data",
+			Type: "google_project",
+			File: filepath.Join(
+				nosqltestdata,
+				"deploystack-nosql-client-server",
+				"terraform",
+				"main.tf",
+			),
+			Start: 21,
+			Text: `
+data "google_project" "project" {
+  project_id = var.project_id
+}`,
+		},
 		{
 			Name: "all",
 			Kind: "managed",
@@ -80,11 +96,11 @@ var nosqlMeta = Meta{
 				"terraform",
 				"main.tf",
 			),
-			Start: 21,
+			Start: 25,
 			Text: `
 resource "google_project_service" "all" {
   for_each                   = toset(var.gcp_service_list)
-  project                    = var.project_number
+  project                    = data.google_project.project.number
   service                    = each.key
   disable_dependent_services = false
   disable_on_destroy         = false
@@ -100,11 +116,12 @@ resource "google_project_service" "all" {
 				"terraform",
 				"main.tf",
 			),
-			Start: 29,
+			Start: 34,
 			Text: `
 data "google_compute_network" "default" {
-  project = var.project_id
-  name = "default"
+  project    = var.project_id
+  name       = "default"
+  depends_on = [google_project_service.all]
 }`,
 		},
 
@@ -118,13 +135,14 @@ data "google_compute_network" "default" {
 				"terraform",
 				"main.tf",
 			),
-			Start: 34,
+			Start: 40,
 			Text: `
 resource "google_compute_network" "main" {
   provider                = google-beta
   name                    = "${var.basename}-network"
   auto_create_subnetworks = true
   project                 = var.project_id
+  depends_on              = [google_project_service.all]
 }`,
 		},
 		{
@@ -137,11 +155,11 @@ resource "google_compute_network" "main" {
 				"terraform",
 				"main.tf",
 			),
-			Start: 41,
+			Start: 48,
 			Text: `
 resource "google_compute_firewall" "default-allow-http" {
   name    = "deploystack-allow-http"
-  project = var.project_number
+  project = data.google_project.project.number
   network = google_compute_network.main.name
 
   allow {
@@ -152,6 +170,7 @@ resource "google_compute_firewall" "default-allow-http" {
   source_ranges = ["0.0.0.0/0"]
 
   target_tags = ["http-server"]
+  depends_on  = [google_project_service.all]
 }`,
 		},
 
@@ -165,11 +184,11 @@ resource "google_compute_firewall" "default-allow-http" {
 				"terraform",
 				"main.tf",
 			),
-			Start: 56,
+			Start: 64,
 			Text: `
 resource "google_compute_firewall" "default-allow-internal" {
   name    = "deploystack-allow-internal"
-  project = var.project_number
+  project = data.google_project.project.number
   network = google_compute_network.main.name
 
   allow {
@@ -177,16 +196,17 @@ resource "google_compute_firewall" "default-allow-internal" {
     ports    = ["0-65535"]
   }
 
-  allow{
+  allow {
     protocol = "udp"
     ports    = ["0-65535"]
   }
 
-  allow{
+  allow {
     protocol = "icmp"
   }
 
   source_ranges = ["10.128.0.0/20"]
+  depends_on    = [google_project_service.all]
 
 }`,
 		},
@@ -201,11 +221,11 @@ resource "google_compute_firewall" "default-allow-internal" {
 				"terraform",
 				"main.tf",
 			),
-			Start: 79,
+			Start: 88,
 			Text: `
 resource "google_compute_firewall" "default-allow-ssh" {
   name    = "deploystack-allow-ssh"
-  project = var.project_number
+  project = data.google_project.project.number
   network = google_compute_network.main.name
 
   allow {
@@ -216,6 +236,7 @@ resource "google_compute_firewall" "default-allow-ssh" {
   source_ranges = ["0.0.0.0/0"]
 
   target_tags = ["ssh-server"]
+  depends_on  = [google_project_service.all]
 }`,
 		},
 
@@ -229,14 +250,14 @@ resource "google_compute_firewall" "default-allow-ssh" {
 				"terraform",
 				"main.tf",
 			),
-			Start: 95,
+			Start: 105,
 			Text: `# Create Instances
 resource "google_compute_instance" "server" {
-  name         = "server"
-  zone         = var.zone
-  project      = var.project_id
-  machine_type = "e2-standard-2"
-  tags         = ["ssh-server", "http-server"]
+  name                      = "server"
+  zone                      = var.zone
+  project                   = var.project_id
+  machine_type              = "e2-standard-2"
+  tags                      = ["ssh-server", "http-server"]
   allow_stopping_for_update = true
 
 
@@ -283,14 +304,14 @@ resource "google_compute_instance" "server" {
 				"terraform",
 				"main.tf",
 			),
-			Start: 136,
+			Start: 146,
 			Text: `
 resource "google_compute_instance" "client" {
-  name         = "client"
-  zone         = var.zone
-  project      = var.project_id
-  machine_type = "e2-standard-2"
-  tags         = ["http-server", "https-server", "ssh-server"]
+  name                      = "client"
+  zone                      = var.zone
+  project                   = var.project_id
+  machine_type              = "e2-standard-2"
+  tags                      = ["http-server", "https-server", "ssh-server"]
   allow_stopping_for_update = true
 
   boot_disk {
@@ -347,23 +368,11 @@ variable "project_id" {
 		},
 
 		{
-			Name:  "project_number",
-			Kind:  "variable",
-			Type:  "string",
-			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
-			Start: 21,
-			Text: `
-variable "project_number" {
-  type = string
-}`,
-		},
-
-		{
 			Name:  "zone",
 			Kind:  "variable",
 			Type:  "string",
 			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
-			Start: 25,
+			Start: 21,
 			Text: `
 variable "zone" {
   type = string
@@ -375,7 +384,7 @@ variable "zone" {
 			Kind:  "variable",
 			Type:  "string",
 			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
-			Start: 29,
+			Start: 25,
 			Text: `
 variable "region" {
   type = string
@@ -387,7 +396,7 @@ variable "region" {
 			Kind:  "variable",
 			Type:  "string",
 			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
-			Start: 33,
+			Start: 29,
 			Text: `
 variable "basename" {
   type = string
@@ -399,7 +408,7 @@ variable "basename" {
 			Kind:  "variable",
 			Type:  "list(string)",
 			File:  filepath.Join(nosqltestdata, "deploystack-nosql-client-server", "terraform", "variables.tf"),
-			Start: 37,
+			Start: 33,
 			Text: `
 variable "gcp_service_list" {
   description = "The list of apis necessary for the project"
@@ -912,11 +921,10 @@ func TestSuggest(t *testing.T) {
 		"nosql-client-server": {
 			in: nosqlMeta,
 			want: config.Config{
-				Title:         "NOSQL CLIENT SERVER",
+				Title:         "NoSQL Client Server",
 				Name:          "nosql-client-server",
 				Duration:      5,
 				Project:       true,
-				ProjectNumber: true,
 				Region:        true,
 				RegionType:    "compute",
 				RegionDefault: "us-central1",
@@ -933,12 +941,10 @@ func TestSuggest(t *testing.T) {
 						Type:  "string",
 					},
 				},
-				Description: `This process will configure and create two Compute Engine instances:
-* Server - which will run mongodb
-* Client - which will run a custom go application that talks to mongo and then 
-           exposes an API where you consumne data from mongo`,
+				Description: "",
 				Products: []config.Product{
-					{Product: "Compute Engine"},
+					{Product: "Compute Engine", Info: "Server - which will run mongodb"},
+					{Product: "Compute Engine", Info: "Client - which will run a custom go application"},
 				},
 			},
 		},

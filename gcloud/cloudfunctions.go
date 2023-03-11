@@ -29,7 +29,7 @@ func (c *Client) getCloudFunctionsService(project string) (*cloudfunctions.Servi
 		return svc, nil
 	}
 
-	if err := c.ServiceEnable(project, "cloudfunctions.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, CloudFunctions); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
@@ -48,7 +48,7 @@ func (c *Client) getCloudFunctionsService(project string) (*cloudfunctions.Servi
 func (c *Client) FunctionRegionList(project string) ([]string, error) {
 	resp := []string{}
 
-	if err := c.ServiceEnable(project, "cloudfunctions.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, CloudFunctions); err != nil {
 		return resp, fmt.Errorf("error activating service for polling: %s", err)
 	}
 

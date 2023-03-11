@@ -306,12 +306,20 @@ func validateGCEDefault(input string, q *Queue) tea.Cmd {
 			return successMsg{}
 		}
 
-		project := q.stack.GetSetting("project-id")
+		project := q.stack.GetSetting("project_id")
+
 		basename := q.stack.GetSetting("basename")
 
 		defaultImage, err := q.client.ImageLatestGet(project, gcloud.DefaultImageProject, gcloud.DefaultImageFamily)
 		if err != nil {
-			return errMsg{err: fmt.Errorf("validateGCEDefault: could not get DefaultImage default: %s", err)}
+			return errMsg{
+				err: fmt.Errorf(
+					"validateGCEDefault: could not get DefaultImage for project(%s) family(%s): %s",
+					gcloud.DefaultImageProject,
+					gcloud.DefaultImageFamily,
+					err,
+				),
+			}
 		}
 
 		defaultConfig := map[string]string{

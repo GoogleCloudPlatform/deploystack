@@ -30,7 +30,7 @@ func (c *Client) getSchedulerService(project string) (*scheduler.CloudSchedulerC
 		return svc, nil
 	}
 
-	if err := c.ServiceEnable(project, "cloudscheduler.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, CloudScheduler); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 

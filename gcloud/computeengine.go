@@ -48,7 +48,7 @@ func (c *Client) getComputeService(project string) (*compute.Service, error) {
 		return svc, nil
 	}
 
-	if err := c.ServiceEnable(project, "compute.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, Compute); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
@@ -177,13 +177,13 @@ func (c *Client) ImageLatestGet(project, imageproject, imagefamily string) (stri
 
 	svc, err := c.getComputeService(project)
 	if err != nil {
-		return resp, err
+		return resp, fmt.Errorf("ImageLatestGet: could not get compute service: %s", err)
 	}
 
 	filter := fmt.Sprintf("(family=\"%s\")", imagefamily)
 	results, err := svc.Images.List(imageproject).Filter(filter).Do()
 	if err != nil {
-		return resp, err
+		return resp, fmt.Errorf("ImageLatestGet: could not get filter list images: %s", err)
 	}
 
 	sort.Slice(results.Items, func(i, j int) bool {

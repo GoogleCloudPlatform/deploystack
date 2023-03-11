@@ -7,6 +7,7 @@ env:
   DS_TUI_VERSION: $DS_TUI_VERSION
   DS_GCLOUD_VERSION: $DS_GCLOUD_VERSION
   DS_CONFIG_VERSION: $DS_CONFIG_VERSION
+  DEPLOYSTACK_PATH: $DEPLOYSTACK_PATH
   DEPLOYSTACK_SHELL_PATH: $DEPLOYSTACK_SHELL_PATH
 
 tasks:
@@ -275,9 +276,13 @@ tasks:
       - dsexec:clean
       - go:clean
     cmds:
-      - go mod init dsexec && go mod tidy
+      - go mod init dsexec
+      - go get github.com/GoogleCloudPlatform/deploystack@v1.11.3 
+      - go mod tidy
+      - go mod edit -replace github.com/GoogleCloudPlatform/deploystack={{.DEPLOYSTACK_PATH}}
       - ./version.sh
       - go build -o dsexec deploystack_exec.go
+
 
   dsexec:install:
     desc: Installs a local version of dsexec

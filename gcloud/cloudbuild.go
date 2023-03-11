@@ -28,7 +28,7 @@ func (c *Client) getCloudBuildService(project string) (*cloudbuild.Service, erro
 		return svc, nil
 	}
 
-	if err := c.ServiceEnable(project, "cloudbuild.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, CloudBuild); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 

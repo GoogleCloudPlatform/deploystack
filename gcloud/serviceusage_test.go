@@ -15,29 +15,40 @@
 package gcloud
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
 
+const FAKESERVICE Service = 1000004
+
 func TestServiceEnable(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
-		service string
+		service Service
 		project string
 		err     error
 		want    bool
 		disable bool
 	}{
-		"vault":       {"vault.googleapis.com", projectID, nil, true, true},
-		"compute":     {"compute.googleapis.com", projectID, nil, true, false},
-		"fakeservice": {"fakeservice.googleapis.com", projectID, ErrorServiceNotExistOrNotAllowed, false, false},
+		"vault":        {Vault, projectID, nil, true, true},
+		"compute":      {Compute, projectID, nil, true, false},
+		"emptyproject": {Compute, "", ErrorProjectRequired, false, false},
+		"fakeservice":  {FAKESERVICE, projectID, ErrorServiceNotExistOrNotAllowed, false, false},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := c.ServiceEnable(tc.project, tc.service)
-			if err != tc.err {
-				t.Fatalf("expected: %v got: %v", tc.err, err)
+
+			if tc.err == nil && err != nil {
+				t.Fatalf("expected: no error got: %v", err)
+			}
+
+			if tc.err != nil && err != nil {
+				if errors.Is(tc.err, err) {
+					t.Fatalf("expected: %v got: %v", tc.err, err)
+				}
 			}
 
 			got, err := c.ServiceIsEnabled(tc.project, tc.service)
@@ -58,13 +69,13 @@ func TestServiceEnable(t *testing.T) {
 func TestServiceDisable(t *testing.T) {
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
-		service string
+		service Service
 		project string
 		err     error
 		want    bool
 	}{
-		"vault":       {"vault.googleapis.com", projectID, nil, false},
-		"fakeservice": {"fakeservice.googleapis.com", projectID, ErrorServiceNotExistOrNotAllowed, false},
+		"vault":       {Vault, projectID, nil, false},
+		"fakeservice": {FAKESERVICE, projectID, ErrorServiceNotExistOrNotAllowed, false},
 	}
 
 	for name, tc := range tests {

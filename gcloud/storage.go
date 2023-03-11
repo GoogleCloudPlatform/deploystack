@@ -31,7 +31,7 @@ func (c *Client) getStorageService(project string) (*storage.Client, error) {
 		return svc, nil
 	}
 
-	if err := c.ServiceEnable(project, "storage.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, Storage); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 

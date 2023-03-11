@@ -29,7 +29,7 @@ func (c *Client) getRunService(project string) (*run.APIService, error) {
 		return svc, nil
 	}
 
-	if err := c.ServiceEnable(project, "run.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, Run); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 
