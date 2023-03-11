@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.12.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.11.3...v1.12.0) (2023-03-11)
+
+
+### Features
+
+* allow hook scripts to interact with env ([bf2c29e](https://github.com/GoogleCloudPlatform/deploystack/commit/bf2c29eff7c2aeb9c949a3b1000d88162ad35edc))
+
+
+### Bug Fixes
+
+* altering what's in the client to facilitate activating services ([6611e6c](https://github.com/GoogleCloudPlatform/deploystack/commit/6611e6c205da11a84b95a9103b05f0f83ab59615))
+* changed service enablements to enums to make them more robust ([c9473fd](https://github.com/GoogleCloudPlatform/deploystack/commit/c9473fdc640b99cc7a799644ed83e529308c7f4a))
+* configure_gce_instance error resolved ([71a3b2e](https://github.com/GoogleCloudPlatform/deploystack/commit/71a3b2e19c69eeeda99248ab0a92d411d890b52d))
+* update tests because nosql-client-server was updated ([6031f2c](https://github.com/GoogleCloudPlatform/deploystack/commit/6031f2cf95954a1271a67194413b87ad5a302b6e))
+
 ## [1.11.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.11.2...v1.11.3) (2023-03-10)
 
 
