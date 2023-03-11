@@ -29,7 +29,7 @@ func (c *Client) getSecretManagerService(project string) (*secretmanager.Service
 		return svc, nil
 	}
 
-	if err := c.ServiceEnable(project, "secretmanager.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, SecretManager); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 

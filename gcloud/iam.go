@@ -28,7 +28,7 @@ func (c *Client) getIAMService(project string) (*iam.Service, error) {
 		return svc, nil
 	}
 
-	if err := c.ServiceEnable(project, "domains.googleapis.com"); err != nil {
+	if err := c.ServiceEnable(project, IAM); err != nil {
 		return nil, fmt.Errorf("error activating service for polling: %s", err)
 	}
 

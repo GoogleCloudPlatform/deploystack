@@ -471,7 +471,7 @@ func TestBreakServicesServiceUsage(t *testing.T) {
 				client.services.serviceUsage.BasePath = "nonsenseshouldbreak"
 			},
 			errorfunc: func() (interface{}, error) {
-				return client.ServiceIsEnabled(projectID, "example.com")
+				return client.ServiceIsEnabled(projectID, Compute)
 			},
 		},
 	}
