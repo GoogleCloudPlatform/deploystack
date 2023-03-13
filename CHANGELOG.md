@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.1...v1.12.2) (2023-03-13)
+
+
+### Bug Fixes
+
+* added cloud billing as a service. ([e194192](https://github.com/GoogleCloudPlatform/deploystack/commit/e1941923170f31a462f6a76bb85d890b034eaf2f))
+
 ## [1.12.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.0...v1.12.1) (2023-03-13)
 
 
