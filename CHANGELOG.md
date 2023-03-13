@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.0...v1.12.1) (2023-03-13)
+
+
+### Bug Fixes
+
+* adding preappy script hook ([eee055d](https://github.com/GoogleCloudPlatform/deploystack/commit/eee055da3b654169353ffe63135e5b4ddfecd843))
+
 ## [1.12.0](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.11.3...v1.12.0) (2023-03-11)
 
 
