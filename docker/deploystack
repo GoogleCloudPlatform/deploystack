@@ -89,6 +89,10 @@ case $1 in
     . $scriptsDIR/postinit.sh
   fi
 
+   if [ -f "$scriptsDIR/preapply.sh" ]; then
+    . $scriptsDIR/preapply.sh
+  fi
+
   terraform -chdir="$terraformDIR" apply -auto-approve -var-file=terraform.tfvars || FAILED=true
 
   if [ -f "$scriptsDIR/postapply.sh" ]; then
