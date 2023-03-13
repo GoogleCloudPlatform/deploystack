@@ -28,21 +28,23 @@ type Service int64
 const (
 	// Compute is the service name for enabling Compute Engine
 	Compute Service = iota + 1
+	// CloudBilling is the service name for enabling CloudBilling
+	CloudBilling
+	// CloudBuild is the service name for enabling Cloud Build
+	CloudBuild
+	// CloudFunctions is the service name for enabling Cloud Functions
+	CloudFunctions
 	// CloudResourceManager is the service name for enabling
 	// CloudResourceManager this is ultimately about manipulating projects
 	CloudResourceManager
-	// CloudBuild is the service name for enabling Cloud Build
-	CloudBuild
 	// CloudScheduler is the service name for enabling Cloud Scheduler
 	CloudScheduler
 	// Domains is the service name for enabling Cloud Domains
 	Domains
-	// CloudFunctions is the service name for enabling Cloud Functions
-	CloudFunctions
-	// Run is the service name for enabling Cloud Run
-	Run
 	// IAM is the service name for enabling Cloud IAM
 	IAM
+	// Run is the service name for enabling Cloud Run
+	Run
 	// SecretManager is the service name for enabling Cloud Secret Manager
 	SecretManager
 	// Storage is the service name for enabling Cloud Storage
@@ -55,26 +57,28 @@ func (s Service) String() string {
 	apistring := "googleapis.com"
 	svc := ""
 	switch s {
-	case Compute:
-		svc = "compute"
-	case CloudResourceManager:
-		svc = "cloudresourcemanager"
+	case CloudBilling:
+		svc = "cloudbilling"
 	case CloudBuild:
 		svc = "cloudbuild"
-	case Domains:
-		svc = "domains"
 	case CloudFunctions:
 		svc = "cloudfunctions"
-	case Run:
-		svc = "run"
+	case CloudResourceManager:
+		svc = "cloudresourcemanager"
+	case CloudScheduler:
+		svc = "cloudscheduler"
+	case Compute:
+		svc = "compute"
+	case Domains:
+		svc = "domains"
 	case IAM:
 		svc = "iam"
+	case Run:
+		svc = "run"
 	case SecretManager:
 		svc = "secretmanager"
 	case Storage:
 		svc = "storage"
-	case CloudScheduler:
-		svc = "cloudscheduler"
 	case Vault:
 		svc = "vault"
 	default:
