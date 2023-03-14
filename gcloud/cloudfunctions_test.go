@@ -15,6 +15,7 @@
 package gcloud
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -23,6 +24,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/cloudfunctions/v1"
 )
 
@@ -150,6 +152,64 @@ func TestCloudFunctionCreate(t *testing.T) {
 			if err != tc.err {
 				t.Fatalf("deleting function: expected: no error got: %+v", err)
 			}
+		})
+	}
+}
+
+func TestCloudFunctionsBadProject(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"FunctionRegionList": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.FunctionRegionList(bad)
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"FunctionDeploy": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.FunctionDeploy(bad, "", cloudfunctions.CloudFunction{})
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"FunctionDelete": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.FunctionDelete(bad, "", "")
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"FunctionGet": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.FunctionGet(bad, "", "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+
+		"FunctionGenerateSignedURL": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.FunctionGenerateSignedURL(bad, "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
 		})
 	}
 }

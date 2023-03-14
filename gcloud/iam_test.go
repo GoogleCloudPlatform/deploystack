@@ -15,8 +15,12 @@
 package gcloud
 
 import (
+	"context"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestServiceAccountCreate(t *testing.T) {
@@ -44,6 +48,40 @@ func TestServiceAccountCreate(t *testing.T) {
 				t.Logf("delete: trying to delete: %s", email)
 				t.Fatalf("delete: expected: no error got: %+v", err)
 			}
+		})
+	}
+}
+
+func TestServiceAccountBadProject(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"ServiceAccountCreate": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.ServiceAccountCreate(bad, "", "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"ServiceAccountDelete": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.ServiceAccountDelete(bad, "")
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
 		})
 	}
 }

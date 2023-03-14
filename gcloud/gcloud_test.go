@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/scheduler/apiv1beta1/schedulerpb"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/option"
 )
 
@@ -131,6 +132,7 @@ func regionsListHelper(file string) ([]string, error) {
 }
 
 func TestGetRegions(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 
 	fc := filepath.Join(testFilesDir, "gcloudout/regions_compute.txt")
@@ -190,6 +192,8 @@ func TestGetRegions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
 			got, err := c.RegionList(tc.project, tc.product)
 
 			// BUG: getting weird regions intertmittenly popping up. Solving with this hack
@@ -218,7 +222,7 @@ func TestGetRegions(t *testing.T) {
 }
 
 func TestBillingAccountCache(t *testing.T) {
-
+	t.Parallel()
 	client := NewClient(context.Background(), "testing")
 	cachekey := "BillingAccountList"
 
@@ -249,6 +253,7 @@ func TestBillingAccountCache(t *testing.T) {
 }
 
 func TestCacheableFunctions(t *testing.T) {
+	t.Parallel()
 	client := NewClient(context.Background(), "testing")
 	tests := map[string]struct {
 		cachekey  string
@@ -276,6 +281,8 @@ func TestCacheableFunctions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
 
 			_, ok := client.cache[tc.cachekey]
 			if ok {
@@ -306,6 +313,7 @@ func TestCacheableFunctions(t *testing.T) {
 }
 
 func TestBreakServices(t *testing.T) {
+	t.Parallel()
 	client := NewClient(context.Background(), "testing")
 	tests := map[string]struct {
 		servicefunc func() (interface{}, error)
@@ -438,6 +446,9 @@ func TestBreakServices(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			name := name
+			tc := tc
+			t.Parallel()
 			_, err := tc.servicefunc()
 			if err != nil {
 				t.Fatalf("could not call service function for %s: %s ", name, err)
@@ -457,6 +468,7 @@ func TestBreakServices(t *testing.T) {
 // TestBreakServicesServiceUsage split out because mucking with the client
 // while the rest of the tests are running caused errors
 func TestBreakServicesServiceUsage(t *testing.T) {
+	t.Parallel()
 	client := NewClient(context.Background(), "testing")
 	tests := map[string]struct {
 		servicefunc func() (interface{}, error)
@@ -494,7 +506,97 @@ func TestBreakServicesServiceUsage(t *testing.T) {
 	}
 }
 
+func TestForceServiceError(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() (interface{}, error)
+		err         error
+	}{
+		"Billing": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getCloudBuildService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Build": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getCloudBuildService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Functions": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getCloudFunctionsService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Run": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getRunService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Domains": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getDomainsClient(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"IAM": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getIAMService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Scheduler": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getSchedulerService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"SecretManager": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getSecretManagerService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+
+		"Storage": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getStorageService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			_, err := tc.servicefunc()
+			if tc.err == nil && err != nil {
+				assert.Fail(t, "expected no error, got", err)
+			}
+
+			if tc.err != nil {
+				assert.ErrorContains(t, err, tc.err.Error())
+			}
+		})
+	}
+}
+
 func TestLabeledValuesLongestLen(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		in   LabeledValues
 		want int
@@ -538,6 +640,7 @@ func TestLabeledValuesLongestLen(t *testing.T) {
 }
 
 func TestLabeledValuesGetDefault(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		in           LabeledValues
 		want         LabeledValue
@@ -599,6 +702,7 @@ func TestLabeledValuesGetDefault(t *testing.T) {
 }
 
 func TestNewLabeledValues(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		sl           []string
 		defaultValue string
@@ -634,7 +738,8 @@ func TestNewLabeledValues(t *testing.T) {
 	}
 }
 
-func TestBasic(t *testing.T) {
+func TestContactManipulation(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		addreses   []string
 		recipients []string

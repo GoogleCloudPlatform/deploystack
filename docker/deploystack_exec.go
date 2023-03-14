@@ -105,7 +105,7 @@ func main() {
 
 	s, err := deploystack.Init(wd)
 	if err != nil {
-		tui.Fatal(fmt.Errorf("could not initalizze: %s", err))
+		tui.Fatal(fmt.Errorf("could not initalize: %s", err))
 	}
 
 	if *verify {

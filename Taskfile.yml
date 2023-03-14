@@ -277,7 +277,7 @@ tasks:
       - go:clean
     cmds:
       - go mod init dsexec
-      - go get github.com/GoogleCloudPlatform/deploystack@v1.11.3 
+      - go get github.com/GoogleCloudPlatform/deploystack
       - go mod tidy
       - go mod edit -replace github.com/GoogleCloudPlatform/deploystack={{.DEPLOYSTACK_PATH}}
       - ./version.sh

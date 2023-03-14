@@ -15,9 +15,11 @@
 package gcloud
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/cloudbuild/v1"
 )
 
@@ -61,6 +63,40 @@ func TestTriggerCreate(t *testing.T) {
 			if err != tc.err {
 				t.Fatalf("expected: no error got: %+v", err)
 			}
+		})
+	}
+}
+
+func TestCloudBuildBadProject(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"CloudBuildTriggerCreate": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.CloudBuildTriggerCreate(bad, cloudbuild.BuildTrigger{})
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"CloudBuildTriggerDelete": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.CloudBuildTriggerDelete(bad, "")
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
 		})
 	}
 }

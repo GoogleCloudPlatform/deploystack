@@ -15,6 +15,7 @@
 package gcloud
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,11 +24,13 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/kylelemons/godebug/diff"
+	"github.com/stretchr/testify/assert"
 	domainspb "google.golang.org/genproto/googleapis/cloud/domains/v1beta1"
 	"google.golang.org/genproto/googleapis/type/postaladdress"
 )
 
 func TestContactDataYAML(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		file    string
 		contact ContactData
@@ -77,6 +80,7 @@ func TestContactDataYAML(t *testing.T) {
 }
 
 func TestContactDataReadFrom(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		file string
 		want ContactData
@@ -121,6 +125,7 @@ func TestContactDataReadFrom(t *testing.T) {
 }
 
 func TestContactDataWriteTo(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		contact ContactData
 	}{
@@ -257,6 +262,7 @@ func TestDomainIsVerified(t *testing.T) {
 }
 
 func TestDomainContact(t *testing.T) {
+	t.Parallel()
 	contact := &domainspb.ContactSettings_Contact{
 		PostalAddress: &postaladdress.PostalAddress{
 			RegionCode:         "US",
@@ -311,6 +317,58 @@ func TestDomainContact(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v got: %+v", tc.want, got)
 			}
+		})
+	}
+}
+
+func TestDomainsBadProject(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"DomainsSearch": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.DomainsSearch(bad, "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"DomainIsAvailable": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.DomainIsAvailable(bad, "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+
+		"DomainIsVerified": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.DomainIsVerified(bad, "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+
+		"DomainRegister": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.DomainRegister(bad, nil, ContactData{})
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
 		})
 	}
 }

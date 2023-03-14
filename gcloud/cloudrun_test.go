@@ -15,10 +15,14 @@
 package gcloud
 
 import (
+	"context"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetRunRegions(t *testing.T) {
@@ -50,6 +54,33 @@ func TestGetRunRegions(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}
+		})
+	}
+}
+
+func TestCloudRunBadProject(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"RunRegionList": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.RunRegionList(bad)
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
 		})
 	}
 }

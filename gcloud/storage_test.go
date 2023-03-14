@@ -14,7 +14,13 @@
 
 package gcloud
 
-import "testing"
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestBucketCreate(t *testing.T) {
 	t.Parallel()
@@ -75,6 +81,98 @@ func TestObjectCreate(t *testing.T) {
 			if err != tc.err {
 				t.Fatalf("delete bucket: expected: no error got: %+v", err)
 			}
+		})
+	}
+}
+
+func TestStorageBadProject(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"StorageBucketCreate": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.StorageBucketCreate(bad, "")
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"StorageBucketDelete": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.StorageBucketDelete(bad, "")
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"StorageObjectCreate": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.StorageObjectCreate(bad, "", "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"StorageObjectDelete": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.StorageObjectDelete(bad, "", "")
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
+		})
+	}
+}
+
+func TestStorageErrors(t *testing.T) {
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"StorageBucketCreate": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.StorageBucketCreate(projectID, "ALLCAPSSHOULDERR")
+			},
+			err: fmt.Errorf("Invalid bucket name"),
+		},
+		"StorageBucketDelete": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.StorageBucketDelete(projectID, "ALLCAPSSHOULDERR")
+			},
+			err: fmt.Errorf("Invalid bucket name"),
+		},
+		"StorageObjectCreate": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.StorageObjectCreate(projectID, "ALLCAPSSHOULDERR", "")
+				return err
+			},
+			err: fmt.Errorf("no such file or directory"),
+		},
+		"StorageObjectDelete": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.StorageObjectDelete(projectID, "ALLCAPSSHOULDERR", "")
+			},
+			err: fmt.Errorf("object doesn't exist"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
 		})
 	}
 }

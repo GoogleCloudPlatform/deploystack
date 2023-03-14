@@ -108,9 +108,5 @@ func (c *Client) StorageObjectDelete(project, bucket, gspath string) error {
 	}
 	name := filepath.Base(gspath)
 
-	obj := svc.Bucket(bucket).Object(name)
-
-	obj.Delete(c.ctx)
-
-	return nil
+	return svc.Bucket(bucket).Object(name).Delete(c.ctx)
 }
