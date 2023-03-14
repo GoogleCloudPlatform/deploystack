@@ -446,7 +446,7 @@ func TestBreakServices(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
+			name := name
 			tc := tc
 			t.Parallel()
 			_, err := tc.servicefunc()
