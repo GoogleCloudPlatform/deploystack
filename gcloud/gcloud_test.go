@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/scheduler/apiv1beta1/schedulerpb"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/option"
 )
 
@@ -490,6 +491,92 @@ func TestBreakServicesServiceUsage(t *testing.T) {
 				t.Fatalf("error should be returned by service function for %s: %s ", name, err)
 			}
 
+		})
+	}
+}
+
+func TestForceServiceError(t *testing.T) {
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() (interface{}, error)
+		err         error
+	}{
+		"Billing": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getCloudBuildService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Build": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getCloudBuildService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Functions": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getCloudFunctionsService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Run": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getRunService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Domains": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getDomainsClient(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"IAM": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getIAMService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"Scheduler": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getSchedulerService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"SecretManager": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getSecretManagerService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+
+		"Storage": {
+			servicefunc: func() (interface{}, error) {
+				c := NewClient(context.Background(), "testing")
+				return c.getStorageService(bad)
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, err := tc.servicefunc()
+			if tc.err == nil && err != nil {
+				assert.Fail(t, "expected no error, got", err)
+			}
+
+			if tc.err != nil {
+				assert.ErrorContains(t, err, tc.err.Error())
+			}
 		})
 	}
 }
