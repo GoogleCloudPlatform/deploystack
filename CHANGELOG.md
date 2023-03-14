@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.2...v1.12.3) (2023-03-14)
+
+
+### Bug Fixes
+
+* getting version to just extract version. ([80e3f1a](https://github.com/GoogleCloudPlatform/deploystack/commit/80e3f1a15eb22c5d86bd2adf31aaaf6727ce80fc))
+
 ## [1.12.2](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.1...v1.12.2) (2023-03-13)
 
 
