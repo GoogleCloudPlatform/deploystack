@@ -15,6 +15,7 @@
 package gcloud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,6 +28,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -92,6 +94,7 @@ func TestZones(t *testing.T) {
 }
 
 func TestFormatMBToGB(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		input int64
 		want  string
@@ -519,6 +522,7 @@ func TestImages(t *testing.T) {
 }
 
 func TestGetLatestImage(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	f := filepath.Join(testFilesDir, "gcloudout/images.json")
 	dat, err := os.ReadFile(f)
@@ -555,6 +559,67 @@ func TestGetLatestImage(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %+v, got: %+v", tc.want, got)
 			}
+		})
+	}
+}
+
+func TestComputeBadProject(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"ComputeRegionList": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.ComputeRegionList(bad)
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"ZoneList": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.ZoneList(bad, "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+
+		"MachineTypeList": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.MachineTypeList(bad, "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"ImageList": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.ImageList(bad, "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+
+		"ImageLatestGet": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				_, err := c.ImageList(bad, "")
+				return err
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
 		})
 	}
 }

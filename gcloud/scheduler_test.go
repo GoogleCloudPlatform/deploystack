@@ -15,10 +15,12 @@
 package gcloud
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"cloud.google.com/go/scheduler/apiv1beta1/schedulerpb"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestScheduleJob(t *testing.T) {
@@ -61,6 +63,39 @@ func TestScheduleJob(t *testing.T) {
 			if err != tc.err {
 				t.Fatalf("expected: no error got: %+v", err)
 			}
+		})
+	}
+}
+
+func TestSchedulerBadProject(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"JobSchedule": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.JobSchedule(bad, "", schedulerpb.Job{})
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"JobDelete": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.JobDelete(bad, "", "")
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
 		})
 	}
 }

@@ -23,6 +23,7 @@ import (
 const FAKESERVICE Service = 1000004
 
 func TestServiceEnable(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
 		service Service
@@ -39,6 +40,9 @@ func TestServiceEnable(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+
 			err := c.ServiceEnable(tc.project, tc.service)
 
 			if tc.err == nil && err != nil {

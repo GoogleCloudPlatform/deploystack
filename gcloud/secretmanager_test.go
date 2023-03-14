@@ -14,7 +14,13 @@
 
 package gcloud
 
-import "testing"
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestSecretCreate(t *testing.T) {
 	t.Parallel()
@@ -39,6 +45,39 @@ func TestSecretCreate(t *testing.T) {
 			if err != tc.err {
 				t.Fatalf("expected: no error got: %+v", err)
 			}
+		})
+	}
+}
+
+func TestSecretsBadProject(t *testing.T) {
+	t.Parallel()
+	bad := "notavalidprojectnameanditshouldfaildasdas"
+	tests := map[string]struct {
+		servicefunc func() error
+		err         error
+	}{
+		"SecretCreate": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.SecretCreate(bad, "", "")
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+		"SecretDelete": {
+			servicefunc: func() error {
+				c := NewClient(context.Background(), "testing")
+				return c.SecretDelete(bad, "")
+			},
+			err: fmt.Errorf("error activating service for polling"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+			err := tc.servicefunc()
+			assert.ErrorContains(t, err, tc.err.Error())
 		})
 	}
 }

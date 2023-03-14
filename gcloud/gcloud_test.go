@@ -132,6 +132,7 @@ func regionsListHelper(file string) ([]string, error) {
 }
 
 func TestGetRegions(t *testing.T) {
+	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 
 	fc := filepath.Join(testFilesDir, "gcloudout/regions_compute.txt")
@@ -191,6 +192,8 @@ func TestGetRegions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
 			got, err := c.RegionList(tc.project, tc.product)
 
 			// BUG: getting weird regions intertmittenly popping up. Solving with this hack
@@ -219,7 +222,7 @@ func TestGetRegions(t *testing.T) {
 }
 
 func TestBillingAccountCache(t *testing.T) {
-
+	t.Parallel()
 	client := NewClient(context.Background(), "testing")
 	cachekey := "BillingAccountList"
 
@@ -250,6 +253,7 @@ func TestBillingAccountCache(t *testing.T) {
 }
 
 func TestCacheableFunctions(t *testing.T) {
+	t.Parallel()
 	client := NewClient(context.Background(), "testing")
 	tests := map[string]struct {
 		cachekey  string
@@ -277,6 +281,8 @@ func TestCacheableFunctions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
 
 			_, ok := client.cache[tc.cachekey]
 			if ok {
@@ -307,6 +313,7 @@ func TestCacheableFunctions(t *testing.T) {
 }
 
 func TestBreakServices(t *testing.T) {
+	t.Parallel()
 	client := NewClient(context.Background(), "testing")
 	tests := map[string]struct {
 		servicefunc func() (interface{}, error)
@@ -439,6 +446,9 @@ func TestBreakServices(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+
+			tc := tc
+			t.Parallel()
 			_, err := tc.servicefunc()
 			if err != nil {
 				t.Fatalf("could not call service function for %s: %s ", name, err)
@@ -458,6 +468,7 @@ func TestBreakServices(t *testing.T) {
 // TestBreakServicesServiceUsage split out because mucking with the client
 // while the rest of the tests are running caused errors
 func TestBreakServicesServiceUsage(t *testing.T) {
+	t.Parallel()
 	client := NewClient(context.Background(), "testing")
 	tests := map[string]struct {
 		servicefunc func() (interface{}, error)
@@ -496,6 +507,7 @@ func TestBreakServicesServiceUsage(t *testing.T) {
 }
 
 func TestForceServiceError(t *testing.T) {
+	t.Parallel()
 	bad := "notavalidprojectnameanditshouldfaildasdas"
 	tests := map[string]struct {
 		servicefunc func() (interface{}, error)
@@ -569,6 +581,8 @@ func TestForceServiceError(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
 			_, err := tc.servicefunc()
 			if tc.err == nil && err != nil {
 				assert.Fail(t, "expected no error, got", err)
@@ -582,6 +596,7 @@ func TestForceServiceError(t *testing.T) {
 }
 
 func TestLabeledValuesLongestLen(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		in   LabeledValues
 		want int
@@ -625,6 +640,7 @@ func TestLabeledValuesLongestLen(t *testing.T) {
 }
 
 func TestLabeledValuesGetDefault(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		in           LabeledValues
 		want         LabeledValue
@@ -686,6 +702,7 @@ func TestLabeledValuesGetDefault(t *testing.T) {
 }
 
 func TestNewLabeledValues(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		sl           []string
 		defaultValue string
@@ -721,7 +738,8 @@ func TestNewLabeledValues(t *testing.T) {
 	}
 }
 
-func TestBasic(t *testing.T) {
+func TestContactManipulation(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		addreses   []string
 		recipients []string
