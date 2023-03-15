@@ -7,7 +7,7 @@ function deploystackError() {
   repo=$(git config --get remote.origin.url)
   echo
   echo "Deploystack - $BRED Error $CLEAR"
-  echo "An error occured collecting the necessary information to run your Deploystack"
+  echo "An error occurred collecting the necessary information to run your Deploystack"
   echo "application. Please try again."
   echo
   echo "If the problem persists, please file an issue with the Github repo:"

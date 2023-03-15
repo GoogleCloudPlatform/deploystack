@@ -58,7 +58,7 @@ tasks:
       - ./update
 
   creds.json:
-    desc: Gets teh details for the creds file, assuming you have permission
+    desc: Gets the details for the creds file, assuming you have permission
     cmds:
       - |
         gcloud secrets versions access latest --secret=creds \

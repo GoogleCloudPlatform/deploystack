@@ -203,7 +203,7 @@ project="testproject"
 set=["item1","item2"]
 `,
 		},
-		"with complext types": {
+		"with complex types": {
 			in: Settings{
 				Setting{Name: "project", Value: "testproject", Type: "string"},
 				Setting{Name: "boolean", Value: "true", Type: "boolean"},

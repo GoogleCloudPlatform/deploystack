@@ -219,7 +219,7 @@ type Projects struct {
 	AllowDuplicates bool      `json:"allow_duplicates"  yaml:"allow_duplicates"`
 }
 
-// Setting is a item that will be translated to a varaible in a terraform file
+// Setting is a item that will be translated to a variable in a terraform file
 type Setting struct {
 	Name  string            `json:"name"  yaml:"name"`
 	Value string            `json:"value"  yaml:"value"`

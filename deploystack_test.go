@@ -466,7 +466,7 @@ func TestPrecheck(t *testing.T) {
 	}
 }
 func TestPrecheckMulti(t *testing.T) {
-	// Precheck exits if it is called in testing with mutliple stacks
+	// Precheck exits if it is called in testing with multiple stacks
 	// so make throwing the exit the test
 
 	if os.Getenv("BE_CRASHER") == "1" {
@@ -486,8 +486,8 @@ func TestPrecheckMulti(t *testing.T) {
 		os.Chdir(oldWD)
 		return
 	}
-	// So this is what I got addvice to do, but it caused panics
-	// Setting it to explicilty "go test" fixed it
+	// So this is what I got advice to do, but it caused panics
+	// Setting it to explicitly "go test" fixed it
 	// cmd := exec.Command(os.Args[0], "-test.run=TestPrecheckMulti")
 	cmd := exec.Command("go", "test", "-timeout", "20s", "-test.run=TestPrecheckMulti")
 	cmd.Env = append(os.Environ(), "BE_CRASHER=1")
