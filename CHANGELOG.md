@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.4](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.3...v1.12.4) (2023-03-15)
+
+
+### Bug Fixes
+
+* Remove unexported elements from struct ([5e321c3](https://github.com/GoogleCloudPlatform/deploystack/commit/5e321c3246f058d12be7490b7b0e67f2bd9fb2d6))
+* update dockerfile to include a smoke test ([41ce4a8](https://github.com/GoogleCloudPlatform/deploystack/commit/41ce4a84523a2d743a79d8462de3ce401a2ab39e))
+
 ## [1.12.3](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.2...v1.12.3) (2023-03-14)
 
 
