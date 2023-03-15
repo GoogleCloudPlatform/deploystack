@@ -41,7 +41,7 @@ type Config struct {
 	PathScripts          string            `json:"path_scripts" yaml:"path_scripts"`
 	Projects             Projects          `json:"projects" yaml:"projects"`
 	Products             []Product         `json:"products" yaml:"products"`
-	wd                   string
+	WD                   string            `json:"-" yaml:"-"`
 }
 
 func (c *Config) convertHardset() {
@@ -52,19 +52,24 @@ func (c *Config) convertHardset() {
 	c.HardSet = nil
 }
 
+// wd used to be unexported, but not it is not. Left the getter and setter to
+// not break anything
+
+// Getwd gets the working directory for the config.
 func (c *Config) Getwd() string {
-	return c.wd
+	return c.WD
 }
 
+// Setwd sets the working directory for the config.
 func (c *Config) Setwd(wd string) {
-	c.wd = wd
+	c.WD = wd
 }
 
 // Copy produces a copy of a config file for manipulating it without changing
 // the original
 func (c Config) Copy() Config {
 	out := Config{}
-	out.wd = c.wd
+	out.WD = c.WD
 	out.Name = c.Name
 	out.Title = c.Title
 	out.Project = c.Project
@@ -205,7 +210,7 @@ type Project struct {
 	Name         string `json:"variable_name"  yaml:"variable_name"`
 	UserPrompt   string `json:"user_prompt"  yaml:"user_prompt"`
 	SetAsDefault bool   `json:"set_as_default"  yaml:"set_as_default"`
-	value        string
+	Value        string `json:"value"  yaml:"value"`
 }
 
 // Projects is a list of projects that we will collect info for
@@ -362,7 +367,7 @@ type Custom struct {
 	Options        []string `json:"options"  yaml:"options"`
 	PrependProject bool     `json:"prepend_project"  yaml:"prepend_project"`
 	Validation     string   `json:"validation,omitempty"  yaml:"validation,omitempty"`
-	project        string
+	Project        string   `json:"-"  yaml:"-"`
 }
 
 // Customs are a slice of Custom variables.
