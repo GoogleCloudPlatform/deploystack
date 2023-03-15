@@ -1,0 +1,10 @@
+
+
+CONGRATS!!!!!!!  
+You have configured a project and created two Compute Engine instances. 
+1. server - running mongodb
+2. client - running small go app with api 
+
+ 
+
+

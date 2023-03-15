@@ -1,0 +1,95 @@
+
+# I think it's a good idea to test your scripts. It's kinda awkward but you'll 
+# be happy you did 
+
+
+# DON'T REMOVE FROM test script.
+CYAN='\033[0;36m'
+BCYAN='\033[1;36m'
+NC='\033[0m' # No Color
+DIVIDER=$(printf %"$(tput cols)"s | tr " " "*")
+DIVIDER+="\n"
+
+function get_project_id() {
+    local __resultvar=$1
+    VALUE=$(gcloud config get-value project | xargs)
+    eval $__resultvar="'$VALUE'"
+}
+
+function get_project_number() {
+    local __resultvar=$1
+    local PRO=$2
+    VALUE=$(gcloud projects list --filter="project_id=$PRO" --format="value(PROJECT_NUMBER)" | xargs)
+    eval $__resultvar="'$VALUE'"
+}
+
+# DISPLAY HELPERS
+function section_open() {
+    section_description=$1
+    printf "$DIVIDER"
+    printf "${CYAN}$section_description${NC} \n"
+    printf "$DIVIDER"
+}
+
+function section_close() {
+    printf "$DIVIDER"
+    printf "${CYAN}$section_description ${BCYAN}- done${NC}\n"
+    printf "\n\n"
+}
+
+function evalTest() {
+    local command=$1
+    local expected=$2
+
+    local ERR=""
+    got=$(eval $command 2>errFile)
+    ERR=$(<errFile)
+
+    if [ ${#ERR} -gt 0 ]; then
+        if [ "$expected" = "EXPECTERROR" ]; then
+            printf "Expected Error thrown \n"
+            return
+        fi
+
+        printf "Halting - error: '$ERR'  \n"
+        exit 1
+    fi
+
+    if [ "$got" != "$expected" ]; then
+        printf "Halting: '$got'  \n"
+        exit 1
+    fi
+
+    printf "$expected is ok\n"
+}
+
+# END DON'T REMOVE FROM test script.
+
+
+get_project_id PROJECT
+gcloud services enable cloudresourcemanager.googleapis.com --project=$PROJECT
+REGION=us-central1
+ZONE=us-central1-a
+BASENAME=mongo-client-server
+
+CLIENT=client
+SERVER=server
+
+section_open "Delete Client Instance"
+   gcloud compute instances delete $CLIENT --zone="$ZONE" -q
+section_close
+
+section_open "Delete Server Instance"
+   gcloud compute instances delete $SERVER --zone="$ZONE" -q
+section_close
+
+
+section_open "Delete Firewall Rule"
+   gcloud compute firewall-rules delete deploystack-allow-http -q
+   gcloud compute firewall-rules delete deploystack-allow-ssh -q
+   gcloud compute firewall-rules delete deploystack-allow-internal -q
+section_close
+
+section_open "Delete Network Rule"
+   gcloud compute networks delete $BASENAME-network -q 
+section_close

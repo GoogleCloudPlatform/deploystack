@@ -30,7 +30,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "testdata")
 
 func TestExtract(t *testing.T) {
 	testdata := filepath.Join(testFilesDir, "terraform", "extracttest")

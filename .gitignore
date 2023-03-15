@@ -6,8 +6,8 @@ cmd/terraform.tfvars
 **/credentials.json
 **/.DS_Store
 tools/installfile/output.txt
-test_files/gcloudout/*.txt
-test_files/gcloudout/*.json
+testdata/gcloudout/*.txt
+testdata/gcloudout/*.json
 tools/testprojects/email-notifier/cmd/config.json
 tools/testprojects/email-notifier/config.json
 cmd/contact.yaml
@@ -25,12 +25,12 @@ tools/testcreator/out/*
 tools/testcreator/out
 tools/dvatracker/repo/
 tools/dvatracker/out/ref.csv
-test_files/computenames_repos/deploystack-gcs-to-bq-with-least-privileges/
-test_files/computenames_repos/deploystack-single-vm/
+testdata/computenames_repos/deploystack-gcs-to-bq-with-least-privileges/
+testdata/computenames_repos/deploystack-single-vm/
 deploystack-gcs-to-bq-with-least-privileges/
 deploystack-single-vm/
 tui/contact.yaml
-gcloud/test_files/gcloudout/billing_accounts_local.json
+gcloud/testdata/gcloudout/billing_accounts_local.json
 cmd/new-ui/debug.log
 tui/debug/testdata/*
 tui/cmd/mock/debug.log
@@ -46,6 +46,6 @@ docker/versionDS
 docker/versionGcloud
 docker/versionTUI
 .vscode/settings.json
-test_files/reposformeta/deploystack-nosql-client-server/
-test_files/reposformeta/terraform-google-load-balanced-vms/
+testdata/reposformeta/deploystack-nosql-client-server/
+testdata/reposformeta/terraform-google-load-balanced-vms/
 docker/versionTerraform

@@ -31,7 +31,7 @@ func TestFindAndReadConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)
 	}
-	testdata := fmt.Sprintf("%s/test_files/configs", wd)
+	testdata := fmt.Sprintf("%s/testdata/configs", wd)
 
 	tests := map[string]struct {
 		pwd string
@@ -263,7 +263,7 @@ func TestTerraformFile(t *testing.T) {
 		},
 		"fail": {
 			filename: "file/shouldwork/dir.txt",
-			want:     errors.New("test_files/file/shouldwork/dir.txt: no such file or directory"),
+			want:     errors.New("testdata/file/shouldwork/dir.txt: no such file or directory"),
 		},
 	}
 

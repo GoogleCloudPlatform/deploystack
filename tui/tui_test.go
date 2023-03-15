@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "testdata")
 
 func readTestFile(file string) string {
 	dat, err := os.ReadFile(file)

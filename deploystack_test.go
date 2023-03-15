@@ -34,7 +34,7 @@ import (
 	cp "github.com/otiai10/copy"
 )
 
-var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "testdata")
 
 var nosqltestdata = filepath.Join(testFilesDir, "reposformeta")
 
@@ -433,7 +433,7 @@ func TestPrecheck(t *testing.T) {
 		t.Fatalf("error setting up environment for testing %v", err)
 	}
 
-	testdata := fmt.Sprintf("%s/test_files/configs", wd)
+	testdata := fmt.Sprintf("%s/testdata/configs", wd)
 	tests := map[string]struct {
 		wd   string
 		want string
@@ -475,7 +475,7 @@ func TestPrecheckMulti(t *testing.T) {
 			t.Fatalf("error setting up environment for testing %v", err)
 		}
 
-		testdata := fmt.Sprintf("%s/test_files/configs", wd)
+		testdata := fmt.Sprintf("%s/testdata/configs", wd)
 		path := fmt.Sprintf("%s/multi", testdata)
 		oldWD, _ := os.Getwd()
 		if err := os.Chdir(path); err != nil {
@@ -567,7 +567,7 @@ func TestCheckForContact(t *testing.T) {
 		want gcloud.ContactData
 	}{
 		"basic": {
-			in: "test_files/contact/contact.yaml",
+			in: "testdata/contact/contact.yaml",
 			want: gcloud.ContactData{
 				AllContacts: gcloud.DomainRegistrarContact{
 					Email: "test@example.com",
@@ -619,7 +619,7 @@ func TestInit(t *testing.T) {
 			err:  errUnableToRead,
 		},
 		"no_custom": {
-			path: "test_files/dsfolders/no_customs",
+			path: "testdata/dsfolders/no_customs",
 			want: config.Stack{
 				Config: config.Config{
 					Title:         "TESTCONFIG",
@@ -635,7 +635,7 @@ func TestInit(t *testing.T) {
 			err: nil,
 		},
 		"no_name": {
-			path: "test_files/dsfolders/no_name",
+			path: "testdata/dsfolders/no_name",
 			want: config.Stack{
 				Config: config.Config{
 					Title:         "NONAME",
@@ -651,7 +651,7 @@ func TestInit(t *testing.T) {
 			err: fmt.Errorf("could retrieve name of stack: could not open local git directory: repository does not exist \nDeployStack author: fix this by adding a 'name' key and value to the deploystack config"),
 		},
 		"custom": {
-			path: "test_files/dsfolders/customs",
+			path: "testdata/dsfolders/customs",
 			want: config.Stack{
 				Config: config.Config{
 					Title:         "TESTCONFIG",
@@ -670,7 +670,7 @@ func TestInit(t *testing.T) {
 			err: nil,
 		},
 		"custom_options": {
-			path: "test_files/dsfolders/customs_options",
+			path: "testdata/dsfolders/customs_options",
 			want: config.Stack{
 				Config: config.Config{
 					Title:         "TESTCONFIG",
@@ -778,7 +778,7 @@ func TestGetRepo(t *testing.T) {
 		t.Fatalf("error setting up environment for testing %v", err)
 	}
 
-	testdata := fmt.Sprintf("%s/test_files/repoforgithub", wd)
+	testdata := fmt.Sprintf("%s/testdata/repoforgithub", wd)
 	tests := map[string]struct {
 		repo github.Repo
 		path string
@@ -840,7 +840,7 @@ func TestGetAcceptableDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)
 	}
-	testdata := fmt.Sprintf("%s/test_files/repoforgithub", wd)
+	testdata := fmt.Sprintf("%s/testdata/repoforgithub", wd)
 
 	tests := map[string]struct {
 		in   string

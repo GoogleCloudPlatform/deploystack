@@ -1,0 +1,19 @@
+---
+title: NoSQL Client Server
+name: nosql-client-server
+duration: 5
+documentation_link: https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/nosql-client-server
+collect_project: true
+collect_region: true
+region_type: compute
+region_default: us-central1
+collect_zone: true
+author_settings:
+  - name: basename
+    value: nosql-client-server
+    type: string
+products:
+  - info: Server - which will run mongodb
+    product: Compute Engine
+  - info: Client - which will run a custom go application
+    product: Compute Engine

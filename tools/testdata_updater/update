@@ -1,5 +1,5 @@
 #!/bin/sh
-DIR="../../test_files/gcloudout"
+DIR="../../testdata/gcloudout"
 
 gcloud projects list --format="value(name)" > $DIR/projects.txt
 gcloud compute regions list --format="value(name)" > $DIR/regions_compute.txt
@@ -16,13 +16,13 @@ cat $DIR/billing_accounts.json
 echo "Region files have been updated."
 
 
-cd "../../test_files/computenames_repos"
+cd "../../testdata/computenames_repos"
 git clone git@github.com:googlecloudplatform/deploystack-gcs-to-bq-with-least-privileges.git
 git clone https://github.com/GoogleCloudPlatform/deploystack-single-vm.git
 mkdir folder-no-git
 
 cd "../.."
-cd "test_files/reposformeta"
+cd "testdata/reposformeta"
 pwd
 git clone https://github.com/GoogleCloudPlatform/deploystack-nosql-client-server.git
 git clone https://github.com/GoogleCloudPlatform/terraform-google-load-balanced-vms.git

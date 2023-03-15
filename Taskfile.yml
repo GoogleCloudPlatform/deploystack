@@ -53,7 +53,7 @@ tasks:
 
   update:
     desc: Update files that tests depend on
-    dir: tools/test_files_updater
+    dir: tools/testdata_updater
     cmds:
       - ./update
 

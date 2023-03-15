@@ -41,7 +41,7 @@ var (
 	opts             = option.WithCredentialsFile("")
 	ctx              = context.Background()
 	defaultUserAgent = "deploystack/testing"
-	testFilesDir     = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+	testFilesDir     = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "testdata")
 )
 
 func TestMain(m *testing.M) {
