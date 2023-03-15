@@ -127,15 +127,15 @@ func TestDescriptionRender(t *testing.T) {
 			outputFile: "description_basic.txt",
 		},
 
-		// "one_min": {
-		// 	configPath: "config_one_min.yaml",
-		// 	outputFile: "description_one_min.txt",
-		// },
+		"one_min": {
+			configPath: "config_one_min.yaml",
+			outputFile: "description_one_min.txt",
+		},
 
-		// "long_description": {
-		// 	configPath: "config_long_description.yaml",
-		// 	outputFile: "description_long_description.txt",
-		// },
+		"long_description": {
+			configPath: "config_long_description.yaml",
+			outputFile: "description_long_description.txt",
+		},
 	}
 
 	for name, tc := range tests {
@@ -160,7 +160,7 @@ func TestDescriptionRender(t *testing.T) {
 
 			if want != got {
 				fmt.Println(diff.Diff(want, got))
-				writeDebugFile(got, tc.outputFile)
+				writeDebugFile(got, outputdata)
 				t.Fatalf("text wasn't the same. Look in testdata for expected and debug/testdata for got")
 			}
 		})

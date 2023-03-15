@@ -27,7 +27,7 @@ var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
 func readTestFile(file string) string {
 	dat, err := os.ReadFile(file)
 	if err != nil {
-		return fmt.Sprintf("Couldn't read test file: %s", file)
+		return fmt.Sprintf("couldn't read test file: %s", file)
 	}
 
 	return string(dat)
