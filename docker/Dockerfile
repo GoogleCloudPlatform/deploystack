@@ -32,3 +32,5 @@ RUN wget --quiet https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/t
   && rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
 
 COPY deploystack /usr/local/bin/deploystack
+RUN output=$(/usr/local/bin/dsexec -version); [ -z ${output##*"deploystack:"*} ] || { echo "invalid version: $output"; exit 1; }
+RUN output2=$(cat /usr/local/bin/deploystack); [ -z ${output2##*"DEPLOYSTACK"*} ] || { echo "invalid content: $output2"; exit 1; }
