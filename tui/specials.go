@@ -207,7 +207,7 @@ func newDomain(q *Queue) {
 
 	dy := newYesOrNo(
 		q,
-		"Buying a domain is not reversable, saying 'y' will incur a charge.",
+		"Buying a domain is not reversible, saying 'y' will incur a charge.",
 		"domain_consent",
 		false,
 		nil,
@@ -321,11 +321,11 @@ func newZone(q *Queue) {
 }
 
 func newMachineTypeManager(q *Queue) {
-	p := newPicker("Pick a Machine Type Family", "Retrieving machine type familes", "instance-machine-type-family", gcloud.DefaultMachineFamily, getMachineTypeFamilies(q))
+	p := newPicker("Pick a Machine Type Family", "Retrieving machine type families", "instance-machine-type-family", gcloud.DefaultMachineFamily, getMachineTypeFamilies(q))
 	p.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p.addContent("\n\n")
 	p.addContent("There are a large number of machine types to choose from. For more information \n")
-	p.addContent("please refer to the following link for more infomation about Machine types: \n")
+	p.addContent("please refer to the following link for more information about Machine types: \n")
 	p.addContent(url.Render("https://cloud.google.com/compute/docs/machine-types"))
 	q.add(&p)
 
@@ -333,7 +333,7 @@ func newMachineTypeManager(q *Queue) {
 	p2.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p2.addContent("\n\n")
 	p2.addContent("There are a large number of machine types to choose from. For more information \n")
-	p2.addContent("please refer to the following link for more infomation about Machine types: \n")
+	p2.addContent("please refer to the following link for more information about Machine types: \n")
 	p2.addContent(url.Render("https://cloud.google.com/compute/docs/machine-types"))
 	q.add(&p2)
 }
@@ -343,7 +343,7 @@ func newDiskImageManager(q *Queue) {
 	p.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p.addContent("\n\n")
 	p.addContent("There are a large number of machine images to choose from. For more information \n")
-	p.addContent("please refer to the following link for more infomation about Machine images: \n")
+	p.addContent("please refer to the following link for more information about Machine images: \n")
 	p.addContent(url.Render("https://cloud.google.com/compute/docs/images"))
 	q.add(&p)
 
@@ -351,7 +351,7 @@ func newDiskImageManager(q *Queue) {
 	p2.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p2.addContent("\n\n")
 	p2.addContent("There are a large number of machine images to choose from. For more information \n")
-	p2.addContent("please refer to the following link for more infomation about Machine images: \n")
+	p2.addContent("please refer to the following link for more information about Machine images: \n")
 	p2.addContent(url.Render("https://cloud.google.com/compute/docs/images"))
 	q.add(&p2)
 
@@ -359,7 +359,7 @@ func newDiskImageManager(q *Queue) {
 	p3.addContent(textStyle.Bold(true).Render("Configure a Compute Engine Instance"))
 	p3.addContent("\n\n")
 	p3.addContent("There are a large number of machine images to choose from. For more information \n")
-	p3.addContent("please refer to the following link for more infomation about Machine images: \n")
+	p3.addContent("please refer to the following link for more information about Machine images: \n")
 	p3.addContent(url.Render("https://cloud.google.com/compute/docs/images"))
 	q.add(&p3)
 }

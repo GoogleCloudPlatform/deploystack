@@ -207,7 +207,6 @@ func (p picker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					p.queue.stack.AddSetting(p.key, p.value)
 				}
 
-				// TODO: see if you can figure out a test for these untested bits
 				if p.postProcessor != nil {
 					if p.state != "querying" {
 						p.state = "querying"

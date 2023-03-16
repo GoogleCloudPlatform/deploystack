@@ -30,7 +30,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "testdata")
 
 func TestExtract(t *testing.T) {
 	testdata := filepath.Join(testFilesDir, "terraform", "extracttest")
@@ -1298,14 +1298,14 @@ func TestNewGCPResources(t *testing.T) {
 		want GCPResources
 	}{
 		"basic": {want: working},
-		"error": {want: GCPResources{}, err: fmt.Errorf("cannot unmarshal !!str `shoudl`")},
+		"error": {want: GCPResources{}, err: fmt.Errorf("cannot unmarshal !!str `should`")},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			oldResources := resources
 			if tc.err != nil {
-				resources = []byte("{\"test\":shoudl}")
+				resources = []byte("{\"test\":should}")
 			}
 			defer func() { resources = oldResources }()
 

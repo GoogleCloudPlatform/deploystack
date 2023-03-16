@@ -9,6 +9,7 @@ env:
   DS_CONFIG_VERSION: $DS_CONFIG_VERSION
   DEPLOYSTACK_PATH: $DEPLOYSTACK_PATH
   DEPLOYSTACK_SHELL_PATH: $DEPLOYSTACK_SHELL_PATH
+  DEPLOYSTACK_TEST_PROJECT: $DEPLOYSTACK_TEST_PROJECT
 
 tasks:
 
@@ -53,12 +54,13 @@ tasks:
 
   update:
     desc: Update files that tests depend on
-    dir: tools/test_files_updater
+    dir: tools/testdata_updater
     cmds:
+      - gcloud config set project {{.DEPLOYSTACK_TEST_PROJECT}}
       - ./update
 
   creds.json:
-    desc: Gets teh details for the creds file, assuming you have permission
+    desc: Gets the details for the creds file, assuming you have permission
     cmds:
       - |
         gcloud secrets versions access latest --secret=creds \

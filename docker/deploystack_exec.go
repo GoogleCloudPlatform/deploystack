@@ -40,7 +40,7 @@ func main() {
 	name := flag.Bool("name", false, "Whether or not to be in drop the name of the stack")
 	version := flag.Bool("version", false, "Shows version information")
 	repo := flag.String("repo", "", "The name only of a Google Cloud Platform repo to download")
-	suggest := flag.Bool("suggest", false, "Weather or not you want DeployStack to reccomend a config")
+	suggest := flag.Bool("suggest", false, "Weather or not you want DeployStack to recommend a config")
 
 	flag.Parse()
 
@@ -89,7 +89,7 @@ func main() {
 			tui.Fatal(err)
 		}
 
-		fmt.Printf("Made a reccomended config for you\n")
+		fmt.Printf("Made a recommended config for you\n")
 		return
 	}
 
@@ -105,7 +105,7 @@ func main() {
 
 	s, err := deploystack.Init(wd)
 	if err != nil {
-		tui.Fatal(fmt.Errorf("could not initalize: %s", err))
+		tui.Fatal(fmt.Errorf("could not initialize: %s", err))
 	}
 
 	if *verify {

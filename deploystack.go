@@ -40,7 +40,7 @@ var (
 	contactfile      = "contact.yaml"
 )
 
-// Init initializes a Deploystack stack by looking on teh local file system
+// Init initializes a Deploystack stack by looking on the local file system
 func Init(path string) (*config.Stack, error) {
 	s := config.NewStack()
 
@@ -82,7 +82,7 @@ func Precheck() error {
 	return nil
 }
 
-// ContactCheck checks the local file system for a file containg domain
+// ContactCheck checks the local file system for a file containing domain
 // registar contact info
 func ContactCheck() gcloud.ContactData {
 	contact := gcloud.ContactData{}
@@ -99,7 +99,7 @@ func ContactCheck() gcloud.ContactData {
 	return contact
 }
 
-// ContactSave writes a file containg domain registar contact info to disk
+// ContactSave writes a file containing domain registar contact info to disk
 // if it exists
 func ContactSave(i interface{}) {
 	// We can ignore errors - this is an convenience to the user
@@ -279,8 +279,8 @@ func DownloadRepo(repo github.Repo, path string) (string, error) {
 }
 
 // UniquePath returns either the input candidate path if it does not exist,
-// or a path like the input candidate with increasing nubmers appended to it
-// until the ouput name is a path that does not exist
+// or a path like the input candidate with increasing numbers appended to it
+// until the output name is a path that does not exist
 func UniquePath(candidate string) string {
 	if _, err := os.Stat(candidate); os.IsNotExist(err) {
 		return candidate

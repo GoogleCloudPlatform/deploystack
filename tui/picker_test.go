@@ -21,15 +21,18 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPicker(t *testing.T) {
+
 	tests := map[string]struct {
 		listLabel      string
 		spinnerLabel   string
 		key            string
 		defaultValue   string
 		preProcessor   tea.Cmd
+		postProcessor  func(string, *Queue) tea.Cmd
 		state          string
 		outputFile     string
 		msg            tea.Msg
@@ -38,6 +41,7 @@ func TestPicker(t *testing.T) {
 		exkey          string
 		exstate        string
 		content        string
+		slowQueryText  string
 	}{
 		"basic": {
 			listLabel:    "test",
@@ -105,6 +109,21 @@ func TestPicker(t *testing.T) {
 			msg:          errMsg{err: fmt.Errorf("error")},
 			outputFile:   "picker_error.txt",
 		},
+		"slowQueryText": {
+			listLabel:    "test",
+			spinnerLabel: "test",
+			key:          "test",
+			preProcessor: func() tea.Cmd {
+				return func() tea.Msg {
+					items := []list.Item{}
+					return items
+				}
+			}(),
+			state:         "querying",
+			msg:           tea.MouseEvent{},
+			outputFile:    "picker_slowquerytext.txt",
+			slowQueryText: "A slow query came through here",
+		},
 
 		"success": {
 			listLabel:      "test",
@@ -149,6 +168,28 @@ func TestPicker(t *testing.T) {
 			outputFile:   "picker_send_ctrl_c.txt",
 			exkey:        "",
 		},
+
+		"post_processor": {
+			listLabel:    "test",
+			spinnerLabel: "test",
+			key:          "test",
+			preProcessor: func() tea.Cmd {
+				return func() tea.Msg {
+					items := []list.Item{}
+					return items
+				}
+			}(),
+			state:      "displaying",
+			exstate:    "querying",
+			msg:        tea.KeyMsg{Type: tea.KeyEnter},
+			outputFile: "picker_post_processor.txt",
+			postProcessor: func(projectID string, q *Queue) tea.Cmd {
+				return func() tea.Msg {
+
+					return successMsg{}
+				}
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -177,6 +218,13 @@ func TestPicker(t *testing.T) {
 			if tc.content != "" {
 				ptmp.addContent(tc.content)
 			}
+
+			ptmp.querySlowText = tc.slowQueryText
+
+			if tc.postProcessor != nil {
+				ptmp.addPostProcessor(tc.postProcessor)
+			}
+
 			q.add(&ptmp)
 			q.add(&dummyPicker)
 
@@ -226,6 +274,149 @@ func TestPicker(t *testing.T) {
 				}
 
 			}
+		})
+	}
+}
+
+func TestPositionDefault(t *testing.T) {
+	tests := map[string]struct {
+		items        []list.Item
+		defaultValue string
+		wantItems    []list.Item
+		wantIndex    int
+	}{
+		"empty": {
+			items:        []list.Item{},
+			defaultValue: "",
+			wantItems:    []list.Item{},
+			wantIndex:    0,
+		},
+		"basic": {
+			items: []list.Item{
+				item{label: "label1", value: "value1"},
+				item{label: "label2", value: "value2"},
+				item{label: "label3", value: "value3"},
+				item{label: "label4", value: "value4"},
+				item{label: "label5", value: "value5"},
+				item{label: "label6", value: "value6"},
+			},
+			defaultValue: "label3",
+			wantItems: []list.Item{
+				item{label: "label1", value: "value1"},
+				item{label: "label2", value: "value2"},
+				item{label: "label3 (Default Value)", value: "value3"},
+				item{label: "label4", value: "value4"},
+				item{label: "label5", value: "value5"},
+				item{label: "label6", value: "value6"},
+			},
+			wantIndex: 2,
+		},
+		"MoreThan12": {
+			items: []list.Item{
+				item{label: "label1", value: "value1"},
+				item{label: "label2", value: "value2"},
+				item{label: "label3", value: "value3"},
+				item{label: "label4", value: "value4"},
+				item{label: "label5", value: "value5"},
+				item{label: "label6", value: "value6"},
+				item{label: "label7", value: "value7"},
+				item{label: "label8", value: "value8"},
+				item{label: "label9", value: "value9"},
+				item{label: "label10", value: "value10"},
+				item{label: "label11", value: "value11"},
+				item{label: "label12", value: "value12"},
+			},
+			defaultValue: "label3",
+			wantItems: []list.Item{
+				item{label: "label3 (Default Value)", value: "value3"},
+				item{label: "label1", value: "value1"},
+				item{label: "label2", value: "value2"},
+				item{label: "label4", value: "value4"},
+				item{label: "label5", value: "value5"},
+				item{label: "label6", value: "value6"},
+				item{label: "label7", value: "value7"},
+				item{label: "label8", value: "value8"},
+				item{label: "label9", value: "value9"},
+				item{label: "label10", value: "value10"},
+				item{label: "label11", value: "value11"},
+				item{label: "label12", value: "value12"},
+			},
+			wantIndex: 0,
+		},
+		"MoreThan12Default1st": {
+			items: []list.Item{
+				item{label: "label1", value: "value1"},
+				item{label: "label2", value: "value2"},
+				item{label: "label3", value: "value3"},
+				item{label: "label4", value: "value4"},
+				item{label: "label5", value: "value5"},
+				item{label: "label6", value: "value6"},
+				item{label: "label7", value: "value7"},
+				item{label: "label8", value: "value8"},
+				item{label: "label9", value: "value9"},
+				item{label: "label10", value: "value10"},
+				item{label: "label11", value: "value11"},
+				item{label: "label12", value: "value12"},
+			},
+			defaultValue: "label1",
+			wantItems: []list.Item{
+				item{label: "label1 (Default Value)", value: "value1"},
+				item{label: "label2", value: "value2"},
+				item{label: "label3", value: "value3"},
+				item{label: "label4", value: "value4"},
+				item{label: "label5", value: "value5"},
+				item{label: "label6", value: "value6"},
+				item{label: "label7", value: "value7"},
+				item{label: "label8", value: "value8"},
+				item{label: "label9", value: "value9"},
+				item{label: "label10", value: "value10"},
+				item{label: "label11", value: "value11"},
+				item{label: "label12", value: "value12"},
+			},
+			wantIndex: 0,
+		},
+		"MoreThan12WithCreate": {
+			items: []list.Item{
+				item{label: "label1", value: "value1"},
+				item{label: "label2", value: "value2"},
+				item{label: "label3", value: "value3"},
+				item{label: "label4", value: "value4"},
+				item{label: "label5", value: "value5"},
+				item{label: "label6", value: "value6"},
+				item{label: "label7", value: "value7"},
+				item{label: "label8", value: "value8"},
+				item{label: "label9", value: "value9"},
+				item{label: "label10", value: "value10"},
+				item{label: "label11", value: "value11"},
+				item{label: "label12", value: "value12"},
+				item{label: "Create New Project", value: ""},
+			},
+			defaultValue: "label3",
+			wantItems: []list.Item{
+				item{label: "Create New Project", value: ""},
+				item{label: "label3 (Default Value)", value: "value3"},
+				item{label: "label1", value: "value1"},
+				item{label: "label2", value: "value2"},
+				item{label: "label4", value: "value4"},
+				item{label: "label5", value: "value5"},
+				item{label: "label6", value: "value6"},
+				item{label: "label7", value: "value7"},
+				item{label: "label8", value: "value8"},
+				item{label: "label9", value: "value9"},
+				item{label: "label10", value: "value10"},
+				item{label: "label11", value: "value11"},
+				item{label: "label12", value: "value12"},
+			},
+			wantIndex: 1,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotItems, gotIndex := positionDefault(tc.items, tc.defaultValue)
+			assert.Equal(t, tc.wantItems, gotItems)
+			assert.Equal(t, tc.wantIndex, gotIndex)
+
 		})
 	}
 }

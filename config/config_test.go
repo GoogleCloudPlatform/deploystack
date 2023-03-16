@@ -12,7 +12,7 @@ import (
 	"github.com/kylelemons/godebug/diff"
 )
 
-var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "test_files")
+var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "testdata")
 
 func compareValues(label string, want interface{}, got interface{}, t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
@@ -21,7 +21,7 @@ func compareValues(label string, want interface{}, got interface{}, t *testing.T
 }
 
 func TestConfig(t *testing.T) {
-	testdata := "../test_files/configs"
+	testdata := "../testdata/configs"
 	tests := map[string]struct {
 		pwd      string
 		want     Config
@@ -214,7 +214,7 @@ func TestReadConfig(t *testing.T) {
 			err:  errUnableToRead,
 		},
 		"no_custom": {
-			path: "../test_files/dsfolders/no_customs",
+			path: "../testdata/dsfolders/no_customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -229,7 +229,7 @@ func TestReadConfig(t *testing.T) {
 			err: nil,
 		},
 		"custom": {
-			path: "../test_files/dsfolders/customs",
+			path: "../testdata/dsfolders/customs",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -247,7 +247,7 @@ func TestReadConfig(t *testing.T) {
 			err: nil,
 		},
 		"custom_options": {
-			path: "../test_files/dsfolders/customs_options",
+			path: "../testdata/dsfolders/customs_options",
 			want: Stack{
 				Config: Config{
 					Title:         "TESTCONFIG",
@@ -523,7 +523,7 @@ func TestNewConfigReport(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)
 	}
-	testdata := fmt.Sprintf("%s/test_files/configs/multi", wd)
+	testdata := fmt.Sprintf("%s/testdata/configs/multi", wd)
 
 	tests := map[string]struct {
 		in   string
@@ -573,7 +573,7 @@ func TestFindConfigReports(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error setting up environment for testing %v", err)
 	}
-	testdata := fmt.Sprintf("%s/test_files/configs/multi", wd)
+	testdata := fmt.Sprintf("%s/testdata/configs/multi", wd)
 
 	tests := map[string]struct {
 		in   string

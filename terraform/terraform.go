@@ -273,7 +273,7 @@ func (l List) Matches(s string) bool {
 // GCPResources is a collection of GCPResource
 type GCPResources map[string]GCPResource
 
-// GetProduct returns the prouct name assoicated with the terraform resource
+// GetProduct returns the prouct name associated with the terraform resource
 func (g GCPResources) GetProduct(key string) string {
 	v, ok := g[key]
 	if !ok {

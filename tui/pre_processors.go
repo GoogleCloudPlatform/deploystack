@@ -87,10 +87,6 @@ func getRegions(q *Queue) tea.Cmd {
 		project := s.GetSetting("project_id")
 		product := s.Config.RegionType
 
-		if project == "throwerror" {
-			return errMsg{err: fmt.Errorf("intentional error thrown")}
-		}
-
 		p, err := q.client.RegionList(project, product)
 		if err != nil {
 			return errMsg{err: err}

@@ -204,7 +204,7 @@ func TestCreateProject(t *testing.T) {
 
 			err := c.ProjectCreate(name, creds["parent"], creds["parent_type"])
 
-			// Don't accidently delete the project that you are using to run
+			// Don't accidentally delete the project that you are using to run
 			// these tests. Yes I found out the hard way
 			if name != projectID {
 				c.ProjectDelete(name)

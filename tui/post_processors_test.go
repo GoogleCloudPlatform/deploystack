@@ -22,6 +22,7 @@ import (
 	"cloud.google.com/go/domains/apiv1beta1/domainspb"
 	"github.com/GoogleCloudPlatform/deploystack/gcloud"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestProcessProjectSelection(t *testing.T) {
@@ -531,6 +532,35 @@ func TestStackSelection(t *testing.T) {
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected: %v, got: %v", tc.want, got)
 			}
+		})
+	}
+}
+
+func TestHandleProjectNumbe(t *testing.T) {
+	tests := map[string]struct {
+		forceErr bool
+		want     interface{}
+	}{
+		"noerror": {
+			forceErr: false,
+			want:     nil,
+		},
+		"error": {
+			forceErr: true,
+			want:     errMsg{err: errForced},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+			q.stack.Config.ProjectNumber = true
+			m := GetMock(0)
+			m.forceErr = tc.forceErr
+			q.client = m
+			got := handleProjectNumber("test", &q)
+
+			assert.Equal(t, tc.want, got)
 		})
 	}
 }

@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTextInput(t *testing.T) {
@@ -162,4 +163,23 @@ func TestTextInput(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTextInputPreviewFunc(t *testing.T) {
+	q := getTestQueue(appTitle, "test")
+	page := newTextInput("test", "test", "test", "test")
+	q.add(&page)
+
+	f := func(q *Queue) {
+		p := q.models[q.current]
+		p.setValue("test")
+
+	}
+	page.addPreView(f)
+
+	assert.Empty(t, page.getValue())
+
+	page.View()
+	assert.Equal(t, "test", page.getValue())
+
 }

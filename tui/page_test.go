@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPage(t *testing.T) {
@@ -74,4 +75,69 @@ func TestPage(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDynamicPageValue(t *testing.T) {
+	tests := map[string]struct {
+		in   page
+		want string
+	}{
+		"basic": {
+			in:   newPage("testkey", nil),
+			want: "testvalue",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Empty(t, tc.in.getValue())
+			tc.in.setValue(tc.want)
+			assert.Equal(t, tc.want, tc.in.getValue())
+			tc.in.clear()
+			assert.Equal(t, "", tc.in.getValue())
+		})
+	}
+}
+
+func TestDynamicPageClearContent(t *testing.T) {
+	tests := map[string]struct {
+		in   page
+		want []component
+	}{
+		"basic": {
+			in: newPage("testkey", []component{
+				newTextBlock("TestContent"),
+			}),
+			want: []component{
+				newTextBlock("TestContent"),
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.want, tc.in.content)
+			tc.in.clearContent()
+			assert.Equal(t, []component{}, tc.in.content)
+		})
+	}
+}
+
+func TestPagePreviewFunc(t *testing.T) {
+	q := getTestQueue(appTitle, "test")
+	page := newPage("test", nil)
+	q.add(&page)
+
+	f := func(q *Queue) {
+		p := q.models[q.current]
+		p.setValue("test")
+
+	}
+	page.addPreView(f)
+
+	assert.Empty(t, page.getValue())
+
+	page.View()
+	assert.Equal(t, "test", page.getValue())
+
 }
