@@ -10,6 +10,8 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/kylelemons/godebug/diff"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var testFilesDir = filepath.Join(os.Getenv("DEPLOYSTACK_PATH"), "testdata")
@@ -115,6 +117,57 @@ func TestConfig(t *testing.T) {
 				t.Errorf("compare failed: %v", diff)
 				// t.Fatalf("expected: \n%+v, \ngot: \n%+v", tc.want, s.Config)
 			}
+		})
+	}
+}
+
+func TestConfigNoMessageFolder(t *testing.T) {
+	testdata := filepath.Join(testFilesDir, "configs")
+	tests := map[string]struct {
+		pwd  string
+		want Config
+	}{
+		"yaml": {
+			pwd: "nomessages",
+			want: Config{
+				Title:         "Load Balanced VMs",
+				Name:          "terraform-google-load-balanced-vms",
+				Project:       true,
+				Region:        true,
+				RegionType:    "compute",
+				RegionDefault: "us-central1",
+				Zone:          true,
+				CustomSettings: Customs{
+					Custom{Name: "nodes"},
+				},
+				Duration:      10,
+				PathTerraform: ".",
+				Products: []Product{
+					{
+						Product: "Compute Engine",
+						Info:    "A Cluster of VMs",
+					},
+					{
+						Product: "Load Balancing",
+						Info:    "A public endpoint shared by the cluster",
+					},
+				},
+				Description: `This solution deploys a group of VMs managed by a load balancer. It also 
+utilizes Auto Scaling and Auto healing to deliver a static web site.`,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(testdata, tc.pwd)
+
+			s := NewStack()
+
+			err := s.FindAndReadRequired(path)
+			require.Nil(t, err)
+			assert.Equal(t, tc.want, s.Config)
+
 		})
 	}
 }

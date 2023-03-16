@@ -170,11 +170,12 @@ func (s *Stack) FindAndRead(path string, required bool) error {
 	s.Config.PathMessages, _ = filepath.Rel(path, messagePath)
 	errs = append(errs, err)
 
-	descText := fmt.Sprintf("%s/description.txt", messagePath)
-
-	description, err := ioutil.ReadFile(descText)
-	s.Config.Description = string(description)
-	errs = append(errs, err)
+	if config.Description == "" {
+		descText := fmt.Sprintf("%s/description.txt", messagePath)
+		description, err := ioutil.ReadFile(descText)
+		s.Config.Description = string(description)
+		errs = append(errs, err)
+	}
 
 	s.Config.convertHardset()
 	s.Config.defaultAuthorSettings()
