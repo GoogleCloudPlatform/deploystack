@@ -226,7 +226,7 @@ func TestGetProject(t *testing.T) {
 	}
 
 	if err := c.ProjectIDSet(expected); err != nil {
-		t.Fatalf("setting expecgted project: expected: no error, got: %v", err)
+		t.Fatalf("setting expected project: expected: no error, got: %v", err)
 	}
 
 	got, err := c.ProjectIDGet()
