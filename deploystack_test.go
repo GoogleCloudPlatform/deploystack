@@ -489,7 +489,7 @@ func TestPrecheckMulti(t *testing.T) {
 	// So this is what I got advice to do, but it caused panics
 	// Setting it to explicitly "go test" fixed it
 	// cmd := exec.Command(os.Args[0], "-test.run=TestPrecheckMulti")
-	cmd := exec.Command("go", "test", "-timeout", "20s", "-test.run=TestPrecheckMulti")
+	cmd := exec.Command("go", "test", "-timeout", "2s", "-test.run=TestPrecheckMulti", "-coverage")
 	cmd.Env = append(os.Environ(), "BE_CRASHER=1")
 	err := cmd.Run()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
