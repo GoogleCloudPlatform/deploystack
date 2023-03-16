@@ -20,7 +20,9 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/deploystack/config"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/assert"
 )
 
 func getTestQueue(title, subtitle string) Queue {
@@ -420,6 +422,141 @@ func TestQueueClear(t *testing.T) {
 			if tc.model.value != "" {
 				t.Fatalf("model clear did not happen properly")
 			}
+		})
+	}
+}
+func TestQueueModel(t *testing.T) {
+	tests := map[string]struct {
+		in   []interface{}
+		key  string
+		want interface{}
+	}{
+		"basic": {
+			in: []interface{}{
+				newPage("test", nil),
+			},
+			key:  "test",
+			want: newPage("test", nil),
+		},
+		"basicwrong": {
+			in: []interface{}{
+				newPage("test", nil),
+			},
+			key:  "test2",
+			want: nil,
+		},
+		"multiple": {
+			in: []interface{}{
+				newPage("test2", nil),
+				newPage("test", nil),
+				newPicker("test", "test", "test3", "", nil),
+			},
+			key:  "test2",
+			want: newPage("test2", nil),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+
+			for _, v := range tc.in {
+
+				switch qmodel := v.(type) {
+				case page:
+					q.add(&qmodel)
+
+				case picker:
+					qmodel.spinner = spinner.Model{}
+					q.add(&qmodel)
+				}
+
+			}
+
+			switch want := tc.want.(type) {
+			case page:
+				want.queue = &q
+				got := q.Model(tc.key)
+				assert.Equal(t, &want, got)
+
+			case picker:
+
+				want.queue = &q
+				got := q.Model(tc.key).(*picker)
+				want.spinner = spinner.Model{}
+
+				assert.Equal(t, &want, got)
+			case nil:
+				got := q.Model(tc.key)
+				assert.Nil(t, got)
+			}
+
+		})
+	}
+}
+
+func TestQueuePrev(t *testing.T) {
+	tests := map[string]struct {
+		in        []interface{}
+		key       string
+		want      interface{}
+		gotobegin bool
+	}{
+		"basic": {
+			in: []interface{}{
+				newPage("test", nil),
+				newPage("test2", nil),
+				newPage("test3", nil),
+			},
+			want: newPage("test2", nil),
+		},
+		"basicatzero": {
+			in: []interface{}{
+				newPage("test", nil),
+				newPage("test2", nil),
+				newPage("test3", nil),
+			},
+			want:      newPage("test", nil),
+			gotobegin: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			q := getTestQueue(appTitle, "test")
+
+			for _, v := range tc.in {
+
+				switch qmodel := v.(type) {
+				case page:
+					q.add(&qmodel)
+				case picker:
+					q.add(&qmodel)
+				}
+
+			}
+
+			switch want := tc.want.(type) {
+			case page:
+				want.queue = &q
+				q.Start()
+				q.next()
+				q.next()
+
+				if tc.gotobegin {
+					q.current = 0
+				}
+
+				got, _ := q.prev()
+
+				assert.Equal(t, &want, got)
+
+			case picker:
+
+			case nil:
+
+			}
+
 		})
 	}
 }

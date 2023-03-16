@@ -57,7 +57,7 @@ func NewQueue(s *config.Stack, client UIClient) Queue {
 	return q
 }
 
-// Model retrieves a give model by key from the queue
+// Model retrieves a given model by key from the queue
 func (q *Queue) Model(key string) QueueModel {
 
 	for _, v := range q.models {
