@@ -62,7 +62,7 @@ func TestGetComputeRegions(t *testing.T) {
 				tc.want = append(tc.want, add)
 			}
 
-			tempremoves := []string{"europe-west12"}
+			tempremoves := []string{}
 
 			for _, remove := range tempremoves {
 				t.Logf("artificially removing %s ,might be source of issue", remove)
