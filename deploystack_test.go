@@ -338,18 +338,17 @@ resource "google_compute_instance" "client" {
   metadata_startup_script = <<SCRIPT
     add-apt-repository ppa:longsleep/golang-backports -y && \
     apt update -y && \
-    apt install golang-go -y
+    apt install golang-go git -y
     mkdir /modcache
     mkdir /go
     mkdir /app && cd /app
-    curl https://raw.githubusercontent.com/GoogleCloudPlatform/golang-samples/main/compute/quickstart/compute_quickstart_sample.go --output main.go
-    go mod init exec
-    GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache go mod tidy
-    GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache go get -u 
-    sed -i 's/mongoport = "80"/mongoport = "27017"/' /app/main.go
-    echo "GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache HOST=${google_compute_instance.server.network_interface.0.network_ip} go run main.go"
-    GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache HOST=${google_compute_instance.server.network_interface.0.network_ip} go run main.go & 
+    git clone https://github.com/GoogleCloudPlatform/deploystack-nosql-client-server.git
+    cd /app/deploystack-nosql-client-server/code/client
+    GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache go build -o trainers main.go model.go
+    echo "GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache DBHOST=${google_compute_instance.server.network_interface.0.network_ip} ./trainers"
+    GOPATH=/go GOMODCACHE=/modcache GOCACHE=/modcache DBHOST=${google_compute_instance.server.network_interface.0.network_ip} ./trainers & 
   SCRIPT
+
 
   depends_on = [google_project_service.all]
 }`,
@@ -906,6 +905,7 @@ func TestNewMeta(t *testing.T) {
 				))
 
 				diff := deep.Equal(tc.want, got)
+				t.Log("a common reason for this error is that one of the outside repos changed")
 				t.Errorf("compare failed: %v", diff)
 			}
 		})

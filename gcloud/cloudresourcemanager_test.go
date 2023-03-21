@@ -162,9 +162,9 @@ func TestCreateProject(t *testing.T) {
 	t.Parallel()
 	c := NewClient(ctx, defaultUserAgent)
 	tests := map[string]struct {
-		input   string
-		err     error
-		noRando bool
+		input    string
+		err      error
+		noRandom bool
 	}{
 		"Too long": {
 			input: "zprojectnamedeletethisprojectnamehastoomanycharacters",
@@ -178,17 +178,16 @@ func TestCreateProject(t *testing.T) {
 			input: "spaces in name",
 			err:   ErrorProjectInvalidCharacters,
 		},
-		// TODO: Figure out why this isn't working for test account
+		// Todo: figure out why these fail
 		// "Duplicate": {
-		// 	input:   projectID,
-		// 	err:     ErrorProjectAlreadyExists,
-		// 	noRando: true,
+		// 	input:    projectID,
+		// 	err:      ErrorProjectAlreadyExists,
+		// 	noRandom: true,
 		// },
 		"Too short": {
 			input: "",
 			err:   ErrorProjectCreateTooShort,
 		},
-		// TODO: Figure out why this isn't working for test account
 		// "Should work": {
 		// 	input: "ds-unittest",
 		// 	err:   nil,
@@ -198,7 +197,7 @@ func TestCreateProject(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			name := tc.input + randSeq(5)
-			if tc.noRando {
+			if tc.noRandom {
 				name = tc.input
 			}
 
@@ -228,7 +227,7 @@ func TestGetProject(t *testing.T) {
 	}
 
 	if err := c.ProjectIDSet(expected); err != nil {
-		t.Fatalf("setting expecgted project: expected: no error, got: %v", err)
+		t.Fatalf("setting expected project: expected: no error, got: %v", err)
 	}
 
 	got, err := c.ProjectIDGet()

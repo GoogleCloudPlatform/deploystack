@@ -136,6 +136,10 @@ func TestDescriptionRender(t *testing.T) {
 			configPath: "config_long_description.yaml",
 			outputFile: "description_long_description.txt",
 		},
+		"products_description": {
+			configPath: "config_product_description.yaml",
+			outputFile: "description_product_description.txt",
+		},
 	}
 
 	for name, tc := range tests {
