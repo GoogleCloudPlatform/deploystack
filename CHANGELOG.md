@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.5](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.4...v1.12.5) (2023-03-21)
+
+
+### Bug Fixes
+
+* omitting message folder no longer blanks description. ([af13e64](https://github.com/GoogleCloudPlatform/deploystack/commit/af13e648018f9f14ab7f3f917409766cee97b7e9))
+
 ## [1.12.4](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.3...v1.12.4) (2023-03-15)
 
 
