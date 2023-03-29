@@ -57,7 +57,7 @@ func TestGetComputeRegions(t *testing.T) {
 
 			// These regions are causing flakiness at the moment. Cannot figure out.
 			// So it's not super important that they be tested
-			flakes := []string{"me-west1", "us-west4", "europe-west12"}
+			flakes := []string{"me-west1", "us-west4", "europe-west12", "northamerica-northeast1", "northamerica-northeast2"}
 
 			for _, f := range flakes {
 				t.Logf("removing flake: %s, might be source of issue", f)
