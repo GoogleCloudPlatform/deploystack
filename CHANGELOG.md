@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.6](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.5...v1.12.6) (2023-03-30)
+
+
+### Bug Fixes
+
+* enabling ServiceUsage api on projects on creation, like the console ([8f743ab](https://github.com/GoogleCloudPlatform/deploystack/commit/8f743ab6f1981a064443ca363fe6ea009978affa))
+
 ## [1.12.5](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.4...v1.12.5) (2023-03-21)
 
 
