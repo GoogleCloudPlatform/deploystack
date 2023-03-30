@@ -45,6 +45,8 @@ const (
 	IAM
 	// Run is the service name for enabling Cloud Run
 	Run
+	// ServiceUsage is the service name for manipulating and enabling services
+	ServiceUsage
 	// SecretManager is the service name for enabling Cloud Secret Manager
 	SecretManager
 	// Storage is the service name for enabling Cloud Storage
@@ -75,6 +77,8 @@ func (s Service) String() string {
 		svc = "iam"
 	case Run:
 		svc = "run"
+	case ServiceUsage:
+		svc = "serviceusage"
 	case SecretManager:
 		svc = "secretmanager"
 	case Storage:
