@@ -105,7 +105,18 @@ func main() {
 
 	s, err := deploystack.Init(wd)
 	if err != nil {
-		tui.Fatal(fmt.Errorf("could not initialize: %s", err))
+
+		if !strings.Contains(err.Error(), "could not read config file") {
+			tui.Fatal(fmt.Errorf("could not initialize: %s", err))
+		}
+
+		if err := deploystack.WriteConfig(wd, github.Repo{}); err != nil {
+			tui.Fatal(err)
+		}
+		s, err = deploystack.Init(wd)
+		if err != nil {
+			tui.Fatal(err)
+		}
 	}
 
 	if *verify {
