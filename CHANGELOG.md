@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.7](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.6...v1.12.7) (2023-03-30)
+
+
+### Bug Fixes
+
+* updating dsexec to try and create a config ([83ecd3a](https://github.com/GoogleCloudPlatform/deploystack/commit/83ecd3ae71f071307febd491be7558b722a3ce91))
+
 ## [1.12.6](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.5...v1.12.6) (2023-03-30)
 
 
