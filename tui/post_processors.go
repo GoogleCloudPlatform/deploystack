@@ -85,6 +85,10 @@ func createProject(projectID string, q *Queue) tea.Cmd {
 			return errMsg{err: fmt.Errorf("createProject: could not create project: %w", err)}
 		}
 
+		if err := q.client.ServiceEnable(projectID, gcloud.ServiceUsage); err != nil {
+			return errMsg{err: fmt.Errorf("createProject: could not enable service: %w", err)}
+		}
+
 		if errMsg := handleProjectNumber(projectID, q); errMsg != nil {
 			return errMsg
 		}
