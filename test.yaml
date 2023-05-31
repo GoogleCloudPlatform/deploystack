@@ -13,6 +13,10 @@
 # limitations under the License.
 
 steps:
+   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+     id: "clean"
+     entrypoint: bash
+     args: ['./clean']
    - name: 'gcr.io/cloud-builders/git'
      id: "ssh-init"
      secretEnv: ['SSH_KEY']
@@ -86,7 +90,7 @@ steps:
      dir: "gcloud"
      env:
       - 'DEPLOYSTACK_PATH=$_DEPLOYSTACK_PATH'
-     waitFor: ['test-file-get']      
+     waitFor: ['test-file-get', 'clean']      
 timeout: 3600s
 substitutions:
     _DEPLOYSTACK_PATH: /workspace

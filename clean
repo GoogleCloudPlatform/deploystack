@@ -1,0 +1,39 @@
+#!/bin/bash
+# DON'T REMOVE FROM clean script.
+CYAN='\033[0;36m'
+BCYAN='\033[1;36m'
+NC='\033[0m' # No Color
+DIVIDER="********************************************************************************\n"
+
+function get_project_id() {
+    local __resultvar=$1
+    VALUE=$(gcloud config get-value project | xargs)
+    eval "$__resultvar"="'$VALUE'"
+}
+
+# DISPLAY HELPERS
+function section_open() {
+    section_description=$1
+    printf "%b" "$DIVIDER"
+    printf "%b%s%b\\n" "$CYAN" "$section_description" "$NC"
+    printf "%b" "$DIVIDER"
+}
+
+function section_close() {
+    printf "%b" "$DIVIDER"
+    printf "%b%s%b- done%b\\n" "$CYAN" "$section_description" "$BCYAN"  "$NC"
+    printf "\\n\\n"
+}
+
+
+# END DON'T REMOVE FROM clean script.
+
+
+get_project_id PROJECT
+gcloud services enable cloudresourcemanager.googleapis.com --project="$PROJECT"
+REGION=us-central1
+
+
+section_open "Delete Functions"
+    gcloud functions delete testFunctionName --region $REGION -q --project="$PROJECT"
+section_close
