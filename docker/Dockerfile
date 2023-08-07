@@ -1,4 +1,4 @@
-FROM golang:latest as builder
+FROM golang:bullseye AS builder
 
 ARG DS_BASE_VERSION=@latest
 ARG DS_GITHUB_VERSION=@latest
