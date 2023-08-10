@@ -310,6 +310,7 @@ tasks:
     desc: pushes to master branch      
     cmds: 
       - cd {{.DEPLOYSTACK_SHELL_PATH}} && git checkout master
+      - touch Dockerfile
       - task: shell:export
 
   shell:main:

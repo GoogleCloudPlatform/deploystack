@@ -1,3 +1,4 @@
+# Switching to bulleye because of compilation errors
 FROM golang:bullseye AS builder
 
 ARG DS_BASE_VERSION=@latest
