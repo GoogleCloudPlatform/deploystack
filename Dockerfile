@@ -16,10 +16,6 @@ FROM golang:1.19.4-alpine3.17 AS builder
 
 WORKDIR /usr/src/app
 
-# pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
-# COPY go.mod go.sum ./
-# RUN go mod download && go mod verify
-
 COPY . .
 
 WORKDIR /usr/src/app/cmd/basic-docker
