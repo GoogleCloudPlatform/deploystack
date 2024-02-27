@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.8](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.7...v1.12.8) (2024-02-27)
+
+
+### Bug Fixes
+
+* upping version to make changes surface ([0b4e8a3](https://github.com/GoogleCloudPlatform/deploystack/commit/0b4e8a39fdd8739aef1b32b3fe33cb28f08a6e4f))
+
 ## [1.12.7](https://github.com/GoogleCloudPlatform/deploystack/compare/v1.12.6...v1.12.7) (2023-03-30)
 
 
