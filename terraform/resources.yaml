@@ -395,8 +395,8 @@ google_storage_bucket:
   label: google_storage_bucket
   product: Cloud Storage
   test_config: 
-    test_type: gsutil
-    test_command: gsutil ls | grep -c gs://
+    test_type: gcloud
+    test_command: gcloud storage ls | grep -c gs://
     expected: 0
   api_calls: 
   - storage.buckets.insert
@@ -413,8 +413,8 @@ google_storage_bucket_object:
   label: google_storage_bucket_object
   product: Cloud Storage
   test_config: 
-    test_type: gsutil
-    test_command: gsutil ls | grep -c gs://
+    test_type: gcloud
+    test_command: gcloud storage ls | grep -c gs://
     expected: 0
     todo: Make sure you check the bucket details at an actual object
   api_calls: 
@@ -537,5 +537,3 @@ github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/net-cloudnat:
   aliasof:
   - google_compute_router
   - google_compute_router_nat
-
-
